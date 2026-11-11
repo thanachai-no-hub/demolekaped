@@ -1768,10 +1768,10 @@ const headOf = dept => S.people.find(p => p.role === 'head' && p.dept === dept);
 function wstatus(t) { if (t.approval === 'pending') return 'awaiting'; if (t.approval === 'rejected') return 'rejected'; if (t.p >= 100) return 'done'; if (t.due < S.now) return 'overdue'; if (t.blocked) return 'blocked'; return t.p > 0 ? 'in_progress' : 'not_started'; }
 const WS_TH = { awaiting: 'รอหัวหน้าอนุมัติ', rejected: 'ไม่อนุมัติ', done: 'เสร็จ', overdue: 'เลยกำหนด', blocked: 'ติดปัญหา', in_progress: 'กำลังทำ', not_started: 'ยังไม่เริ่ม' };
 const SCH_TH = { draft: 'ร่าง', scheduled: 'รอส่ง', sent: 'ส่งแล้ว', done: 'เตือนแล้ว', cancelled: 'ยกเลิก', failed: 'ส่งไม่สำเร็จ' };
-const pillW = t => { const s = wstatus(t); return '<span class="pill ' + s + '">' + WS_TH[s] + '</span>'; };
+const pillW = t => { const s = wstatus(t); return '<span class="pill ' + s + '">' + (s === 'awaiting' ? 'รอ' + P(t.approver).name + 'อนุมัติ' : WS_TH[s]) + '</span>'; };
 const pillS = s => '<span class="pill ' + s + '">' + SCH_TH[s] + '</span>';
 function dueText(t) {
-  if (t.approval === 'pending') return 'รออนุมัติ · กำหนดส่ง ' + rel(t.due, S.now);
+  if (t.approval === 'pending') return 'ผู้อนุมัติ ' + P(t.approver).name + ' · กำหนดส่ง ' + rel(t.due, S.now);
   if (t.approval === 'rejected') return 'ไม่ได้รับอนุมัติ';
   if (t.p >= 100) return 'เสร็จแล้ว';
   if (t.due < S.now) { const dd = Math.max(1, Math.floor((S.now - t.due) / 864e5) + (sameDay(t.due, S.now) ? 0 : 0)); return sameDay(t.due, S.now) ? 'เลยกำหนดวันนี้ ' + hm(t.due) : 'เลยกำหนด ' + dd + ' วัน'; }
@@ -1922,7 +1922,7 @@ function reportCard(uid, label) {
     });
     const watch = vis.filter(activeTask).filter(t => ['overdue', 'blocked'].includes(wstatus(t)) || (t.due - S.now) < 1.6 * 864e5).sort((a, b) => sev(a) - sev(b));
     const pend = vis.filter(t => t.approval === 'pending');
-    if (pend.length) body += '<div class="fx-t">งานพิเศษรอหัวหน้าอนุมัติ</div>' + pend.map(t => rowx('a', esc(P(t.owner).name + ' · ' + t.title), 'รอ ' + P(t.approver).name + ' อนุมัติ')).join('');
+    if (pend.length) body += '<div class="fx-t">งานพิเศษรอหัวหน้าอนุมัติ</div>' + pend.map(t => rowx('a', esc(P(t.owner).name + ' · ' + t.title), 'ผู้อนุมัติ ' + P(t.approver).name)).join('');
     body += '<div class="fx-t">ต้องจับตา · ใครรับผิดชอบ</div>' + (watch.length ? watch.map(t => taskBlock(t, true)).join('') : '<div class="fx-r"><i class="dot n"></i><span>ไม่มีงานเสี่ยง</span></div>');
     const od = vis.filter(t => wstatus(t) === 'overdue');
     return { head: label || 'รายงาน 09:00 · ทั้งบริษัท', tone: 'duckh', body,
@@ -2224,15 +2224,14 @@ async function assign(uid, text, p, special) {
   preamble(uid, text, 'assign_task', { owner: p.name, title, due_at: iso(due), special: !!special });
   replyTrace(special ? 'ยืนยันงานพิเศษ' : 'ยืนยันมอบหมายงาน'); render();
   const steps = special
-    ? rowx('a', '1. ส่งให้' + head.name + ' (หัวหน้าฝ่าย) อนุมัติก่อน', 'การ์ดมีปุ่ม อนุมัติ / ไม่อนุมัติ') +
+    ? rowx('a', '1. ส่งให้' + head.name + 'อนุมัติ', 'ปุ่ม อนุมัติ / ไม่อนุมัติ') +
       rowx('n', '2. ' + p.name + ' เห็นว่ามีงานพิเศษรออยู่', 'ยังเริ่มไม่ได้ และยังไม่มีการตาม') +
       rowx('', '3. อนุมัติแล้วงานจึงเปิดให้' + p.name + 'ทำ', 'แจ้งท่านและ' + p.name + 'ทันที')
     : (informHead ? rowx('a', '1. แจ้ง' + head.name + ' (หัวหน้าฝ่าย) ก่อน', 'ให้หัวหน้ารับรู้ว่าลูกทีมได้งานอะไร') + rowx('', '2. ส่งงานให้' + p.name, 'พร้อมปุ่มรับทราบ') : rowx('', 'ส่งงานให้' + p.name + 'ทันที', '')) +
       rowx('a', 'รอบ 09:00 ก่อนครบกำหนด 1 วัน', 'ตาม' + p.name + 'เอง') + rowx('r', 'ถ้าเลยกำหนด', 'แจ้ง' + p.name + ' และหัวหน้าฝ่ายทันที');
   await card(uid, {
     head: special ? 'ยืนยันงานพิเศษ' : 'ยืนยันมอบหมายงาน', tone: special ? 'warn' : '',
-    body: kv('ผู้รับงาน', p.name + ' · ' + p.title) + kv('งาน', title) + kv('กำหนดส่ง', when(due)) + kv('หัวหน้าฝ่าย', head.name) +
-      (special ? kv('ประเภท', 'งานพิเศษ · ต้องให้' + head.name + 'อนุมัติก่อน') : '') + (specialNote ? '<div class="fx-note">' + esc(specialNote) + '</div>' : '') +
+    body: kv('ผู้รับงาน', p.name + ' · ' + p.title) + kv('งาน', title) + kv('กำหนดส่ง', when(due)) + (special ? kv('ประเภท', 'งานพิเศษ') + kv('ผู้อนุมัติ', head.name) : kv('หัวหน้าฝ่าย', head.name)) + (specialNote ? '<div class="fx-note">' + esc(specialNote) + '</div>' : '') +
       '<div class="fx-t">ลำดับขั้น</div>' + steps,
     buttons: [
       { label: special ? 'ส่งขออนุมัติ' : 'ยืนยัน', fn: async () => {
@@ -2249,7 +2248,7 @@ async function assign(uid, text, p, special) {
           render();
           await say(uid, 'ส่งงานพิเศษให้' + head.name + 'อนุมัติแล้วครับ\n' + p.name + ' จะเห็นว่ามีงานรออยู่ และเริ่มทำได้ทันทีที่' + head.name + 'อนุมัติ ผมจะแจ้งผลให้ครับ');
           await approvalCard(t);
-          await card(p.id, { head: 'มีงานพิเศษจาก ' + me.name + ' รออยู่', tone: 'warn', body: taskBlock(t, false) + '<div class="fx-note">งานนี้ต้องรอ' + esc(head.name) + 'อนุมัติก่อน ยังไม่ต้องเริ่มทำ ผมจะแจ้งทันทีเมื่ออนุมัติแล้วครับ</div>' }, true);
+          await card(p.id, { head: 'มีงานพิเศษจาก ' + me.name + ' รออยู่', tone: 'warn', body: taskBlock(t, false) + '<div class="fx-note">ยังไม่ต้องเริ่มทำ จะแจ้งทันทีเมื่ออนุมัติแล้วครับ</div>' }, true);
           return;
         }
         if (informHead) {
@@ -2305,7 +2304,7 @@ async function approvals(uid) {
   const list = S.tasks.filter(t => t.approval === 'pending' && (me.role === 'ceo' ? t.by === uid : me.role === 'head' ? t.approver === uid : t.owner === uid));
   if (!list.length) { await say(uid, 'ตอนนี้ไม่มีงานพิเศษรออนุมัติครับ'); return; }
   if (me.role === 'head') { await say(uid, 'มีงานพิเศษรอคุณอนุมัติ ' + list.length + ' งานครับ'); for (const t of list) await approvalCard(t); return; }
-  await card(uid, { head: 'งานพิเศษรออนุมัติ', tone: 'warn', body: list.map(t => taskBlock(t, me.role === 'ceo') + '<em style="font-size:12px;color:var(--muted)">รอ ' + esc(P(t.approver).name) + ' อนุมัติ</em>').join('') });
+  await card(uid, { head: 'งานพิเศษรออนุมัติ', tone: 'warn', body: list.map(t => taskBlock(t, me.role === 'ceo') + '<em style="font-size:12px;color:var(--muted)">ผู้อนุมัติ ' + esc(P(t.approver).name) + '</em>').join('') });
 }
 
 /* ---------- business & finance Q&A (numbers computed in SQL, AI only words them) ---------- */
