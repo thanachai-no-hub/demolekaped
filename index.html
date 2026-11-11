@@ -1067,6 +1067,7 @@ const A3 = (function () {
   const PLATE = { x0: -4.2, x1: 6.3, z0: -6.2, z1: 9.6 };
 
   function col(n) { return new THREE.Color(css(n) || '#888'); }
+  function tint(c) { return c && c.startsWith('--') ? col(c) : new THREE.Color(c || '#888'); }
   function anchor(id) { const n = NODES[id]; return new THREE.Vector3(n.pos[0], n.top || 1.4, n.pos[1]); }
 
   function build() {
@@ -1101,25 +1102,128 @@ const A3 = (function () {
     plateLbl = document.createElement('div'); plateLbl.className = 'lbl plate';
     plateLbl.innerHTML = 'Supabase<small> · Postgres · Edge Functions · pg_cron · RLS</small>'; lblBox.appendChild(plateLbl);
 
+    // Recognisable models: every object is built with its "front" facing +z, then turned to face the camera each frame.
+    const tex = (draw, w, h) => { const c = document.createElement('canvas'); c.width = w || 256; c.height = h || 256; draw(c.getContext('2d'), c.width, c.height); const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t; };
+    const rr = (x, a, b, w, h, r) => { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); };
+    const FONT = '"Prompt", "Noto Sans Thai", system-ui, sans-serif';
+    const T_LINE = tex((x, w, h) => { x.fillStyle = '#06c755'; x.fillRect(0, 0, w, h); x.fillStyle = '#fff'; rr(x, 34, 70, 188, 110, 40); x.fill(); x.fillStyle = '#06c755'; x.font = 'bold 64px ' + FONT; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('LINE', 128, 128); });
+    const T_CLOCK = tex((x, w, h) => {
+      x.fillStyle = '#fffaf2'; x.fillRect(0, 0, w, h); x.translate(128, 128); x.strokeStyle = '#2b2b2b';
+      for (let i = 0; i < 12; i++) { x.save(); x.rotate(i * Math.PI / 6); x.lineWidth = i % 3 ? 4 : 9; x.beginPath(); x.moveTo(0, -112); x.lineTo(0, i % 3 ? -98 : -88); x.stroke(); x.restore(); }
+      x.fillStyle = '#2b2b2b'; x.font = 'bold 34px ' + FONT; x.textAlign = 'center'; x.textBaseline = 'middle';
+      [['12', 0, -66], ['3', 68, 0], ['6', 0, 68], ['9', -68, 0]].forEach(([t, a, b]) => x.fillText(t, a, b));
+      x.lineCap = 'round'; x.lineWidth = 10; x.beginPath(); x.moveTo(0, 0); x.lineTo(-52, 0); x.stroke();
+      x.lineWidth = 7; x.beginPath(); x.moveTo(0, 0); x.lineTo(0, -82); x.stroke();
+      x.fillStyle = '#d4552b'; x.beginPath(); x.arc(0, 0, 10, 0, 7); x.fill();
+    });
+    const T_CHIP = tex((x, w, h) => { x.fillStyle = '#1d2430'; x.fillRect(0, 0, w, h); x.strokeStyle = '#f0b429'; x.lineWidth = 8; rr(x, 30, 30, 196, 196, 22); x.stroke(); x.fillStyle = '#f0b429'; x.font = 'bold 96px ' + FONT; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('AI', 128, 134); });
+    const T_DB = tex((x, w, h) => { x.fillStyle = '#138a8a'; x.fillRect(0, 0, w, h); x.fillStyle = '#fff'; x.font = 'bold 70px ' + FONT; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('DB', 128, 132); });
+    const T_CAL = tex((x, w, h) => { x.fillStyle = '#ffffff'; x.fillRect(0, 0, w, h); x.fillStyle = '#e5484d'; x.fillRect(0, 0, w, 74); x.fillStyle = '#fff'; x.font = 'bold 42px ' + FONT; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('พ.ย.', 128, 40); x.fillStyle = '#222'; x.font = 'bold 120px ' + FONT; x.fillText('11', 128, 168); });
+    const T_SRV = tex((x, w, h) => { x.fillStyle = '#26303b'; x.fillRect(0, 0, w, h); for (let i = 0; i < 4; i++) { const y = 18 + i * 60; x.fillStyle = '#3a4757'; rr(x, 16, y, 224, 46, 8); x.fill(); x.fillStyle = '#2fdc75'; x.beginPath(); x.arc(40, y + 23, 7, 0, 7); x.fill(); x.fillStyle = i % 2 ? '#f0b429' : '#2fdc75'; x.beginPath(); x.arc(62, y + 23, 7, 0, 7); x.fill(); x.fillStyle = '#6b9cff'; x.fillRect(90, y + 18, 130, 10); } });
+
     Object.keys(NODES).forEach(id => {
       const n = NODES[id]; const g = new THREE.Group(); let h = 1.4;
-      const mat = () => new THREE.MeshStandardMaterial({ roughness: 0.45, metalness: 0.1, transparent: !!n.dim, opacity: n.dim ? 0.45 : 1 });
-      const add = (geo, y) => { const mesh = new THREE.Mesh(geo, mat()); mesh.position.y = y; mesh.userData.id = id; g.add(mesh); return mesh; };
-      switch (n.shape) {
-        case 'phone': add(new THREE.BoxGeometry(1.2, 2.1, 0.22), 1.05); h = 2.4; break;
-        case 'hub': add(new THREE.CylinderGeometry(1.4, 1.5, 0.7, 32), 0.35); add(new THREE.CylinderGeometry(0.9, 1.0, 0.5, 32), 0.95); h = 1.5; break;
-        case 'server': add(new THREE.BoxGeometry(2, 0.5, 1.5), 0.3); add(new THREE.BoxGeometry(2, 0.5, 1.5), 0.85); add(new THREE.BoxGeometry(2, 0.5, 1.5), 1.4); h = 1.8; break;
+      const mat = (c, map) => new THREE.MeshStandardMaterial({ color: map ? new THREE.Color('#ffffff') : tint(c || n.col), roughness: 0.5, metalness: 0.08, transparent: !!n.dim, opacity: n.dim ? 0.5 : 1, map: map || null });
+      // c: CSS token ('--x'), hex ('#xxxxxx') or omitted (node colour). keep=true means a textured face that recolor() must not touch
+      const add = (geo, x, y, z, c, map) => {
+        const mesh = new THREE.Mesh(geo, Array.isArray(map) || (map && map.isMaterial) ? map : mat(c, map));
+        mesh.position.set(x, y, z); mesh.userData.c = c || null; mesh.userData.keep = !!map; g.add(mesh); return mesh;
+      };
+      const texMat = t => { const m = mat('#ffffff', t); m.color = new THREE.Color('#ffffff'); return m; };
+      const person = (shirt, extra) => {
+        add(new THREE.CylinderGeometry(0.13, 0.13, 0.8, 12), -0.16, 0.4, 0, '#2b3440');
+        add(new THREE.CylinderGeometry(0.13, 0.13, 0.8, 12), 0.16, 0.4, 0, '#2b3440');
+        add(new THREE.CylinderGeometry(0.3, 0.36, 0.95, 18), 0, 1.27, 0, shirt);
+        add(new THREE.SphereGeometry(0.36, 18, 12), 0, 1.72, 0, shirt).scale.set(1, 0.45, 0.85);
+        add(new THREE.SphereGeometry(0.3, 20, 16), 0, 2.08, 0, '#f2c7a0');
+        add(new THREE.SphereGeometry(0.31, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), 0, 2.12, -0.02, '#2a2018');
+        const armL = add(new THREE.CylinderGeometry(0.09, 0.09, 0.7, 10), -0.42, 1.3, 0.05, shirt); armL.rotation.z = 0.25;
+        const armR = add(new THREE.CylinderGeometry(0.09, 0.09, 0.6, 10), 0.3, 1.38, 0.28, shirt); armR.rotation.x = -1.1;
+        add(new THREE.BoxGeometry(0.26, 0.42, 0.05), 0.3, 1.5, 0.55, '#1b1b1b').rotation.x = -0.5;
+        add(new THREE.PlaneGeometry(0.21, 0.34), 0.3, 1.51, 0.585, '--c-line').rotation.x = -0.5;
+        if (extra) extra();
+        return 2.4;
+      };
+      switch (id) {
+        case 'ceo': h = person('#1f2a44', () => { add(new THREE.BoxGeometry(0.08, 0.5, 0.04), 0, 1.45, 0.33, '#c2362f'); add(new THREE.CylinderGeometry(0.22, 0.24, 0.12, 18), 0, 2.35, 0, '#f2b705'); }); break;
+        case 'head': h = person('#3b6fb6'); break;
+        case 'staff': h = person('#e07b39'); break;
+        case 'line': {
+          add(new THREE.CylinderGeometry(1.2, 1.35, 0.35, 32), 0, 0.18, 0, '#2b3440');
+          const side = mat('--c-line');
+          const b = add(new THREE.CylinderGeometry(1.0, 1.0, 0.3, 40), 0, 1.6, 0, null, [side, texMat(T_LINE), texMat(T_LINE)]);
+          b.rotation.x = Math.PI / 2; b.userData.c = '--c-line'; b.userData.keep = true; b.material[0].userData = { tint: '--c-line' };
+          const tail = add(new THREE.ConeGeometry(0.28, 0.6, 16), -0.45, 0.62, 0, '--c-line'); tail.rotation.z = -0.5;
+          h = 2.7; break;
+        }
+        case 'api': {
+          add(new THREE.BoxGeometry(1.5, 2.0, 1.2), 0, 1.0, 0, null, [mat('#2b3440'), mat('#2b3440'), mat('#3a4757'), mat('#2b3440'), texMat(T_SRV), mat('#2b3440')]).userData.keep = true;
+          add(new THREE.BoxGeometry(1.56, 0.08, 1.26), 0, 2.02, 0, '--c-api');
+          h = 2.2; break;
+        }
+        case 'worker': {
+          add(new THREE.BoxGeometry(0.95, 1.0, 0.7), 0, 0.95, 0);
+          add(new THREE.BoxGeometry(0.75, 0.55, 0.6), 0, 1.78, 0);
+          add(new THREE.SphereGeometry(0.08, 10, 8), -0.17, 1.82, 0.31, '#7ef9ff');
+          add(new THREE.SphereGeometry(0.08, 10, 8), 0.17, 1.82, 0.31, '#7ef9ff');
+          add(new THREE.BoxGeometry(0.3, 0.05, 0.02), 0, 1.64, 0.31, '#1b1b1b');
+          add(new THREE.CylinderGeometry(0.03, 0.03, 0.3, 8), 0, 2.2, 0, '#9aa49e');
+          add(new THREE.SphereGeometry(0.09, 10, 8), 0, 2.38, 0, '#d4552b');
+          add(new THREE.CylinderGeometry(0.08, 0.08, 0.7, 10), -0.6, 1.0, 0).rotation.z = 0.3;
+          add(new THREE.CylinderGeometry(0.08, 0.08, 0.7, 10), 0.6, 1.0, 0).rotation.z = -0.3;
+          add(new THREE.BoxGeometry(0.4, 0.3, 0.05), 0, 1.05, 0.37, '#e7eef5');
+          add(new THREE.CylinderGeometry(0.12, 0.12, 0.45, 10), -0.22, 0.22, 0, '#2b3440');
+          add(new THREE.CylinderGeometry(0.12, 0.12, 0.45, 10), 0.22, 0.22, 0, '#2b3440');
+          h = 2.5; break;
+        }
         case 'agent': {
-          const body = add(new THREE.SphereGeometry(1.0, 28, 20), 1.0); body.scale.set(1.25, 0.85, 1);
-          const headM = add(new THREE.SphereGeometry(0.62, 24, 18), 1.95); headM.position.x = 0.75;
-          const beak = add(new THREE.ConeGeometry(0.22, 0.6, 16), 1.9); beak.rotation.z = -Math.PI / 2; beak.position.x = 1.55; beak.userData.beak = true;
+          const body = add(new THREE.SphereGeometry(1.0, 28, 20), 0, 1.0, 0); body.scale.set(1.25, 0.85, 1);
+          add(new THREE.SphereGeometry(0.62, 24, 18), 0.75, 1.95, 0);
+          const beak = add(new THREE.ConeGeometry(0.22, 0.6, 16), 1.55, 1.9, 0, '#e8730c'); beak.rotation.z = -Math.PI / 2;
+          add(new THREE.SphereGeometry(0.09, 12, 10), 1.05, 2.12, 0.42, '#1b1b1b');
+          add(new THREE.SphereGeometry(0.09, 12, 10), 1.05, 2.12, -0.42, '#1b1b1b');
+          const wing = add(new THREE.SphereGeometry(0.55, 20, 14), -0.15, 1.15, 0.72, '#f7d046'); wing.scale.set(1.2, 0.55, 0.3);
+          const wing2 = add(new THREE.SphereGeometry(0.55, 20, 14), -0.15, 1.15, -0.72, '#f7d046'); wing2.scale.set(1.2, 0.55, 0.3);
+          const tail = add(new THREE.ConeGeometry(0.3, 0.5, 12), -1.25, 1.3, 0); tail.rotation.z = Math.PI / 2 + 0.5;
           g.userData.bob = true; h = 2.8; break;
         }
-        case 'llm': { const m = add(new THREE.IcosahedronGeometry(1.0, 0), 1.2); m.userData.spin = -0.4; h = 2.4; break; }
-        case 'db': for (let k = 0; k < 3; k++) add(new THREE.CylinderGeometry(1.05, 1.05, 0.55, 40), 0.33 + k * 0.6); h = 2.0; break;
-        case 'queue': { const r = add(new THREE.CylinderGeometry(1.0, 1.0, 0.35, 40), 0.25); const hand = add(new THREE.BoxGeometry(0.12, 0.08, 0.8), 0.48); hand.position.z = -0.3; hand.userData.spin = 0; hand.userData.hand = true; h = 1.4; break; }
-        case 'ext': add(new THREE.BoxGeometry(1.6, 1.1, 1.6), 0.55); h = 1.4; break;
+        case 'llm': {
+          add(new THREE.BoxGeometry(1.5, 0.25, 1.5), 0, 0.9, 0, null, [mat('#1d2430'), mat('#1d2430'), texMat(T_CHIP), mat('#1d2430'), mat('#1d2430'), mat('#1d2430')]).userData.keep = true;
+          for (let i = 0; i < 4; i++) for (const sgn of [-1, 1]) {
+            const o = -0.54 + i * 0.36;
+            add(new THREE.BoxGeometry(0.12, 0.06, 0.3), o, 0.85, sgn * 0.88, '#c9ccd1');
+            add(new THREE.BoxGeometry(0.3, 0.06, 0.12), sgn * 0.88, 0.85, o, '#c9ccd1');
+          }
+          const halo = add(new THREE.TorusGeometry(1.2, 0.04, 8, 48), 0, 0.9, 0, '--c-ai'); halo.rotation.x = Math.PI / 2;
+          h = 1.6; break;
+        }
+        case 'db': {
+          for (let k = 0; k < 3; k++) {
+            add(new THREE.CylinderGeometry(1.0, 1.0, 0.5, 40), 0, 0.3 + k * 0.6, 0);
+            if (k < 2) add(new THREE.CylinderGeometry(1.02, 1.02, 0.08, 40), 0, 0.6 + k * 0.6, 0, '#0b4f4f');
+          }
+          add(new THREE.CircleGeometry(0.98, 40), 0, 1.56, 0, null, texMat(T_DB)).rotation.x = -Math.PI / 2;
+          h = 2.0; break;
+        }
+        case 'cron': {
+          const face = add(new THREE.CylinderGeometry(0.85, 0.85, 0.35, 40), 0, 1.25, 0, null, [mat('--c-queue'), texMat(T_CLOCK), texMat(T_CLOCK)]);
+          face.rotation.x = Math.PI / 2; face.material[0].userData = { tint: '--c-queue' };
+          add(new THREE.SphereGeometry(0.3, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), -0.55, 1.95, 0, '--c-queue').rotation.z = 0.5;
+          add(new THREE.SphereGeometry(0.3, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), 0.55, 1.95, 0, '--c-queue').rotation.z = -0.5;
+          add(new THREE.CylinderGeometry(0.06, 0.06, 0.45, 8), -0.5, 0.28, 0, '#2b3440').rotation.z = 0.4;
+          add(new THREE.CylinderGeometry(0.06, 0.06, 0.45, 8), 0.5, 0.28, 0, '#2b3440').rotation.z = -0.4;
+          h = 2.3; break;
+        }
+        case 'ext': {
+          add(new THREE.BoxGeometry(1.4, 1.5, 0.15), 0, 0.85, 0, null, [mat('#dddddd'), mat('#dddddd'), mat('#e5484d'), mat('#dddddd'), texMat(T_CAL), mat('#dddddd')]).userData.keep = true;
+          for (const xx of [-0.35, 0.35]) add(new THREE.TorusGeometry(0.09, 0.03, 8, 16), xx, 1.62, 0, '#9aa49e');
+          h = 1.8; break;
+        }
       }
+      const sc = ['ceo', 'head', 'staff'].includes(id) ? 1.45 : id === 'llm' || id === 'ext' ? 1.25 : 1.15;
+      g.scale.setScalar(sc); h *= sc;
+      g.userData.face = true;
+      g.traverse(m => { m.userData.id = id; });
       n.h = h; n.top = h * 0.6;
       g.position.set(n.pos[0], n.shape === 'phone' || n.shape === 'hub' || id === 'llm' || id === 'ext' ? 0 : 0.1, n.pos[1]);
       scene.add(g); meshes[id] = g;
@@ -1168,7 +1272,12 @@ const A3 = (function () {
     ground.material.color = col('--surface');
     grid.material.vertexColors = false; grid.material.color = col('--grid'); grid.material.transparent = true; grid.material.opacity = 0.8; grid.material.needsUpdate = true;
     plate.material.color = col('--c-supa'); plate.userData.edges.material.color = col('--c-supa');
-    Object.keys(NODES).forEach(id => meshes[id].children.forEach(m => m.material.color = m.userData.beak ? new THREE.Color('#e8730c') : m.userData.hand ? col('--surface') : col(NODES[id].col)));
+    Object.keys(NODES).forEach(id => meshes[id].traverse(m => {
+      if (!m.isMesh) return;
+      if (Array.isArray(m.material)) { m.material.forEach(mm => { if (mm.userData && mm.userData.tint) mm.color = tint(mm.userData.tint); }); return; }
+      if (m.userData.keep) return;
+      m.material.color = tint(m.userData.c || NODES[id].col);
+    }));
     packet.material.color = col('--accent-fill'); halo.material.color = col('--accent-fill');
     highlight();
   }
@@ -1182,7 +1291,7 @@ const A3 = (function () {
     if (camera.aspect < 1.1) {
       // portrait phone: look along the x axis so the long side of the scene runs top-to-bottom
       const k = Math.min(1.5, Math.max(0.9, 0.82 / camera.aspect));
-      camera.position.copy(controls.target).add(new THREE.Vector3(13, 30, 0).multiplyScalar(k));
+      camera.position.copy(controls.target).add(new THREE.Vector3(22, 24, 0).multiplyScalar(k));
     } else {
       const k = Math.min(2.7, Math.max(1.05, 1.5 / camera.aspect));
       camera.position.copy(controls.target).add(new THREE.Vector3(-1.5, 18, 21).multiplyScalar(k));
@@ -1247,8 +1356,8 @@ const A3 = (function () {
     if (!reduced) Object.keys(meshes).forEach(id => {
       const g = meshes[id];
       if (g.userData.bob) g.position.y = 0.1 + Math.sin(tnow * 2) * 0.08;
-      g.children.forEach(m => { if (m.userData.spin) m.rotation.y += m.userData.spin * dt; if (m.userData.hand) m.rotation.y += dt * 1.2; });
     });
+    Object.keys(meshes).forEach(id => { const g = meshes[id]; g.rotation.y = Math.atan2(camera.position.x - g.position.x, camera.position.z - g.position.z); });
     const s = SCEN[st.scen].steps[st.i];
     const { e, rev } = edgeFor(s.p[0], s.p[1]);
     if (st.t < 1) st.t = Math.min(1, st.t + dt / 1.3);
