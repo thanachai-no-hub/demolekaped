@@ -466,6 +466,138 @@ footer { color: var(--muted); font-size: 13px; padding-block: 8px 40px; }
 }
 
 /* ---------- shadcn/ui-style component layer ---------- */
+/* ---------- view toggle ---------- */
+.modebar { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); margin-bottom: 18px; }
+.modebar button { border: 0; background: none; padding: 6px 14px; border-radius: 7px; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; }
+.modebar button[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: var(--shadow); }
+
+/* ---------- sitemap ---------- */
+:root { --k-chat: #2563eb; --k-card: #0d9488; --k-btn: #52525b; --k-rm: #16a34a; --k-liff: #ea580c; --k-push: #d97706; --k-ai: #9333ea; --k-fn: #2f6fde; --k-cron: #d4552b; --k-db: #138a8a; --k-p2: #a1a1aa; }
+.sm-top { display: grid; gap: 14px; margin-bottom: 16px; }
+.sm-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+.sm-stat { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; background: var(--surface); box-shadow: var(--shadow); }
+.sm-stat b { display: block; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.sm-stat span { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.sm-tools { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.sm-tools input { height: 36px; border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; background: var(--surface); color: var(--fg); font: inherit; font-size: 14px; width: min(280px, 100%); }
+.sm-seg { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
+.sm-seg button { border: 0; background: none; padding: 4px 10px; border-radius: 6px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.sm-seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: var(--shadow); }
+.sm-legend { display: flex; flex-wrap: wrap; gap: 6px; }
+.sm-root { display: flex; justify-content: center; position: relative; padding-bottom: 22px; margin-bottom: 4px; }
+.sm-root::after { content: ""; position: absolute; left: 50%; bottom: 0; height: 22px; border-left: 1px dashed var(--ring); }
+.sm-root-card { display: flex; align-items: center; gap: 12px; border: 1px solid var(--fg); border-radius: 12px; padding: 10px 16px; background: var(--surface); box-shadow: var(--shadow); }
+.sm-root-card b { display: block; font-size: 16px; }
+.sm-root-card span { font-size: 12.5px; color: var(--muted); }
+.sm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; border-top: 1px dashed var(--ring); padding-top: 18px; }
+.smsec { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); min-width: 0; }
+.smsec > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.smsec:not([open]) > summary { border-bottom: 0; }
+.smsec > summary::-webkit-details-marker { display: none; }
+.smsec > summary:focus-visible { outline: 3px solid var(--ring); outline-offset: -3px; border-radius: 12px; }
+.smsec .no { width: 28px; height: 28px; border-radius: 8px; background: var(--fg); color: var(--bg); display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+.smsec .st b { display: block; font-size: 15px; line-height: 1.3; }
+.smsec .st span { font-size: 12.5px; color: var(--muted); display: block; line-height: 1.4; }
+.smsec .cnt2 { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.smsec .chev { transition: transform .15s; }
+.smsec[open] .chev { transform: rotate(180deg); }
+.tree { list-style: none; margin: 0; padding: 6px 14px 14px; }
+.tree ul { list-style: none; margin: 0; padding: 0 0 0 16px; }
+.tree li { position: relative; padding: 8px 0 0 16px; }
+.tree li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 1px solid var(--line); }
+.tree li:last-child::before { bottom: auto; height: 19px; }
+.tree li::after { content: ""; position: absolute; left: 0; top: 19px; width: 11px; border-top: 1px solid var(--line); }
+.tree > li { padding-left: 16px; }
+.nd { display: grid; gap: 3px; min-width: 0; }
+.nd-h { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+.nd-h .n { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.nd-h .tt { font-weight: 600; font-size: 14px; line-height: 1.35; }
+.nd .dd { font-size: 13px; color: var(--muted); line-height: 1.45; }
+.nd .q { font-size: 12.5px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; width: fit-content; max-width: 100%; overflow-wrap: anywhere; }
+.kb { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border-radius: 5px; font-size: 11.5px; font-weight: 600; color: color-mix(in srgb, var(--kc) 78%, var(--fg)); background: color-mix(in srgb, var(--kc) 12%, transparent); border: 1px solid color-mix(in srgb, var(--kc) 28%, transparent); white-space: nowrap; }
+.rl { display: inline-flex; height: 20px; align-items: center; padding: 0 6px; border-radius: 5px; font-size: 11px; color: var(--muted); border: 1px dashed var(--line); white-space: nowrap; }
+.try { height: 24px; padding: 0 9px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); font-size: 12px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.try:hover { border-color: var(--fg); }
+.try svg { width: 12px; height: 12px; }
+.sm-empty { color: var(--muted); padding: 24px; text-align: center; border: 1px dashed var(--line); border-radius: 12px; }
+.hl-hit { background: color-mix(in srgb, #facc15 40%, transparent); border-radius: 3px; }
+@media (max-width: 900px) { .sm-grid { grid-template-columns: 1fr; } }
+
+/* ---------- realistic LINE chat ---------- */
+:root { --line-bg: #8ca7d3; --line-me: #8de386; --line-bot: #ffffff; --line-meta: rgba(15, 23, 42, .62); --line-text: #111111; --line-bar: #ffffff; --line-bar-fg: #1f2329; --line-sep: #e5e7eb; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --line-bg: #1f232b; --line-me: #3f9e46; --line-bot: #2e333c; --line-meta: rgba(255, 255, 255, .55); --line-text: #f3f4f6; --line-bar: #16191f; --line-bar-fg: #e5e7eb; --line-sep: #2a2f38; } }
+:root[data-theme="dark"] { --line-bg: #1f232b; --line-me: #3f9e46; --line-bot: #2e333c; --line-meta: rgba(255, 255, 255, .55); --line-text: #f3f4f6; --line-bar: #16191f; --line-bar-fg: #e5e7eb; --line-sep: #2a2f38; }
+.phone { border: 11px solid #0b0b0d; border-radius: 48px; background: var(--line-bg); height: 760px; box-shadow: 0 20px 50px -20px rgb(0 0 0 / .45), 0 0 0 1px #2b2b30; position: relative; }
+.ph-status { display: flex; align-items: center; justify-content: space-between; padding: 10px 22px 4px 26px; background: var(--line-bar); color: var(--line-bar-fg); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; position: relative; }
+.ph-island { position: absolute; left: 50%; top: 7px; transform: translateX(-50%); width: 92px; height: 26px; border-radius: 20px; background: #0b0b0d; }
+.ph-sys { display: flex; align-items: center; gap: 5px; }
+.ph-sys svg { height: 11px; width: auto; fill: currentColor; }
+.ph-head { background: var(--line-bar); color: var(--line-bar-fg); border-bottom: 1px solid var(--line-sep); padding: 6px 10px 8px 6px; gap: 6px; }
+.ph-back { display: inline-flex; align-items: center; gap: 0; min-width: 34px; }
+.ph-back svg { width: 24px; height: 24px; }
+.ph-back small { font-size: 13px; font-weight: 600; }
+.ph-title { flex: 1; min-width: 0; display: grid; }
+.ph-title b { font-size: 16px; display: inline-flex; align-items: center; gap: 4px; line-height: 1.25; }
+.ph-title b .oa { width: 15px; height: 15px; flex: none; }
+.ph-title span { font-size: 11px; color: color-mix(in srgb, var(--line-bar-fg) 55%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ph-ic { width: 26px; height: 26px; display: grid; place-items: center; flex: none; }
+.ph-ic svg { width: 21px; height: 21px; }
+.chat { padding: 12px 10px 8px; gap: 6px; background: var(--line-bg); }
+.chat .stamp { background: rgba(0, 0, 0, .18); color: #fff; font-size: 11.5px; padding: 2px 12px; margin: 6px 0; }
+.chat .m { gap: 6px; align-items: flex-start; }
+.chat .m.bot .av { width: 34px; height: 34px; border-radius: 50%; background: var(--duck); display: grid; place-items: center; flex: none; overflow: hidden; }
+.chat .m.bot .av svg { width: 26px; height: 26px; }
+.chat .m.bot.cont .av { visibility: hidden; height: 0; }
+.chat .mc { display: grid; gap: 3px; min-width: 0; max-width: calc(100% - 40px); }
+.chat .nm { font-size: 11.5px; color: var(--line-meta); padding-left: 2px; }
+.chat .m.bot.cont .nm { display: none; }
+.chat .rb { display: flex; align-items: flex-end; gap: 5px; min-width: 0; }
+.chat .m time { font-size: 10px; color: var(--line-meta); padding-bottom: 1px; }
+.chat .m.me { align-items: flex-end; }
+.chat .m.me .mt { display: grid; justify-items: end; gap: 0; flex: none; }
+.chat .m.me .mt .rd { font-size: 10px; color: var(--line-meta); line-height: 1.2; }
+.chat .b { color: var(--line-text); font-size: 14.5px; line-height: 1.45; padding: 8px 12px; border-radius: 18px; max-width: 100%; position: relative; }
+.chat .m.me .b { background: var(--line-me); border-radius: 18px; max-width: 78%; }
+.chat .m.bot .b { background: var(--line-bot); border-radius: 18px; }
+.chat .m.me:not(.cont) .b::after { content: ""; position: absolute; right: -5px; top: 8px; border: 6px solid transparent; border-left-color: var(--line-me); border-right: 0; }
+.chat .m.bot:not(.cont) .b::before { content: ""; position: absolute; left: -5px; top: 8px; border: 6px solid transparent; border-right-color: var(--line-bot); border-left: 0; }
+.chat .b.thinking { color: color-mix(in srgb, var(--line-text) 55%, transparent); }
+.chat .typing .b { display: inline-flex; gap: 4px; align-items: center; height: 34px; padding: 0 14px; }
+.chat .typing .b i { width: 7px; height: 7px; border-radius: 50%; background: color-mix(in srgb, var(--line-text) 40%, transparent); animation: tdot 1.1s infinite; }
+.chat .typing .b i:nth-child(2) { animation-delay: .15s; } .chat .typing .b i:nth-child(3) { animation-delay: .3s; }
+@keyframes tdot { 0%, 60%, 100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-3px); opacity: 1; } }
+.chat .fx { border: 0; border-radius: 16px; background: var(--line-bot); color: var(--line-text); width: 260px; max-width: 100%; box-shadow: 0 1px 1px rgb(0 0 0 / .06); }
+.chat .fx .fx-f { border-top: 1px solid color-mix(in srgb, var(--line-text) 10%, transparent); }
+.chat .fx .fx-f button { border-left-color: color-mix(in srgb, var(--line-text) 10%, transparent); color: #06a64a; }
+.chat .fx .fx-f button.x { color: color-mix(in srgb, var(--line-text) 55%, transparent); }
+.qrow { background: var(--line-bg); padding: 6px 10px 8px; }
+.qrow button { background: var(--line-bot); color: var(--line-text); border: 1px solid color-mix(in srgb, var(--line-text) 14%, transparent); font-weight: 500; height: 32px; padding: 0 13px; font-size: 13px; border-radius: 999px; }
+.ph-in { background: var(--line-bar); border-top: 1px solid var(--line-sep); padding: 7px 8px 12px; gap: 4px; align-items: center; }
+.ph-tool { width: 32px; height: 32px; display: grid; place-items: center; flex: none; border: 0; background: none; color: var(--line-bar-fg); padding: 0; cursor: pointer; }
+.ph-tool svg { width: 22px; height: 22px; }
+.ph-field { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; background: color-mix(in srgb, var(--line-bar-fg) 8%, transparent); border-radius: 999px; padding: 0 10px 0 14px; height: 36px; }
+.ph-field input { flex: 1; min-width: 0; border: 0; background: none; color: var(--line-bar-fg); font: inherit; font-size: 15px; padding: 0; height: 100%; outline: none; }
+.ph-field svg { width: 20px; height: 20px; color: color-mix(in srgb, var(--line-bar-fg) 55%, transparent); flex: none; }
+.ph-field:focus-within { box-shadow: 0 0 0 2px #06c755; }
+.ph-in .ph-tool, .ph-in .ph-send { background: none; border-radius: 50%; padding: 0; font-weight: 400; }
+.ph-in .ph-send { color: #06c755; }
+.ph-in .ph-tool { color: var(--line-bar-fg); }
+.ph-send { width: 34px; height: 34px; border-radius: 50%; border: 0; background: none; color: #06c755; display: grid; place-items: center; cursor: pointer; padding: 0; flex: none; }
+.ph-send svg { width: 24px; height: 24px; }
+.rmenu { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--line-sep); gap: 1px; border-top: 1px solid var(--line-sep); }
+.rmenu[hidden] { display: none; }
+.rm-tile { border: 0; background: var(--line-bar); color: var(--line-bar-fg); height: 82px; display: grid; place-items: center; align-content: center; gap: 6px; cursor: pointer; padding: 6px 4px; font: inherit; font-size: 12.5px; font-weight: 600; line-height: 1.25; text-align: center; }
+.rm-tile:hover { background: color-mix(in srgb, #06c755 8%, var(--line-bar)); }
+.rm-tile:focus-visible { outline: 2px solid #06c755; outline-offset: -2px; }
+.rm-tile .ri { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--rc) 14%, transparent); color: var(--rc); }
+.rm-tile .ri svg { width: 20px; height: 20px; }
+.rm-bar { display: flex; align-items: center; justify-content: space-between; background: var(--line-bar); border-top: 1px solid var(--line-sep); padding: 4px 8px 12px; }
+.rm-bar[hidden] { display: none; }
+.rm-toggle { border: 0; background: none; color: var(--line-bar-fg); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; padding: 6px 12px; }
+.only-3d[hidden], .only-sm[hidden] { display: none; }
+@media (max-width: 420px) { .hide-xs { display: none; } .phone { border-width: 8px; border-radius: 40px; height: 700px; } }
+@media (prefers-reduced-motion: reduce) { .chat .typing .b i { animation: none; } }
+
 .aistate { flex: none; font-size: 11.5px; font-weight: 600; height: 22px; display: inline-flex; align-items: center; gap: 5px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); background: var(--surface-2); }
 .aistate::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--c-ext); }
 .aistate.on { color: var(--fg); }
@@ -521,7 +653,7 @@ h1, h2, h3, h4 { letter-spacing: -0.015em; }
         <div><b>เลขาเป็ด</b><span>AI Agent ตัวเดียว ทำงานแทนเลขาทั้งบริษัท ผ่าน LINE</span></div>
       </div>
       <nav class="nav" aria-label="ส่วนของหน้า">
-        <a href="#architecture" data-v="architecture">โครงสร้างระบบ 3D</a>
+        <a href="#architecture" data-v="architecture">แผนผังระบบ</a>
         <a href="#demo" data-v="demo">ลองใช้งาน</a>
         <a href="#plan" data-v="plan">แผนการสร้าง</a>
         <a href="#feasibility" data-v="feasibility">ทำได้จริงไหม</a>
@@ -533,11 +665,17 @@ h1, h2, h3, h4 { letter-spacing: -0.015em; }
   <!-- ================= 3D ================= -->
   <section class="view" id="v-architecture" data-view="architecture">
     <div class="vh">
-      <div class="eyebrow">ภาพรวมสถาปัตยกรรม · Supabase</div>
-      <h1>เลขาเป็ดรับคำสั่ง ตามงาน และรายงานผลอย่างไร</h1>
-      <p>ดูเหมือนระบบขนส่ง: รถคันเขียวคือข้อมูลหนึ่งชิ้น วิ่งไปตามถนนจากคนหนึ่งไปอีกจุดหนึ่ง กล่องมุมซ้ายบอกว่ารถขนอะไร ส่งไปที่ไหน ที่นั่นทำหน้าที่อะไร และเก็บไว้ที่ไหน เลือกสถานการณ์ด้านขวา ลากเพื่อหมุนภาพ แตะสิ่งของเพื่อดูรายละเอียด</p>
+      <div class="eyebrow">แผนผังระบบ · Sitemap</div>
+      <h1>ทุกหน้าจอ ทุกการ์ด และทุกเส้นทางของเลขาเป็ด</h1>
+      <p class="only-sm">ไล่ดูได้ตั้งแต่พนักงานแอดเพื่อนครั้งแรก จนถึงตารางที่เก็บข้อมูลหลังบ้าน แต่ละข้อบอกว่าเป็นอะไรใน LINE (ข้อความ การ์ด ปุ่ม Rich Menu หน้า LIFF ข้อความอัตโนมัติ) ใครใช้ได้ และกด "ลองในเดโม" เพื่อเปิดแชตจำลองแล้วสั่งคำนั้นให้ทันที</p>
+      <p class="only-3d" hidden>ดูเหมือนระบบขนส่ง: รถคันเขียวคือข้อมูลหนึ่งชิ้น วิ่งไปตามถนนจากคนหนึ่งไปอีกจุดหนึ่ง กล่องมุมซ้ายบอกว่ารถขนอะไร ส่งไปที่ไหน ที่นั่นทำหน้าที่อะไร และเก็บไว้ที่ไหน เลือกสถานการณ์ด้านขวา ลากเพื่อหมุนภาพ แตะสิ่งของเพื่อดูรายละเอียด</p>
     </div>
-    <div class="arch">
+    <div class="modebar" role="tablist" aria-label="มุมมองแผนผัง">
+      <button role="tab" aria-selected="true" data-mode="sitemap">Sitemap ละเอียด</button>
+      <button role="tab" aria-selected="false" data-mode="3d">เส้นทางข้อมูล 3D</button>
+    </div>
+    <div id="sitemap"></div>
+    <div class="arch" id="mode3d" hidden>
       <div class="stage3d" id="stage">
         <canvas id="cv" aria-label="แผนภาพ 3 มิติของระบบเลขาเป็ด"></canvas>
         <div class="labels" id="labels"></div>
@@ -600,17 +738,33 @@ h1, h2, h3, h4 { letter-spacing: -0.015em; }
       <div class="leftcol">
         <div class="who" id="who" aria-label="เลือกว่าจะดูแชตของใคร"></div>
         <div class="phone">
+          <div class="ph-status" aria-hidden="true">
+            <span id="phClock">08:50</span>
+            <span class="ph-island"></span>
+            <span class="ph-sys"><svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg viewBox="0 0 16 12"><path d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0zM3.4 6.8a6.5 6.5 0 0 1 9.2 0l-1.4 1.4a4.5 4.5 0 0 0-6.4 0zM1 4.4a10 10 0 0 1 14 0l-1.4 1.4a8 8 0 0 0-11.2 0z"/></svg><svg viewBox="0 0 27 12"><rect x="0.5" y="0.5" width="23" height="11" rx="3" fill="none" stroke="currentColor" opacity=".45"/><rect x="2" y="2" width="16" height="8" rx="1.6"/><rect x="24.6" y="4" width="1.8" height="4" rx=".9" opacity=".45"/></svg></span>
+          </div>
           <div class="ph-head">
-            <div class="duck" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="10" r="6" fill="#fff6d0"/><circle cx="12.6" cy="8.6" r="1.1" fill="#1b1b1b"/><path d="M15.5 10.2 21 9.6l-4.6 3.1z" fill="#e8730c"/><path d="M5 15c2 4 10 5 14 1-2 5-12 6-14-1z" fill="#fff6d0"/></svg></div>
-            <div style="flex:1;min-width:0"><b>เลขาเป็ด</b><span id="phWho">แชตของ CEO</span></div>
+            <span class="ph-back" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg><small id="phUnread"></small></span>
+            <div class="ph-title"><b>เลขาเป็ด <svg class="oa" viewBox="0 0 16 16" aria-label="บัญชีทางการ"><path d="M8 0.8 9.9 2.3l2.4-.2.6 2.3 2.1 1.2-.9 2.2.9 2.2-2.1 1.2-.6 2.3-2.4-.2L8 15.2l-1.9-1.5-2.4.2-.6-2.3L1 10.4l.9-2.2L1 6l2.1-1.2.6-2.3 2.4.2z" fill="#06c755"/><path d="m5.2 8.2 1.9 1.9 3.8-4" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></b><span id="phWho">แชตของ CEO</span></div>
             <span class="aistate" id="aiState" title="">โหมดจำลอง</span>
+            <span class="ph-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></span>
+            <span class="ph-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span>
           </div>
           <div id="chats" style="display:flex;flex:1;min-height:0" aria-live="polite"></div>
-          <div class="qrow" id="qrow" aria-label="คำสั่งตัวอย่าง"></div>
-          <form class="ph-in" id="cmdForm">
-            <input id="cmd" autocomplete="off" placeholder="พิมพ์ถึงเลขาเป็ด" aria-label="พิมพ์ข้อความถึงเลขาเป็ด">
-            <button type="submit">ส่ง</button>
+          <div class="qrow" id="qrow" aria-label="Quick reply"></div>
+          <form class="ph-in" id="cmdForm" hidden>
+            <button type="button" class="ph-tool" id="toMenu" aria-label="เปิด Rich Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></button>
+            <span class="ph-tool" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+            <span class="ph-tool hide-xs" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg></span>
+            <div class="ph-field"><input id="cmd" autocomplete="off" placeholder="Aa" aria-label="พิมพ์ข้อความถึงเลขาเป็ด"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 14.2a4.4 4.4 0 0 0 7 0"/><circle cx="9.3" cy="10" r=".6" fill="currentColor"/><circle cx="14.7" cy="10" r=".6" fill="currentColor"/></svg></div>
+            <button type="submit" class="ph-send" aria-label="ส่ง"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6l-.1 6.5 12.4 1.9-12.4 1.9z"/></svg></button>
           </form>
+          <div class="rmenu" id="rmenu" aria-label="Rich Menu"></div>
+          <div class="rm-bar" id="rmBar">
+            <button type="button" class="ph-tool" id="toInput" aria-label="พิมพ์ข้อความ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M8 14h8"/></svg></button>
+            <button type="button" class="rm-toggle" id="rmToggle">เมนู <span id="rmArrow">▾</span></button>
+            <span style="width:34px"></span>
+          </div>
         </div>
       </div>
 
@@ -1647,30 +1801,39 @@ function stampIf(uid) {
   const k = S.now.toDateString();
   if (S.stampDay[uid] !== k) { S.stampDay[uid] = k; const d = document.createElement('div'); d.className = 'stamp'; d.textContent = dayStr(S.now); chatEl(uid).appendChild(d); }
 }
+const DUCK_AV = '<div class="av" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="10" r="6" fill="#fff6d0"/><circle cx="12.6" cy="8.6" r="1.1" fill="#1b1b1b"/><path d="M15.5 10.2 21 9.6l-4.6 3.1z" fill="#e8730c"/><path d="M5 15c2 4 10 5 14 1-2 5-12 6-14-1z" fill="#fff6d0"/></svg></div>';
+// LINE groups consecutive messages from the same side: avatar, name and bubble tail only on the first one
+function lastSide(uid) { const kids = chatEl(uid).children; for (let i = kids.length - 1; i >= 0; i--) { const k = kids[i]; if (k.classList.contains('typing')) continue; if (k.classList.contains('stamp')) return null; return k.classList.contains('me') ? 'me' : k.classList.contains('bot') ? 'bot' : null; } return null; }
+function lineRow(uid, who, inner) {
+  const m = document.createElement('div');
+  m.className = 'm ' + who + (lastSide(uid) === who ? ' cont' : '');
+  m.innerHTML = who === 'me'
+    ? '<div class="mt"><span class="rd">อ่านแล้ว</span><time>' + hm(S.now) + '</time></div>' + inner
+    : DUCK_AV + '<div class="mc"><div class="nm">เลขาเป็ด</div><div class="rb">' + inner + '<time>' + hm(S.now) + '</time></div></div>';
+  return m;
+}
 function bubble(uid, who, text) {
   if (!isPersona(uid)) return null;
   stampIf(uid);
-  const m = document.createElement('div'); m.className = 'm ' + who;
-  const t = '<time>' + hm(S.now) + '</time>', b = '<div class="b">' + esc(text) + '</div>';
-  m.innerHTML = who === 'me' ? t + b : b + t;
+  const m = lineRow(uid, who, '<div class="b">' + esc(text) + '</div>');
   chatEl(uid).appendChild(m); scrollChat(uid);
   if (who === 'bot') bump(uid);
   return m;
 }
 async function typing(uid) {
   if (uid !== S.active || reduced) return;
-  const ty = document.createElement('div'); ty.className = 'm bot typing'; ty.innerHTML = '<div class="b">เลขาเป็ดกำลังพิมพ์…</div>';
-  chatEl(uid).appendChild(ty); scrollChat(uid); await sleep(450); ty.remove();
+  const ty = lineRow(uid, 'bot', '<div class="b" aria-label="เลขาเป็ดกำลังพิมพ์"><i></i><i></i><i></i></div>'); ty.classList.add('typing');
+  ty.querySelector('time').remove();
+  chatEl(uid).appendChild(ty); scrollChat(uid); await sleep(650); ty.remove();
 }
 async function say(uid, text) { if (!isPersona(uid)) return; await typing(uid); bubble(uid, 'bot', text); }
 async function card(uid, c, fast) {
   if (!isPersona(uid)) return;
   if (!fast) await typing(uid);
   stampIf(uid);
-  const m = document.createElement('div'); m.className = 'm bot';
-  m.innerHTML = '<div class="fx"><div class="fx-h ' + (c.tone || '') + '">' + esc(c.head) + '</div><div class="fx-b">' + c.body + '</div>' +
+  const m = lineRow(uid, 'bot', '<div class="fx"><div class="fx-h ' + (c.tone || '') + '">' + esc(c.head) + '</div><div class="fx-b">' + c.body + '</div>' +
     (c.buttons && c.buttons.length ? '<div class="fx-f">' + c.buttons.map((b, i) => '<button data-i="' + i + '" class="' + (b.cls || '') + '">' + esc(b.label) + '</button>').join('') + '</div>' : '') +
-    '</div><time>' + hm(S.now) + '</time>';
+    '</div>');
   chatEl(uid).appendChild(m); scrollChat(uid); bump(uid);
   $$('.fx-f button', m).forEach(btn => btn.addEventListener('click', async () => {
     if (S.busy) return;
@@ -2440,6 +2603,259 @@ async function advanceTo(target) {
   } finally { S.busy = false; render(); }
 }
 
+/* =========================================================
+   Sitemap: every LINE screen, card, LIFF page, automatic message and backend part
+   k: chat | card | btn | rm | liff | push | ai | fn | cron | db | p2
+   r: roles that can reach it (omitted = everyone) · try: [persona, command] opens the demo and runs it
+   ========================================================= */
+const KINDS = {
+  chat: ['ข้อความในแชต', '--k-chat'], card: ['การ์ด Flex', '--k-card'], btn: ['ปุ่ม / Quick reply', '--k-btn'], rm: ['Rich Menu', '--k-rm'],
+  liff: ['หน้า LIFF', '--k-liff'], push: ['ข้อความอัตโนมัติ', '--k-push'], ai: ['Claude ตอบ', '--k-ai'], fn: ['Edge Function', '--k-fn'],
+  cron: ['ตั้งเวลา pg_cron', '--k-cron'], db: ['ตารางข้อมูล', '--k-db'], p2: ['ระยะ 2', '--k-p2']
+};
+const RL = { ceo: 'CEO', head: 'หัวหน้า', staff: 'พนักงาน' };
+const SM = [
+  { t: 'เริ่มใช้งานครั้งแรก', d: 'จากแอดเพื่อนจนได้เมนูตามตำแหน่ง', kids: [
+    { t: 'แอดเพื่อน LINE OA "เลขาเป็ด"', k: 'chat', d: 'สแกน QR หรือกดลิงก์ lin.ee ที่ HR ส่งให้', kids: [
+      { t: 'ข้อความต้อนรับ (Greeting message)', k: 'chat', d: 'แนะนำเลขาเป็ด และบอกว่าต้องยืนยันตัวตนก่อนใช้งาน' },
+      { t: 'ปุ่ม "ยืนยันตัวตน"', k: 'btn', d: 'เปิดหน้า LIFF ในแอป LINE' } ] },
+    { t: 'หน้า LIFF: ยืนยันตัวตน', k: 'liff', d: 'หน้าเว็บเล็กที่เปิดในแอป LINE', kids: [
+      { t: 'ล็อกอินด้วย LINE', k: 'liff', d: 'ได้ line_user_id ของคนนั้น โดยไม่ต้องตั้งรหัสผ่าน' },
+      { t: 'กรอกรหัสพนักงาน', k: 'liff', d: 'จับคู่กับตาราง employees ที่มีอยู่แล้ว' },
+      { t: 'กรอกรหัส OTP จากอีเมลบริษัท', k: 'liff', d: 'กันคนอื่นใส่รหัสพนักงานที่ไม่ใช่ของตัวเอง' },
+      { t: 'ผูกบัญชีสำเร็จ', k: 'db', d: 'บันทึก line_links แล้วดึงชื่อ ฝ่าย ตำแหน่งจากข้อมูลเดิมอัตโนมัติ' } ] },
+    { t: 'Rich Menu ตามตำแหน่ง', k: 'rm', d: 'ระบบผูกเมนูให้ตาม role ทันทีหลังยืนยันตัวตน', kids: [
+      { t: 'เมนู CEO', k: 'rm', r: ['ceo'], d: 'ภาพรวมบริษัท · รายงานวันนี้ · ฝ่ายที่น่าห่วง · มอบงาน · นัดประชุม · การเงิน', try: ['u_ceo', '#menu'] },
+      { t: 'เมนูหัวหน้าฝ่าย', k: 'rm', r: ['head'], d: 'งานในฝ่าย · รายงานวันนี้ · ใครน่าห่วง · มอบงานลูกทีม · นัดประชุมทีม · ช่วยเหลือ', try: ['u_nid', '#menu'] },
+      { t: 'เมนูพนักงาน', k: 'rm', r: ['staff'], d: 'งานของฉัน · อัปเดตงาน · แจ้งติดปัญหา · ทำอะไรก่อนดี · ถามเลขา · ช่วยเหลือ', try: ['u_ton', '#menu'] } ] } ] },
+
+  { t: 'ถาม-ตอบกับเลขาเป็ด', d: 'คำถามภาษาพูด ตอบด้วย Claude จากข้อมูลที่ตำแหน่งนั้นเห็นได้', kids: [
+    { t: 'ถามเรื่องงาน', k: 'ai', kids: [
+      { t: 'งานของคนหนึ่งคน', k: 'ai', q: 'งานของคุณต้นไปถึงไหน', r: ['ceo', 'head'], d: 'บอก % สถานะ กำหนดส่ง อัปเดตล่าสุด และจำนวนครั้งที่ตามแล้ว', try: ['u_ceo', 'งานของคุณต้นไปถึงไหน'] },
+      { t: 'งานทั้งฝ่าย', k: 'ai', q: 'ฝ่ายการตลาดถึงไหนแล้ว', r: ['ceo', 'head'], try: ['u_ceo', 'ฝ่ายการตลาดถึงไหนแล้ว'] },
+      { t: 'ใครรับผิดชอบเรื่องนี้', k: 'ai', q: 'ใครรับผิดชอบงบประมาณ', r: ['ceo', 'head'], try: ['u_ceo', 'ใครรับผิดชอบงบประมาณ'] },
+      { t: 'งานของฉัน', k: 'ai', q: 'งานของผมมีอะไรบ้าง', try: ['u_ton', 'งานของผมมีอะไรบ้าง'] },
+      { t: 'ถามนอกสิทธิ์ แล้วถูกปฏิเสธ', k: 'ai', q: 'งานของคุณฝนถึงไหน', r: ['head', 'staff'], d: 'หัวหน้าถามงานฝ่ายอื่น หรือพนักงานถามงานคนอื่น ระบบไม่ส่งข้อมูลนั้นให้ AI เลย', try: ['u_nid', 'งานของคุณฝนถึงไหน'] } ] },
+    { t: 'ถามภาพรวมและการเงิน', k: 'ai', r: ['ceo'], d: 'เปิดให้เฉพาะ CEO และฝ่ายการเงิน ตัวเลขมาจาก view ที่ฝ่ายการเงินตรวจแล้ว', kids: [
+      { t: 'ภาพรวมบริษัท', k: 'ai', q: 'ภาพรวมบริษัทตอนนี้เป็นยังไง', r: ['ceo'], try: ['u_ceo', 'ภาพรวมบริษัทตอนนี้เป็นยังไง'] },
+      { t: 'แนวโน้มยอดขาย 6 เดือน + ประมาณการ', k: 'ai', q: 'แนวโน้มยอดขาย 6 เดือน', r: ['ceo'], try: ['u_ceo', 'แนวโน้มยอดขาย 6 เดือน'] },
+      { t: 'การเงินเดือนล่าสุด', k: 'ai', q: 'การเงินเดือนนี้เป็นยังไง', r: ['ceo'], d: 'รายได้ ค่าใช้จ่าย กำไร เงินสด เทียบเดือนก่อน', try: ['u_ceo', 'การเงินเดือนนี้เป็นยังไง'] },
+      { t: 'ยอดขายแยกสาขา', k: 'ai', q: 'ยอดขายแยกสาขา', r: ['ceo'], try: ['u_ceo', 'ยอดขายแยกสาขา'] },
+      { t: 'ลูกหนี้ค้างเกิน 60 วัน', k: 'ai', q: 'ลูกหนี้ค้างจ่ายมีใครบ้าง', r: ['ceo'], try: ['u_ceo', 'ลูกหนี้ค้างจ่ายมีใครบ้าง'] },
+      { t: 'หัวหน้าฝ่ายอื่นถามการเงิน แล้วถูกปฏิเสธ', k: 'ai', r: ['head'], try: ['u_nid', 'การเงินบริษัทเดือนนี้เป็นยังไง'] } ] },
+    { t: 'ขอคำแนะนำ / วิเคราะห์', k: 'ai', kids: [
+      { t: 'วันนี้ควรโฟกัสอะไร', k: 'ai', q: 'วันนี้ผมควรโฟกัสเรื่องอะไรก่อน', r: ['ceo'], try: ['u_ceo', 'วันนี้ผมควรโฟกัสเรื่องอะไรก่อน'] },
+      { t: 'ฝ่ายไหนน่าห่วง เพราะอะไร', k: 'ai', r: ['ceo'], try: ['u_ceo', 'ฝ่ายไหนน่าห่วงที่สุด เพราะอะไร'] },
+      { t: 'ลูกทีมคนไหนน่าห่วง', k: 'ai', r: ['head'], try: ['u_nid', 'ทีมผมตอนนี้ใครน่าห่วงที่สุด'] },
+      { t: 'พรุ่งนี้ต้องรีบทำอะไรก่อน', k: 'ai', r: ['staff'], try: ['u_ton', 'พรุ่งนี้ผมต้องรีบทำอะไรก่อน'] } ] },
+    { t: 'ค้นสิ่งที่เคยสั่งและเรื่องที่ให้จำ', k: 'ai', q: 'ผมสั่งอะไรคุณสมชายไว้บ้าง', r: ['ceo', 'head'], d: 'อ่านจาก scheduled_messages และ memories ของคนที่ถามเท่านั้น', try: ['u_ceo', 'ผมสั่งอะไรคุณสมชายไว้บ้าง'] },
+    { t: 'คำถามทั่วไป', k: 'ai', d: 'ตอบสั้นๆ แบบเลขาที่รอบรู้ ไม่ต้องเกี่ยวกับบริษัท' } ] },
+
+  { t: 'มอบงานและติดตามงาน', d: 'สั่งในแชต ยืนยันด้วยการ์ด แล้วเลขาเป็ดตามให้เอง', kids: [
+    { t: 'มอบงาน', k: 'chat', q: 'ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้', r: ['ceo', 'head'], try: ['u_ceo', 'ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้'], kids: [
+      { t: 'การ์ดยืนยันมอบหมายงาน', k: 'card', d: 'ผู้รับงาน · งาน · กำหนดส่ง · ข้อความที่จะแจ้ง · ปุ่ม ยืนยัน / ยกเลิก' },
+      { t: 'บันทึกงาน', k: 'db', d: 'tasks (owner_id, department_id, due_at, progress = 0)' },
+      { t: 'การ์ด "งานใหม่" ถึงผู้รับ', k: 'push', d: 'ปุ่ม รับทราบ → บันทึก task_updates' },
+      { t: 'หัวหน้ามอบงานข้ามฝ่าย แล้วถูกปฏิเสธ', k: 'chat', r: ['head'], try: ['u_nid', 'ให้คุณมิ้นท์ทำโปสเตอร์ภายในพรุ่งนี้'] } ] },
+    { t: 'อัปเดตความคืบหน้า', k: 'chat', q: 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์', r: ['staff', 'head'], try: ['u_ton', 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์'], kids: [
+      { t: 'บันทึก % และหมายเหตุ', k: 'db', d: 'tasks.progress + task_updates' },
+      { t: 'ถามกลับว่างานไหน (ถ้ามีหลายงาน)', k: 'btn', d: 'Quick reply รายชื่องานของคนนั้น' },
+      { t: 'งานเสร็จ → แจ้งหัวหน้าและคนสั่ง', k: 'push', try: ['u_ton', 'ใบเสนอราคาเสร็จแล้ว'] },
+      { t: 'ติดปัญหา → แจ้งหัวหน้า', k: 'push', try: ['u_ton', 'ติดปัญหาเรื่องใบเสนอราคา ลูกค้ายังไม่ส่งสเปก'] } ] },
+    { t: 'ตามงาน', k: 'push', kids: [
+      { t: 'ตามอัตโนมัติรอบ 09:00', k: 'push', d: 'งานที่ครบภายในพรุ่งนี้หรือเลยกำหนด · ปุ่ม คืบหน้า +20% / เสร็จแล้ว / ติดปัญหา', try: ['u_ton', '#next'] },
+      { t: 'สั่งตามเองจากการ์ด', k: 'btn', r: ['ceo', 'head'], d: 'ปุ่ม "ตาม…ตอนนี้" / "ตามคนที่ค้าง" / "ตามคนที่เลยกำหนด"' },
+      { t: 'งานเลยกำหนด', k: 'push', d: 'แจ้งเจ้าของงาน + หัวหน้าฝ่าย (ถ้าหัวหน้าเป็นเจ้าของ แจ้ง CEO) · ปุ่ม ตามอีกครั้ง / ขยาย 1 วัน' } ] } ] },
+
+  { t: 'นัดหมาย', d: 'เลือกคนจากรายชื่อ ยืนยัน แจ้ง รับคำตอบ และเตือน', kids: [
+    { t: 'สั่งนัด', k: 'chat', q: 'ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง', try: ['u_ceo', 'ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง'], kids: [
+      { t: 'ถามเวลา ถ้าไม่ได้บอก', k: 'btn', d: 'Quick reply: วันนี้ 11 โมง · บ่าย 2 · พรุ่งนี้ 10 โมง' },
+      { t: 'เลือกผู้เข้าร่วมจากรายชื่อ', k: 'liff', d: 'แยกตามฝ่าย ติ๊กได้หลายคน คนที่ยังไม่แอดเลขาเป็ดเลือกไม่ได้' },
+      { t: 'การ์ดยืนยันนัด', k: 'card', d: 'หัวข้อ · เวลา · ผู้เข้าร่วม · เตือนก่อน 15 นาที · แจ้งเตือนถ้าติดนัดอื่น' },
+      { t: 'บันทึกนัด', k: 'db', d: 'meetings + meeting_attendees (pending)' } ] },
+    { t: 'การ์ดเชิญถึงผู้เข้าร่วม', k: 'push', d: 'ปุ่ม รับทราบ / ไม่สะดวก', kids: [
+      { t: 'แจ้งผู้จัดทุกครั้งที่มีคนตอบ', k: 'push', d: '"คุณนิด ตอบรับนัด … (รอตอบอีก 1 คน)"' } ] },
+    { t: 'เตือนก่อนเริ่ม 15 นาที', k: 'push', d: 'ส่งให้ผู้จัดและทุกคนที่ไม่ได้ปฏิเสธ พร้อมสถานะตอบรับ' },
+    { t: 'นัดประชุมทั้งฝ่าย', k: 'chat', r: ['head', 'ceo'], d: 'ติ๊กทุกคนในฝ่ายไว้ให้อัตโนมัติ', try: ['u_nid', 'นัดประชุมทีมฝ่ายขายพรุ่งนี้บ่าย 2 เรื่องยอดขายไตรมาส 4'] } ] },
+
+  { t: 'ข้อความและการเตือน', d: 'ส่งแทนตามเวลา ร่างข้อความ และเตือนความจำ', kids: [
+    { t: 'ตั้งเวลาส่งข้อความ', k: 'chat', q: 'พรุ่งนี้ 9 โมง ทักคุณสมชายเรื่องใบเสนอราคา', r: ['ceo', 'head'], try: ['u_ceo', 'พรุ่งนี้ 9 โมง ทักคุณสมชายเรื่องใบเสนอราคา'], kids: [
+      { t: 'การ์ดตรวจก่อนส่ง', k: 'card', d: 'ถึง · เวลา · ข้อความ · เตือนถ้าผู้รับยังไม่แอดเลขาเป็ด' },
+      { t: 'ส่งตามเวลาแล้วรายงานผล', k: 'push', d: 'สำเร็จ / ส่งไม่สำเร็จ (ลองแล้ว 3 ครั้ง)' } ] },
+    { t: 'ร่างข้อความ', k: 'ai', q: 'ร่างข้อความถึงคุณสมชาย ขอเลื่อนประชุมไปพุธหน้า', r: ['ceo', 'head'], try: ['u_ceo', 'ร่างข้อความถึงคุณสมชาย ขอเลื่อนประชุมไปพุธหน้า'], kids: [
+      { t: 'ส่งเลย (จากบัญชีเลขาเป็ด)', k: 'btn' },
+      { t: 'ส่งจาก LINE ของฉัน', k: 'liff', d: 'Share Target Picker เลือกเพื่อนหรือกลุ่มจาก LINE ส่วนตัว ใช้กับลูกค้าที่ยังไม่แอดเลขาเป็ด', try: ['u_ceo', 'ร่างข้อความถึงคุณวิชัย ขอนัดคุยเรื่องสัญญาขนส่งปีหน้า'] } ] },
+    { t: 'เตือนความจำ', k: 'chat', q: 'เตือนผมบ่าย 3 โทรหาธนาคาร', try: ['u_ceo', 'เตือนผมบ่าย 3 โทรหาธนาคาร'], kids: [
+      { t: 'ข้อความเตือนตามเวลา', k: 'push', d: 'ปุ่ม รับทราบ / เตือนอีก 10 นาที' } ] },
+    { t: 'ยกเลิกรายการที่ตั้งไว้', k: 'card', q: 'ยกเลิกข้อความถึงคุณสมชาย', r: ['ceo', 'head'] } ] },
+
+  { t: 'ข้อความอัตโนมัติประจำวัน', d: 'เลขาเป็ดส่งเองโดยไม่ต้องมีคนสั่ง', kids: [
+    { t: 'รายงาน 09:00 ของ CEO', k: 'push', r: ['ceo'], d: 'ภาพรวมทุกฝ่าย + รายการต้องจับตาพร้อมชื่อผู้รับผิดชอบ · ปุ่ม ดูฝ่าย / ตามคนที่เลยกำหนด', try: ['u_ceo', '#next'] },
+    { t: 'รายงาน 09:00 ของหัวหน้า', k: 'push', r: ['head'], d: 'งานในฝ่ายเรียงตามความเสี่ยง · ปุ่ม ตามคนที่ค้าง', try: ['u_nid', '#next'] },
+    { t: 'การตาม 09:00 ของพนักงาน', k: 'push', r: ['staff'], try: ['u_ton', '#next'] },
+    { t: 'แจ้งงานเลยกำหนด (ทันทีที่ครบ)', k: 'push' },
+    { t: 'เตือนนัด 15 นาทีก่อนเริ่ม', k: 'push' },
+    { t: 'รายงานผลข้อความที่ตั้งเวลาไว้', k: 'push', r: ['ceo', 'head'] } ] },
+
+  { t: 'หลังบ้าน (Supabase)', d: 'ส่วนที่ผู้ใช้ไม่เห็น แต่ทุกหน้าจอด้านบนใช้', kids: [
+    { t: 'Edge Functions', k: 'fn', kids: [
+      { t: 'line-webhook', k: 'fn', d: 'รับข้อความ/ปุ่มจาก LINE ตรวจลายเซ็น หา profile แล้วส่งให้เลขาเป็ด' },
+      { t: 'daily-report', k: 'fn', d: 'รายงาน 09:00 ตาม role และการตามงาน' },
+      { t: 'scheduler', k: 'fn', d: 'ทุกนาที: ข้อความตั้งเวลา เตือน นัด งานที่เพิ่งเลยกำหนด' },
+      { t: 'liff-api', k: 'fn', d: 'ให้หน้า LIFF ยืนยันตัวตน ดึงรายชื่อ และบันทึกผู้เข้าร่วม' } ] },
+    { t: 'งานตั้งเวลา', k: 'cron', kids: [
+      { t: 'daily-report-0900', k: 'cron', d: "cron '0 2 * * *' (= 09:00 เวลาไทย)" },
+      { t: 'scheduler-every-minute', k: 'cron', d: "cron '* * * * *'" } ] },
+    { t: 'ตารางข้อมูล (RLS ทุกตาราง)', k: 'db', kids: [
+      { t: 'employees (เดิม) → view profiles', k: 'db', d: 'ชื่อ ฝ่าย ตำแหน่ง role อ่านอย่างเดียว' },
+      { t: 'line_links', k: 'db', d: 'รหัสพนักงาน ↔ LINE userId' },
+      { t: 'tasks · task_updates', k: 'db', d: 'งาน ความคืบหน้า และประวัติการอัปเดต' },
+      { t: 'meetings · meeting_attendees', k: 'db', d: 'นัดหมายและสถานะตอบรับ' },
+      { t: 'scheduled_messages', k: 'db', d: 'ข้อความตั้งเวลาและการเตือน' },
+      { t: 'memories · conversations', k: 'db', d: 'ความจำและบทสนทนาล่าสุด แยกต่อคน' },
+      { t: 'message_log', k: 'db', d: 'ประวัติการส่งทุกครั้ง (reply / push)' },
+      { t: 'finance.v_monthly_summary · v_sales_by_branch · v_ar_aging · v_cash', k: 'db', r: ['ceo'], d: 'view การเงินที่ฝ่ายการเงินตรวจแล้ว' } ] },
+    { t: 'Claude (AI)', k: 'ai', d: 'เลือกเครื่องมือ 11 ตัว และตอบคำถามจากข้อมูลตามสิทธิ์ ไม่แตะฐานข้อมูลเอง' } ] },
+
+  { t: 'ระยะ 2', d: 'ยังไม่อยู่ในต้นแบบ', kids: [
+    { t: 'เชื่อม Google Calendar / Outlook', k: 'p2', d: 'เช็กนัดชนจากปฏิทินจริง' },
+    { t: 'สรุปอีเมลและเอกสาร', k: 'p2' },
+    { t: 'แดชบอร์ดเว็บสำหรับผู้บริหาร', k: 'p2' } ] }
+];
+const smState = { role: 'all', q: '', open: true };
+function smMatch(n) {
+  const roleOk = smState.role === 'all' || !n.r || n.r.includes(smState.role);
+  const q = smState.q.trim();
+  const textOk = !q || [n.t, n.d, n.q, KINDS[n.k] && KINDS[n.k][0]].some(x => x && x.toLowerCase().includes(q.toLowerCase()));
+  return roleOk && textOk;
+}
+function smVisible(n) { return smMatch(n) || (n.kids || []).some(smVisible); }
+function smCount(list, acc) { list.forEach(n => { if (n.k) acc[n.k] = (acc[n.k] || 0) + 1; acc._ = (acc._ || 0) + 1; smCount(n.kids || [], acc); }); return acc; }
+function hlText(t) {
+  const q = smState.q.trim(); if (!q) return esc(t);
+  const i = t.toLowerCase().indexOf(q.toLowerCase()); if (i < 0) return esc(t);
+  return esc(t.slice(0, i)) + '<mark class="hl-hit">' + esc(t.slice(i, i + q.length)) + '</mark>' + esc(t.slice(i + q.length));
+}
+function smNode(n, num) {
+  if (!smVisible(n)) return '';
+  const kd = n.k ? KINDS[n.k] : null;
+  const roles = (n.r || []).map(r => '<span class="rl">' + RL[r] + '</span>').join('');
+  const tryBtn = n.try ? '<button class="try" data-u="' + n.try[0] + '" data-q="' + esc(n.try[1]) + '"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5v11l9-5.5z"/></svg>ลองในเดโม</button>' : '';
+  let kidsHtml = '';
+  if (n.kids) { let j = 0; kidsHtml = '<ul>' + n.kids.map(c => smNode(c, num + '.' + (++j))).join('') + '</ul>'; }
+  return '<li><div class="nd"><div class="nd-h"><span class="n">' + num + '</span><span class="tt">' + hlText(n.t) + '</span>' +
+    (kd ? '<span class="kb" style="--kc:var(' + kd[1] + ')">' + kd[0] + '</span>' : '') + roles + tryBtn + '</div>' +
+    (n.q ? '<div class="q">"' + hlText(n.q) + '"</div>' : '') + (n.d ? '<div class="dd">' + hlText(n.d) + '</div>' : '') + '</div>' + kidsHtml + '</li>';
+}
+function renderSitemap() {
+  const cnt = smCount(SM, {});
+  const stat = (k) => '<div class="sm-stat"><b>' + (cnt[k] || 0) + '</b><span><i class="kb" style="--kc:var(' + KINDS[k][1] + ');height:10px;width:10px;padding:0;border-radius:3px"></i>' + KINDS[k][0] + '</span></div>';
+  const box = $('#sitemap');
+  if (!box.dataset.ready) {
+    box.innerHTML = '<div class="sm-top"><div class="sm-stats">' + '<div class="sm-stat"><b>' + cnt._ + '</b><span>จุดทั้งหมดในแผนผัง</span></div>' +
+      ['chat', 'card', 'push', 'rm', 'liff', 'ai', 'db'].map(stat).join('') + '</div>' +
+      '<div class="sm-tools"><input id="smQ" type="search" placeholder="ค้นหา เช่น นัด, การเงิน, LIFF" aria-label="ค้นหาในแผนผัง">' +
+      '<div class="sm-seg" role="group" aria-label="กรองตามตำแหน่ง">' + [['all', 'ทุกตำแหน่ง'], ['ceo', 'CEO'], ['head', 'หัวหน้า'], ['staff', 'พนักงาน']].map(([k, l]) => '<button data-r="' + k + '" aria-pressed="' + (k === 'all') + '">' + l + '</button>').join('') + '</div>' +
+      '<button class="btn sm" id="smFold">ย่อทั้งหมด</button></div>' +
+      '<div class="sm-legend">' + Object.keys(KINDS).map(k => '<span class="kb" style="--kc:var(' + KINDS[k][1] + ')">' + KINDS[k][0] + '</span>').join('') + '</div></div>' +
+      '<div class="sm-root"><div class="sm-root-card"><div class="duck" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="10" r="6" fill="#fff6d0"/><circle cx="12.6" cy="8.6" r="1.1" fill="#1b1b1b"/><path d="M15.5 10.2 21 9.6l-4.6 3.1z" fill="#e8730c"/><path d="M5 15c2 4 10 5 14 1-2 5-12 6-14-1z" fill="#fff6d0"/></svg></div><div><b>เลขาเป็ด · LINE Official Account</b><span>แชตเดียวสำหรับทุกคนในบริษัท เมนูและข้อมูลต่างกันตามตำแหน่ง</span></div></div></div>' +
+      '<div class="sm-grid" id="smGrid"></div>';
+    box.dataset.ready = '1';
+    $('#smQ').addEventListener('input', e => { smState.q = e.target.value; drawSmGrid(); });
+    $$('#sitemap .sm-seg button').forEach(b => b.addEventListener('click', () => { smState.role = b.dataset.r; $$('#sitemap .sm-seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); drawSmGrid(); }));
+    $('#smFold').addEventListener('click', () => { smState.open = !smState.open; $('#smFold').textContent = smState.open ? 'ย่อทั้งหมด' : 'ขยายทั้งหมด'; $$('#smGrid details').forEach(d => d.open = smState.open); });
+  }
+  drawSmGrid();
+}
+function drawSmGrid() {
+  let i = 0;
+  const html = SM.map(sec => {
+    i++;
+    if (!smVisible(sec)) return '';
+    const total = smCount(sec.kids, {})._;
+    let j = 0;
+    return '<details class="smsec"' + (smState.open || smState.q ? ' open' : '') + '><summary><span class="no">' + i + '</span><span class="st"><b>' + esc(sec.t) + '</b><span>' + esc(sec.d) + '</span></span><span class="cnt2">' + total + ' จุด <svg class="chev" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m3 4.5 3 3 3-3"/></svg></span></summary>' +
+      '<ul class="tree">' + sec.kids.map(n => smNode(n, i + '.' + (++j))).join('') + '</ul></details>';
+  }).join('');
+  $('#smGrid').innerHTML = html || '<div class="sm-empty">ไม่พบจุดที่ตรงกับคำค้น</div>';
+  $$('#smGrid .try').forEach(b => b.addEventListener('click', () => tryInDemo(b.dataset.u, b.dataset.q)));
+}
+function tryInDemo(uid, q) {
+  if (S.busy) return;
+  location.hash = 'demo';
+  setTimeout(() => {
+    switchTo(uid);
+    document.querySelector('.leftcol').scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
+    if (q === '#menu') { setBar('menu'); return; }
+    if (q === '#next') { const e = events()[0]; if (e) advanceTo(new Date(Math.max(e.at, S.now))); return; }
+    setBar('input'); submit(q);
+  }, 60);
+}
+
+/* ---------- LINE Rich Menu (per role, swapped automatically after sign-up) ---------- */
+const RI = {
+  chart: '<path d="M4 19V9M10 19V5M16 19v-7M21 19H3"/>', report: '<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/>',
+  alert: '<path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.4v.1"/>', task: '<path d="M9 11.5l2.2 2.2 4.5-4.6"/><rect x="4" y="4" width="16" height="16" rx="3"/>',
+  cal: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>', money: '<circle cx="12" cy="12" r="8.5"/><path d="M14.8 9.3c-.5-1-1.6-1.5-2.8-1.5-1.6 0-2.8.8-2.8 2.1 0 2.9 5.8 1.4 5.8 4.3 0 1.3-1.2 2.1-3 2.1-1.3 0-2.5-.6-3-1.6M12 6.3v1.5M12 16.3v1.5"/>',
+  team: '<circle cx="9" cy="9" r="3.2"/><circle cx="17" cy="10" r="2.5"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6s4.9 1.6 5.5 4.6M14.5 15c2.6-.4 4.9.9 5.5 3.6"/>',
+  up: '<path d="M4 17l5.5-5.5 3.5 3.5L20 8"/><path d="M15 8h5v5"/>', block: '<circle cx="12" cy="12" r="8.5"/><path d="m6 6 12 12"/>',
+  ask: '<path d="M4.5 18.5 6 15a7.5 7.5 0 1 1 3 3z"/><path d="M10 9.6a2.1 2.1 0 1 1 3 1.9c-.6.3-1 .8-1 1.5M12 15.4v.1"/>', help: '<circle cx="12" cy="12" r="8.5"/><path d="M9.8 9.6a2.3 2.3 0 1 1 3.2 2.1c-.6.3-1 .8-1 1.5M12 16.3v.1"/>',
+  bolt: '<path d="M13 3 5 13.5h6L10 21l8.5-11h-6z"/>'
+};
+const RICH = {
+  ceo: [
+    { l: 'ภาพรวมบริษัท', ic: 'chart', c: '#2563eb', q: 'ภาพรวมบริษัทตอนนี้เป็นยังไง' },
+    { l: 'รายงานวันนี้', ic: 'report', c: '#0d9488', q: 'รายงานตอนนี้' },
+    { l: 'ฝ่ายที่น่าห่วง', ic: 'alert', c: '#dc2626', q: 'ฝ่ายไหนน่าห่วงที่สุด เพราะอะไร' },
+    { l: 'มอบงาน', ic: 'task', c: '#16a34a', pre: 'ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้' },
+    { l: 'นัดประชุม', ic: 'cal', c: '#ea580c', q: 'ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง' },
+    { l: 'การเงิน', ic: 'money', c: '#c98200', q: 'การเงินเดือนนี้เป็นยังไง' }
+  ],
+  head: [
+    { l: 'งานในฝ่าย', ic: 'team', c: '#2563eb', q: 'งานในฝ่ายถึงไหนแล้ว' },
+    { l: 'รายงานวันนี้', ic: 'report', c: '#0d9488', q: 'รายงานตอนนี้' },
+    { l: 'ใครน่าห่วง', ic: 'alert', c: '#dc2626', q: 'ทีมผมตอนนี้ใครน่าห่วงที่สุด' },
+    { l: 'มอบงานลูกทีม', ic: 'task', c: '#16a34a', pre: 'ให้คุณต้นสรุปลูกค้าเก่าภายในศุกร์นี้' },
+    { l: 'นัดประชุมทีม', ic: 'cal', c: '#ea580c', q: 'นัดประชุมทีมฝ่ายขายพรุ่งนี้บ่าย 2 เรื่องยอดขายไตรมาส 4' },
+    { l: 'ช่วยเหลือ', ic: 'help', c: '#52525b', help: true }
+  ],
+  staff: [
+    { l: 'งานของฉัน', ic: 'task', c: '#2563eb', q: 'งานของผมมีอะไรบ้าง' },
+    { l: 'อัปเดตงาน', ic: 'up', c: '#16a34a', pre: 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์' },
+    { l: 'แจ้งติดปัญหา', ic: 'block', c: '#dc2626', pre: 'ติดปัญหาเรื่องใบเสนอราคา ลูกค้ายังไม่ส่งสเปก' },
+    { l: 'ทำอะไรก่อนดี', ic: 'bolt', c: '#c98200', q: 'พรุ่งนี้ผมต้องรีบทำอะไรก่อน' },
+    { l: 'ถามเลขา', ic: 'ask', c: '#9333ea', pre: '' },
+    { l: 'ช่วยเหลือ', ic: 'help', c: '#52525b', help: true }
+  ]
+};
+let barMode = 'menu';
+function setBar(mode) {
+  barMode = mode;
+  $('#cmdForm').hidden = mode !== 'input';
+  $('#rmenu').hidden = mode !== 'menu';
+  $('#rmBar').hidden = mode === 'input';
+  $('#rmArrow').textContent = mode === 'menu' ? '▾' : '▴';
+  if (mode === 'input') setTimeout(() => $('#cmd').focus({ preventScroll: true }), 0);
+}
+function drawRich() {
+  const role = P(S.active).role;
+  $('#rmenu').innerHTML = RICH[role].map((t, i) => '<button type="button" class="rm-tile" data-i="' + i + '"><span class="ri" style="--rc:' + t.c + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + RI[t.ic] + '</svg></span>' + esc(t.l) + '</button>').join('');
+  $$('#rmenu .rm-tile').forEach(b => b.addEventListener('click', () => {
+    const t = RICH[role][+b.dataset.i];
+    if (t.help) return helpMsg(S.active);
+    if (t.pre !== undefined) { setBar('input'); $('#cmd').value = t.pre; return; }
+    submit(t.q);
+  }));
+}
+async function helpMsg(uid) {
+  if (S.busy) return; S.busy = true;
+  try {
+    bubble(uid, 'me', 'ช่วยเหลือ');
+    const role = P(uid).role;
+    await say(uid, 'พิมพ์คุยกับผมได้เลยครับ เช่น\n• ' + (role === 'staff' ? '"งานของผมมีอะไรบ้าง"\n• "ใบเสนอราคาได้ 80% แล้ว"\n• "ติดปัญหาเรื่อง..."' : '"งานของคุณแพรถึงไหน"\n• "ให้คุณต้นทำ ... ภายในศุกร์นี้"\n• "นัดประชุมทีม พรุ่งนี้บ่าย 2"') + '\n• "เตือนผมบ่าย 3 โทรหาลูกค้า"\nหรือแตะเมนูด้านล่างครับ');
+  } finally { S.busy = false; render(); }
+}
+
 /* ---------- chips & personas ---------- */
 const CHIPS = {
   u_ceo: ['วันนี้ผมควรโฟกัสเรื่องอะไรก่อน', 'ฝ่ายไหนน่าห่วงที่สุด เพราะอะไร', 'ทำไมกำไรเดือนนี้ลดลง', 'ภาพรวมบริษัทตอนนี้เป็นยังไง', 'แนวโน้มยอดขาย 6 เดือน', 'การเงินเดือนนี้เป็นยังไง', 'ยอดขายแยกสาขา', 'ลูกหนี้ค้างจ่ายมีใครบ้าง', 'ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง', 'งานของคุณต้นไปถึงไหน', 'ฝ่ายการตลาดถึงไหนแล้ว', 'ใครรับผิดชอบงบประมาณ', 'ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้', 'รายงานตอนนี้', 'พรุ่งนี้ 9 โมง ทักคุณสมชายเรื่องใบเสนอราคา', 'เตือนผมบ่าย 3 โทรหาธนาคาร', 'ร่างข้อความถึงคุณสมชาย ขอเลื่อนประชุมไปพุธหน้า', 'ร่างข้อความถึงคุณวิชัย ขอนัดคุยเรื่องสัญญาขนส่งปีหน้า'],
@@ -2457,6 +2873,7 @@ function drawChips() {
   list.forEach(it => { const b = document.createElement('button'); b.type = 'button'; b.textContent = it.label; b.addEventListener('click', () => submit(it.text)); q.appendChild(b); });
 }
 function renderWho() {
+  const pu = $('#phUnread'); if (pu) { const o = PERSONAS.filter(id => id !== S.active).reduce((a, id) => a + (S.unread[id] || 0), 0); pu.textContent = o ? String(o) : ''; }
   $('#who').innerHTML = PERSONAS.map(id => { const p = P(id); const u = S.unread[id] || 0;
     return '<button data-u="' + id + '" aria-pressed="' + (S.active === id) + '"><b>' + esc(p.name) + '</b><span>' + esc(p.title) + '</span>' + (u ? '<i class="badge">' + u + '</i>' : '') + '</button>'; }).join('');
   $$('#who button').forEach(b => b.addEventListener('click', () => switchTo(b.dataset.u)));
@@ -2466,8 +2883,8 @@ function switchTo(uid) {
   PERSONAS.forEach(id => chats[id].hidden = id !== uid);
   const p = P(uid);
   $('#phWho').textContent = 'แชตของ ' + p.name + ' · ' + p.title;
-  $('#cmd').placeholder = { ceo: 'เช่น งานของคุณต้นไปถึงไหน', head: 'เช่น งานในฝ่ายถึงไหนแล้ว', staff: 'เช่น ได้ 80% แล้ว รอเอกสาร' }[p.role];
-  renderWho(); drawChips(); scrollChat(uid); render();
+  $('#cmd').placeholder = 'Aa';
+  renderWho(); drawChips(); drawRich(); scrollChat(uid); render();
 }
 async function submit(text) {
   text = text.trim(); if (!text || S.busy) return;
@@ -2480,6 +2897,9 @@ async function submit(text) {
 /* ---------- render panels ---------- */
 function render() {
   $('#simNow').textContent = dayStr(S.now) + ' · ' + hm(S.now);
+  $('#phClock').textContent = hm(S.now);
+  const other = PERSONAS.filter(id => id !== S.active).reduce((a, id) => a + (S.unread[id] || 0), 0);
+  $('#phUnread').textContent = other ? String(other) : '';
   const nx = events()[0];
   $('#simNext').innerHTML = nx ? 'ถัดไป <b>' + esc(rel(nx.at, S.now)) + '</b> · ' + esc(evLabel(nx)) : '';
   $('#goNext').disabled = S.busy; $('#goHour').disabled = S.busy;
@@ -2563,7 +2983,7 @@ function render() {
     '<div class="tr-head"><p>เส้นทางของ <b>' + esc(tz.cmd || '—') + '</b>' + (tz.at ? ' · ' + hm(tz.at) : '') + '</p><button class="btn sm pri" id="to3d">เล่นเส้นทางแบบนี้ใน 3D</button></div>' +
     (tz.steps.length ? '<ol class="trace">' + tz.steps.map((s, i) => '<li><span class="n">' + (i + 1) + '</span><div class="tc"><span class="lane" style="background:var(' + LANES[s.lane] + ')">' + esc(s.lane) + '</span><span class="tt">' + esc(s.title) + '</span><pre>' + esc(s.code) + '</pre></div></li>').join('') + '</ol>'
       : '<div class="empty">พิมพ์ในแชต หรือกด "ข้ามไปงานถัดไป" แล้วกลับมาดูว่าข้อมูลวิ่งผ่านส่วนไหนบ้าง</div>');
-  $('#to3d').addEventListener('click', () => { location.hash = 'architecture'; A3.play(tz.scen || 'ask'); });
+  $('#to3d').addEventListener('click', () => { setArchMode('3d'); location.hash = 'architecture'; A3.play(tz.scen || 'ask'); });
 
   if (S.flash.size) { clearTimeout(render._t); render._t = setTimeout(() => S.flash.clear(), 1900); }
 }
@@ -2572,6 +2992,9 @@ $$('.ptabs button').forEach(b => b.addEventListener('click', () => {
   $$('.ptabs button').forEach(x => x.setAttribute('aria-selected', x === b ? 'true' : 'false'));
   ['dash', 'db', 'trace'].forEach(k => $('#p-' + k).hidden = k !== b.dataset.p);
 }));
+$('#toMenu').addEventListener('click', () => setBar('menu'));
+$('#toInput').addEventListener('click', () => setBar('input'));
+$('#rmToggle').addEventListener('click', () => setBar(barMode === 'menu' ? 'collapsed' : 'menu'));
 $('#cmdForm').addEventListener('submit', e => { e.preventDefault(); const v = $('#cmd').value; $('#cmd').value = ''; submit(v); });
 $('#goNext').addEventListener('click', () => { const e = events()[0]; if (e) advanceTo(new Date(Math.max(e.at, S.now))); });
 $('#goHour').addEventListener('click', () => advanceTo(new Date(S.now.getTime() + 3600000)));
@@ -2589,6 +3012,7 @@ function boot() {
   aiBadge();
   S.chips = {};
   switchTo('u_ceo');
+  setBar('menu');
 }
 
 /* =========================================================
@@ -2600,17 +3024,27 @@ $('#copySum').addEventListener('click', () => {
   const fallback = () => { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'เลือกข้อความแล้ว กด Ctrl/Cmd+C'; };
   try { navigator.clipboard.writeText(el.textContent).then(() => { btn.textContent = 'คัดลอกแล้ว'; setTimeout(() => btn.textContent = 'คัดลอก', 1800); }, fallback); } catch (e) { fallback(); }
 });
+let archMode = 'sitemap';
+function setArchMode(m) {
+  archMode = m;
+  $$('.modebar button').forEach(b => b.setAttribute('aria-selected', b.dataset.mode === m ? 'true' : 'false'));
+  $('#sitemap').hidden = m !== 'sitemap'; $('#mode3d').hidden = m !== '3d';
+  $$('.only-sm').forEach(e => e.hidden = m !== 'sitemap'); $$('.only-3d').forEach(e => e.hidden = m !== '3d');
+  if (m === '3d' && !$('#v-architecture').hidden) A3.start(); else A3.stop();
+}
+$$('.modebar button').forEach(b => b.addEventListener('click', () => setArchMode(b.dataset.mode)));
 function route() {
   const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'architecture';
   VIEWS.forEach(k => $('#v-' + k).hidden = k !== v);
   $$('.nav a').forEach(a => { if (a.dataset.v === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
-  if (v === 'architecture') A3.start(); else A3.stop();
+  if (v === 'architecture' && archMode === '3d') A3.start(); else A3.stop();
   if (v === 'demo') PERSONAS.forEach(scrollChat);
   window.scrollTo(0, 0);
 }
 addEventListener('hashchange', route);
-document.addEventListener('visibilitychange', () => { if (document.hidden) A3.stop(); else if (!$('#v-architecture').hidden) A3.start(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) A3.stop(); else if (!$('#v-architecture').hidden && archMode === '3d') A3.start(); });
 boot();
+renderSitemap();
 route();
 })();
 </script>
