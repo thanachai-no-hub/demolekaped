@@ -310,6 +310,9 @@ code, pre, .mono { font-family: var(--font-mono); }
 .pill.sent, .pill.done { background: var(--accent-fill); color: var(--on-accent); border-color: var(--accent-fill); }
 .pill.overdue, .pill.failed { background: var(--bad-bg); color: var(--bad); border-color: transparent; }
 .pill.blocked { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+.pill.awaiting { background: var(--warn-bg); color: var(--warn); border: 1px dashed var(--warn); }
+.pill.rejected { color: var(--muted); text-decoration: line-through; }
+.pb.awaiting i { background: repeating-linear-gradient(45deg, #e8a317 0 4px, transparent 4px 8px); }
 .pill.draft, .pill.not_started { border-style: dashed; color: var(--muted); }
 .pill.cancelled { color: var(--muted); text-decoration: line-through; }
 .empty { color: var(--muted); font-size: 14px; padding: 8px 0; }
@@ -798,16 +801,19 @@ h1, h2, h3, h4 { letter-spacing: -0.015em; }
             <li>09:00 ได้รายงานทุกฝ่าย: งานถึงไหน ใครรับผิดชอบ อะไรเลยกำหนด</li>
             <li>ถามได้ทุกคน เช่น "งานของคุณต้นไปถึงไหน"</li>
             <li>ถามภาพรวม แนวโน้มยอดขาย การเงิน ลูกหนี้ ได้คำตอบพร้อมกราฟและแหล่งข้อมูล</li>
-            <li>มอบงานให้ใครก็ได้ ตั้งเวลาส่ง เตือนนัด ร่างข้อความ</li>
+            <li>มอบงานให้ใครก็ได้ ระบบแจ้งหัวหน้าฝ่ายก่อนแล้วจึงส่งถึงลูกน้อง ตั้งเวลาส่ง เตือนนัด ร่างข้อความ</li>
+            <li>สั่ง "งานพิเศษ" ที่ต้องให้หัวหน้าฝ่ายอนุมัติก่อนจึงไปถึงลูกน้อง</li>
             <li>พิมพ์ "ช่วยนัดคุณนิด meeting 11 โมง" เลือกผู้เข้าร่วมจากรายชื่อ LINE แล้วกดยืนยันก่อนแจ้ง</li></ul></div>
           <div class="role"><div class="tag">หัวหน้าฝ่าย</div><h3>เห็นเฉพาะฝ่ายตัวเอง</h3><ul>
             <li>09:00 ได้รายงานของฝ่ายตัวเอง</li>
             <li>ถามและมอบงานได้เฉพาะลูกทีม ถามงานฝ่ายอื่นจะถูกปฏิเสธ</li>
-            <li>ได้แจ้งทันทีเมื่อลูกทีมติดปัญหาหรือเลยกำหนด</li></ul></div>
+            <li>ได้แจ้งทันทีเมื่อลูกทีมติดปัญหาหรือเลยกำหนด</li>
+            <li>รับรู้งานที่ CEO มอบให้ลูกทีมก่อนเสมอ และเป็นผู้อนุมัติงานพิเศษ</li></ul></div>
           <div class="role"><div class="tag">พนักงาน</div><h3>เห็นงานของตัวเอง</h3><ul>
             <li>09:00 ถูกตามงานที่ครบภายในวันพรุ่งนี้หรือเลยกำหนด</li>
             <li>ตอบกลับเป็นภาษาพูด เช่น "เสร็จ 80% รอราคาซัพ" ระบบอัปเดตให้</li>
-            <li>ถาม "งานของผมมีอะไรบ้าง" ได้ตลอด</li></ul></div>
+            <li>ถาม "งานของผมมีอะไรบ้าง" ได้ตลอด</li>
+            <li>เห็นงานพิเศษที่รอหัวหน้าอนุมัติ แต่เริ่มทำได้หลังอนุมัติเท่านั้น</li></ul></div>
         </div>
       </div>
 
@@ -841,6 +847,7 @@ h1, h2, h3, h4 { letter-spacing: -0.015em; }
               <tr><td><code>get_work_status</code></td><td>ตอบว่างานของคน ฝ่าย หรือเรื่องหนึ่งไปถึงไหน ใครรับผิดชอบ</td><td>ทุกคน ตามขอบเขต role</td><td>ไม่ต้อง</td></tr>
               <tr><td><code>get_business_metrics</code></td><td>ภาพรวม แนวโน้มรายได้ กำไร เงินสด ลูกหนี้ ยอดขายแยกสาขา อ่านจาก view ที่ฝ่ายการเงินกำหนดเท่านั้น</td><td>CEO, ฝ่ายการเงิน</td><td>ไม่ต้อง (อ่านอย่างเดียว)</td></tr>
               <tr><td><code>update_progress</code></td><td>บันทึก % ความคืบหน้า สถานะ และหมายเหตุ</td><td>เจ้าของงาน</td><td>ไม่ต้อง</td></tr>
+              <tr><td><code>approve_task</code></td><td>อนุมัติหรือไม่อนุมัติงานพิเศษจาก CEO ก่อนส่งถึงลูกทีม</td><td>หัวหน้าฝ่าย (ผู้อนุมัติของงานนั้น)</td><td>ไม่ต้อง (การกดคือการยืนยัน)</td></tr>
               <tr><td><code>assign_task</code></td><td>มอบงานพร้อมกำหนดส่ง แจ้งผู้รับทันที</td><td>CEO, หัวหน้า (ลูกทีม)</td><td class="yes">ต้อง</td></tr>
               <tr><td><code>nudge_owner</code></td><td>ตามคนรับผิดชอบตอนนี้เลย</td><td>CEO, หัวหน้า</td><td>ไม่ต้อง</td></tr>
               <tr><td><code>get_role_report</code></td><td>รายงานตาม role (ใช้ทั้ง 09:00 และเมื่อถาม)</td><td>ทุกคน</td><td>ไม่ต้อง</td></tr>
@@ -863,7 +870,7 @@ h1, h2, h3, h4 { letter-spacing: -0.015em; }
           <div class="tbl"><h4>line_links<small>ตารางใหม่ ตารางเดียวที่เพิ่ม</small></h4><ul>
             <li class="pk">employee_id <span>→ พนักงานเดิม</span></li><li>line_user_id <span>text unique</span></li><li>linked_at <span>timestamptz</span></li><li>active <span>bool</span></li></ul></div>
           <div class="tbl"><h4>tasks<small>งานที่มอบหมาย</small></h4><ul>
-            <li class="pk">id <span>text PK</span></li><li>title <span>text</span></li><li class="fk">owner_id <span>→ profiles</span></li><li class="fk">department_id <span>→ departments</span></li><li class="fk">created_by <span>→ profiles</span></li><li>due_at <span>timestamptz</span></li><li>progress <span>int 0–100</span></li><li>status <span>todo | doing | blocked | done</span></li><li>nudge_count <span>int</span></li></ul></div>
+            <li class="pk">id <span>text PK</span></li><li>title <span>text</span></li><li class="fk">owner_id <span>→ profiles</span></li><li class="fk">department_id <span>→ departments</span></li><li class="fk">created_by <span>→ profiles</span></li><li>due_at <span>timestamptz</span></li><li>progress <span>int 0–100</span></li><li>status <span>todo | doing | blocked | done</span></li><li>is_special <span>bool</span></li><li>approval_status <span>none | pending | approved | rejected</span></li><li class="fk">approver_id <span>→ profiles</span></li><li>nudge_count <span>int</span></li></ul></div>
           <div class="tbl"><h4>task_updates<small>ประวัติความคืบหน้า</small></h4><ul>
             <li class="pk">id <span>bigint PK</span></li><li class="fk">task_id <span>→ tasks</span></li><li class="fk">by_id <span>→ profiles</span></li><li>progress <span>int</span></li><li>note <span>text</span></li><li>created_at <span>timestamptz</span></li></ul></div>
           <div class="tbl"><h4>scheduled_messages<small>ส่งตามเวลา / เตือน</small></h4><ul>
@@ -972,7 +979,7 @@ for (const t of due) {
           <div class="wk"><span class="w">สัปดาห์ 1</span><b>วางพื้นฐาน</b><span>สร้างโปรเจกต์ Supabase · เปิด LINE OA · Edge Function line-webhook ตอบ "รับทราบ" ได้ · สร้าง schema duck ในฐานข้อมูลเดิม และ view profiles อ่านจากตารางพนักงาน</span></div>
           <div class="wk"><span class="w">สัปดาห์ 2</span><b>ผูก LINE กับพนักงาน</b><span>ตาราง line_links · หน้า LIFF ล็อกอินด้วย LINE แล้วยืนยันด้วยรหัสพนักงาน + OTP · ไม่ต้องกรอกฝ่ายหรือตำแหน่งใหม่</span></div>
           <div class="wk"><span class="w">สัปดาห์ 3</span><b>สิทธิ์ตาม role</b><span>ออก JWT ให้แต่ละคนจาก LINE userId · เขียน RLS ทุกตาราง · ทดสอบว่าหัวหน้าเห็นข้ามฝ่ายไม่ได้</span></div>
-          <div class="wk"><span class="w">สัปดาห์ 4</span><b>เลขาเป็ดคุยได้</b><span>เชื่อม LLM แบบ tool use · มอบงาน ถามสถานะ อัปเดตความคืบหน้า · การ์ดยืนยันและกันการกดซ้ำ</span></div>
+          <div class="wk"><span class="w">สัปดาห์ 4</span><b>เลขาเป็ดคุยได้</b><span>เชื่อม LLM แบบ tool use · มอบงาน (แจ้งหัวหน้าก่อน) · งานพิเศษและการอนุมัติ · ถามสถานะ อัปเดตความคืบหน้า · การ์ดยืนยันและกันการกดซ้ำ</span></div>
           <div class="wk"><span class="w">สัปดาห์ 5</span><b>รายงาน 09:00 และการตาม</b><span>pg_cron + daily-report · รายงานตาม role · ตามงานที่ครบภายในวันพรุ่งนี้ · แจ้งหัวหน้าเมื่อเลยกำหนด</span></div>
           <div class="wk"><span class="w">สัปดาห์ 6</span><b>นัดหมายและตั้งเวลา</b><span>หน้า LIFF เลือกผู้เข้าร่วม · ปุ่ม "ส่งจาก LINE ของฉัน" (Share Target Picker) · แจ้งและรับคำตอบ · เตือนก่อน 15 นาที · ตั้งเวลาส่งข้อความ เตือน</span></div>
           <div class="wk"><span class="w">สัปดาห์ 7</span><b>ความจำและทดสอบภายใน</b><span>ร่างข้อความ ความจำ ค้นย้อนหลัง · ทีมพัฒนาลองใช้เองให้ครบทุกเส้นทาง</span></div>
@@ -1013,7 +1020,7 @@ for (const t of due) {
 
     <div class="plan">
       <div class="verdict">
-        <div class="vd"><b>11</b><span>ทำได้เลยตามที่ออกแบบ</span></div>
+        <div class="vd"><b>12</b><span>ทำได้เลยตามที่ออกแบบ</span></div>
         <div class="vd adj"><b>10</b><span>ทำได้ ด้วยวิธีที่ปรับให้เข้ากับ LINE</span></div>
         <div class="vd no"><b>0</b><span>ข้อที่ไม่มีทางทำ ทุกข้อมีวิธีที่ใช้ได้</span></div>
         <p>ภาพรวม: <strong>ทำได้จริง</strong> ส่วนหลัก คือ รายงาน 09:00 ตาม role, ตามงานเอง, ถามว่างานใครถึงไหน, มอบงาน และนัดหมาย ทำได้ทั้งหมด ข้อที่ LINE ไม่รองรับตรงๆ เปลี่ยนเป็นวิธีที่ใช้ได้จริงแล้ว เช่น ส่งในนาม CEO ใช้ปุ่มส่งจาก LINE ของ CEO เอง ความเสี่ยงใหญ่ที่สุดไม่ใช่เทคนิค แต่เป็นเรื่องว่าพนักงานจะตอบเลขาเป็ดสม่ำเสมอหรือไม่</p>
@@ -1034,7 +1041,8 @@ for (const t of due) {
               <tr><td>CEO ถามภาพรวม แนวโน้ม และการเงินในแชต</td><td><span class="pill done">ทำได้</span></td><td>ข้อมูลการเงินอยู่ใน Postgres เดียวกันอยู่แล้ว ฝ่ายการเงินสร้าง view ที่ยืนยันตัวเลขแล้วให้เลขาเป็ดอ่าน ตัวเลขคำนวณใน SQL ส่วน AI แค่เรียบเรียงคำตอบ เปิดให้เฉพาะ CEO และฝ่ายการเงิน</td></tr>
               <tr><td>กราฟในแชต LINE</td><td><span class="pill done">ทำได้</span></td><td>กราฟแท่งง่ายๆ สร้างจาก Flex Message ได้เลย ถ้าอยากได้กราฟเส้นหรือซับซ้อนกว่านั้น ต้องสร้างเป็นรูปแล้วส่ง</td></tr>
               <tr><td>คาดการณ์ตัวเลขเดือนหน้า</td><td><span class="pill blocked">ทำได้ด้วยวิธีนี้</span></td><td>แสดงเป็นค่าประมาณจากแนวโน้มล่าสุดและต้องบอกทุกครั้งว่าเป็นค่าประมาณ ไม่ใช่การพยากรณ์ทางการเงิน</td></tr>
-              <tr><td>มอบงาน แจ้งหัวหน้าเมื่อเลยกำหนด</td><td><span class="pill done">ทำได้</span></td><td>ผู้รับงานต้องลงทะเบียนในระบบแล้ว</td></tr>
+              <tr><td>มอบงาน แจ้งหัวหน้าเมื่อเลยกำหนด</td><td><span class="pill done">ทำได้</span></td><td>แจ้งหัวหน้าฝ่ายก่อน แล้วจึงส่งถึงลูกน้อง ผู้รับงานต้องลงทะเบียนในระบบแล้ว</td></tr>
+              <tr><td>งานพิเศษที่ต้องให้หัวหน้าอนุมัติก่อน</td><td><span class="pill done">ทำได้</span></td><td>สถานะ approval_status ในตาราง tasks + การ์ดมีปุ่มอนุมัติ ระบบตรวจว่าคนกดเป็นผู้อนุมัติจริง ลูกน้องเห็นงานรออยู่แต่ยังไม่ถูกตาม</td></tr>
               <tr><td>ตั้งเวลาส่งข้อความ เตือนความจำ</td><td><span class="pill done">ทำได้</span></td><td>scheduler รันทุก 1 นาที ข้อความอาจออกช้าได้ไม่เกินประมาณ 1 นาที</td></tr>
               <tr><td>ความจำ ค้นย้อนหลัง ร่างข้อความตามสไตล์</td><td><span class="pill done">ทำได้</span></td><td>เก็บใน Postgres + pgvector เป็นการจดความชอบ ไม่ใช่การฝึกโมเดลใหม่</td></tr>
               <tr><td>การ์ดเลือกผู้เข้าร่วมแบบติ๊กหลายคน</td><td><span class="pill blocked">ทำได้ด้วยวิธีนี้</span></td><td>การ์ดใน LINE จำการติ๊กไม่ได้ จึงเปิดเป็นหน้ารายชื่อในแอป LINE (LIFF) ให้ติ๊กเลือก แล้วส่งนัดพร้อมปุ่มตอบรับ ใช้เวลาทำเพิ่มราว 1 สัปดาห์</td></tr>
@@ -1757,12 +1765,14 @@ function seed() {
 const P = id => S.people.find(p => p.id === id);
 const T = id => S.tasks.find(t => t.id === id);
 const headOf = dept => S.people.find(p => p.role === 'head' && p.dept === dept);
-function wstatus(t) { if (t.p >= 100) return 'done'; if (t.due < S.now) return 'overdue'; if (t.blocked) return 'blocked'; return t.p > 0 ? 'in_progress' : 'not_started'; }
-const WS_TH = { done: 'เสร็จ', overdue: 'เลยกำหนด', blocked: 'ติดปัญหา', in_progress: 'กำลังทำ', not_started: 'ยังไม่เริ่ม' };
+function wstatus(t) { if (t.approval === 'pending') return 'awaiting'; if (t.approval === 'rejected') return 'rejected'; if (t.p >= 100) return 'done'; if (t.due < S.now) return 'overdue'; if (t.blocked) return 'blocked'; return t.p > 0 ? 'in_progress' : 'not_started'; }
+const WS_TH = { awaiting: 'รอหัวหน้าอนุมัติ', rejected: 'ไม่อนุมัติ', done: 'เสร็จ', overdue: 'เลยกำหนด', blocked: 'ติดปัญหา', in_progress: 'กำลังทำ', not_started: 'ยังไม่เริ่ม' };
 const SCH_TH = { draft: 'ร่าง', scheduled: 'รอส่ง', sent: 'ส่งแล้ว', done: 'เตือนแล้ว', cancelled: 'ยกเลิก', failed: 'ส่งไม่สำเร็จ' };
 const pillW = t => { const s = wstatus(t); return '<span class="pill ' + s + '">' + WS_TH[s] + '</span>'; };
 const pillS = s => '<span class="pill ' + s + '">' + SCH_TH[s] + '</span>';
 function dueText(t) {
+  if (t.approval === 'pending') return 'รออนุมัติ · กำหนดส่ง ' + rel(t.due, S.now);
+  if (t.approval === 'rejected') return 'ไม่ได้รับอนุมัติ';
   if (t.p >= 100) return 'เสร็จแล้ว';
   if (t.due < S.now) { const dd = Math.max(1, Math.floor((S.now - t.due) / 864e5) + (sameDay(t.due, S.now) ? 0 : 0)); return sameDay(t.due, S.now) ? 'เลยกำหนดวันนี้ ' + hm(t.due) : 'เลยกำหนด ' + dd + ' วัน'; }
   return 'ครบ ' + rel(t.due, S.now);
@@ -1771,7 +1781,9 @@ const lastUpdate = t => S.updates.filter(u => u.task === t.id).sort((a, b) => b.
 function canSee(viewer, t) { const v = P(viewer); return v.role === 'ceo' || (v.role === 'head' && v.dept === t.dept) || t.owner === viewer; }
 function canSeePerson(viewer, p) { const v = P(viewer); return v.role === 'ceo' || (v.role === 'head' && v.dept === p.dept) || v.id === p.id; }
 const visibleTasks = viewer => S.tasks.filter(t => canSee(viewer, t));
-const openTask = t => t.p < 100;
+const openTask = t => t.p < 100 && t.approval !== 'rejected';
+// active = the owner may work on it (special tasks waiting for approval are visible but not chased)
+const activeTask = t => openTask(t) && t.approval !== 'pending';
 function sql(q) { S.sql = q; }
 function flash(id) { S.flash.add(id); }
 function logPush(toId, what) { S.log.push({ id: ++S.seq.log, to: P(toId).name, what, method: 'push', at: new Date(S.now) }); flash('log:' + S.seq.log); }
@@ -1899,7 +1911,7 @@ function findTaskByKw(text, pool) { return pool.find(t => text.includes(t.title)
 function reportCard(uid, label) {
   const me = P(uid);
   const vis = visibleTasks(uid).filter(openTask);
-  const sev = t => ({ overdue: 0, blocked: 1, in_progress: 2, not_started: 2 })[wstatus(t)] * 10 + (t.due - S.now) / 864e5;
+  const sev = t => ({ overdue: 0, blocked: 1, in_progress: 2, not_started: 2, awaiting: 3, rejected: 4, done: 5 })[wstatus(t)] * 10 + (t.due - S.now) / 864e5;
   if (me.role === 'ceo') {
     let body = '<div class="fx-t">ภาพรวมแต่ละฝ่าย</div>';
     Object.keys(DEPTS).forEach(dk => {
@@ -1908,7 +1920,9 @@ function reportCard(uid, label) {
       const od = ts.filter(t => wstatus(t) === 'overdue').length, bl = ts.filter(t => wstatus(t) === 'blocked').length;
       body += rowx(od ? 'r' : bl ? 'a' : '', '<b>' + DEPTS[dk] + '</b> · หัวหน้า ' + esc(headOf(dk).name), ts.length + ' งานเปิด · เฉลี่ย ' + avg + '%' + (od ? ' · เลยกำหนด ' + od : '') + (bl ? ' · ติดปัญหา ' + bl : ''));
     });
-    const watch = vis.filter(t => ['overdue', 'blocked'].includes(wstatus(t)) || (t.due - S.now) < 1.6 * 864e5).sort((a, b) => sev(a) - sev(b));
+    const watch = vis.filter(activeTask).filter(t => ['overdue', 'blocked'].includes(wstatus(t)) || (t.due - S.now) < 1.6 * 864e5).sort((a, b) => sev(a) - sev(b));
+    const pend = vis.filter(t => t.approval === 'pending');
+    if (pend.length) body += '<div class="fx-t">งานพิเศษรอหัวหน้าอนุมัติ</div>' + pend.map(t => rowx('a', esc(P(t.owner).name + ' · ' + t.title), 'รอ ' + P(t.approver).name + ' อนุมัติ')).join('');
     body += '<div class="fx-t">ต้องจับตา · ใครรับผิดชอบ</div>' + (watch.length ? watch.map(t => taskBlock(t, true)).join('') : '<div class="fx-r"><i class="dot n"></i><span>ไม่มีงานเสี่ยง</span></div>');
     const od = vis.filter(t => wstatus(t) === 'overdue');
     return { head: label || 'รายงาน 09:00 · ทั้งบริษัท', tone: 'duckh', body,
@@ -1917,8 +1931,10 @@ function reportCard(uid, label) {
   if (me.role === 'head') {
     const ts = vis.filter(t => t.dept === me.dept).sort((a, b) => sev(a) - sev(b));
     const lag = ts.filter(t => ['overdue', 'blocked'].includes(wstatus(t)) && t.owner !== uid);
-    return { head: label || 'รายงาน 09:00 · ' + DEPTS[me.dept], tone: 'duckh', body: ts.length ? ts.map(t => taskBlock(t, true)).join('') : 'ไม่มีงานเปิดในฝ่าย',
-      buttons: lag.length ? [{ label: 'ตามคนที่ค้าง', fn: async () => { traceStart(me.name + ' สั่งตามลูกทีมที่ค้าง', 'nudge'); for (const t of lag) await nudge(t, uid, true); render(); await say(uid, 'ตามแล้วครับ: ' + lag.map(t => P(t.owner).name).join(', ')); } }] : [] };
+    const pend = ts.filter(t => t.approval === 'pending' && t.approver === uid);
+    const pendHtml = pend.length ? '<div class="fx-note">มีงานพิเศษจาก CEO รอคุณอนุมัติ ' + pend.length + ' งาน</div>' : '';
+    return { head: label || 'รายงาน 09:00 · ' + DEPTS[me.dept], tone: 'duckh', body: pendHtml + (ts.length ? ts.map(t => taskBlock(t, true)).join('') : 'ไม่มีงานเปิดในฝ่าย'),
+      buttons: pend.length ? [{ label: 'ดูงานรออนุมัติ', fn: () => approvals(uid) }] : lag.length ? [{ label: 'ตามคนที่ค้าง', fn: async () => { traceStart(me.name + ' สั่งตามลูกทีมที่ค้าง', 'nudge'); for (const t of lag) await nudge(t, uid, true); render(); await say(uid, 'ตามแล้วครับ: ' + lag.map(t => P(t.owner).name).join(', ')); } }] : [] };
   }
   const mine = vis.filter(t => t.owner === uid).sort((a, b) => a.due - b.due);
   return { head: label || 'งานของคุณ · ' + dayStr(S.now), tone: 'duckh', body: mine.length ? mine.map(t => taskBlock(t, false)).join('') : 'ไม่มีงานค้าง' };
@@ -2001,6 +2017,8 @@ function aiBadge() {
   el.title = AI.ok ? 'คำถามทั่วไปตอบด้วย Claude จริง ส่วนคำสั่งงานใช้การ์ดยืนยัน' : 'ตอบด้วยกฎตายตัว (เปิดหน้านี้ใน Claude เพื่อคุยกับ AI จริง)';
 }
 function isAction(text) {
+  if (/^งานพิเศษ/.test(text) || (/^ให้/.test(text) && /งานพิเศษ/.test(text))) return true;
+  if (/^งานพิเศษรออนุมัติ$|^รออนุมัติ|^อนุมัติ/.test(text)) return true;
   const question = /ถึงไหน|ใครรับผิดชอบ|อะไร|ยังไง|อย่างไร|เท่าไร|ไหม|มั้ย|หรือยัง|\?|วิเคราะห์|แนะนำ|ทำไม|สรุป|รายงาน|ภาพรวม|แนวโน้ม/.test(text);
   if (question && !/^(ให้|ช่วยนัด|นัด|ร่าง|เตือน|ยกเลิก)/.test(text)) return false;
   const p = findPerson(text);
@@ -2019,6 +2037,7 @@ const DUCK_RULES = `คุณคือ "เลขาเป็ด" เลขา A
 - เคารพสิทธิ์ของตำแหน่ง: ถ้าถามเรื่องที่ไม่อยู่ในข้อมูลเพราะไม่มีสิทธิ์ (เช่น การเงิน หรืองานฝ่ายอื่น) ให้บอกตรงๆ ว่าตำแหน่งนี้ดูไม่ได้ และแนะนำว่าต้องขอใคร
 - ถ้าผู้ใช้อยากให้ทำงาน (มอบงาน นัดประชุม ตั้งเวลาส่งข้อความ เตือน อัปเดตความคืบหน้า) อย่าอ้างว่าทำแล้ว ให้แนะนำประโยคสั้นๆ ให้พิมพ์ เช่น "ให้คุณต้นทำ ... ภายในศุกร์นี้", "ช่วยนัดคุณนิด 11 โมง", "เตือนผมบ่าย 3 ...", "ใบเสนอราคาได้ 80% แล้ว" ระบบจะขึ้นการ์ดให้กดยืนยัน
 - คำถามทั่วไปที่ไม่เกี่ยวกับบริษัท ตอบได้สั้นๆ แบบเลขาที่รอบรู้
+- งานพิเศษจาก CEO ต้องให้หัวหน้าฝ่ายอนุมัติก่อน ถ้ายังรออนุมัติ บอกลูกน้องว่ายังไม่ต้องเริ่มทำ และบอกว่ารอใคร
 - เรียกผู้ใช้ตามชื่อในข้อมูล`;
 function buildContext(uid) {
   const me = P(uid), fin = canFinance(uid), L = [];
@@ -2030,7 +2049,7 @@ function buildContext(uid) {
   L.push('ลูกค้าในสมุดรายชื่อ: ' + S.people.filter(p => !p.internal).map(p => p.name + ' (' + p.title + (p.friend ? '' : ', ยังไม่ได้แอดเลขาเป็ด') + ')').join(', '));
   L.push('\n### งานที่ตำแหน่งนี้มองเห็น');
   visibleTasks(uid).forEach(t => { const lu = lastUpdate(t);
-    L.push('- ' + t.title + ' · ผู้รับผิดชอบ ' + P(t.owner).name + ' · ' + DEPTS[t.dept] + ' · ' + t.p + '% · ' + WS_TH[wstatus(t)] + ' · ' + dueText(t) + ' · สั่งโดย ' + P(t.by).name + ' · ตามแล้ว ' + t.nudges + ' ครั้ง' + (lu ? ' · อัปเดตล่าสุด ' + dayStr(lu.at) + ' ' + hm(lu.at) + ': "' + lu.note + '"' : '')); });
+    L.push('- ' + t.title + ' · ผู้รับผิดชอบ ' + P(t.owner).name + ' · ' + DEPTS[t.dept] + ' · ' + t.p + '% · ' + WS_TH[wstatus(t)] + ' · ' + dueText(t) + ' · สั่งโดย ' + P(t.by).name + ' · ตามแล้ว ' + t.nudges + ' ครั้ง' + (t.special ? ' · งานพิเศษจาก CEO (' + (t.approval === 'pending' ? 'รอ ' + P(t.approver).name + ' อนุมัติ ยังเริ่มไม่ได้' : t.approval === 'approved' ? 'อนุมัติแล้วโดย ' + P(t.approver).name : 'ไม่อนุมัติ') + ')' : '') + (lu ? ' · อัปเดตล่าสุด ' + dayStr(lu.at) + ' ' + hm(lu.at) + ': "' + lu.note + '"' : '')); });
   const mt = S.meetings.filter(m => m.org === uid || m.att.some(a => a.id === uid));
   if (mt.length) { L.push('\n### นัดหมายของผู้ใช้'); mt.forEach(m => L.push('- ' + m.title + ' · ' + when(m.start) + ' · ผู้จัด ' + P(m.org).name + ' · ' + m.att.map(a => P(a.id).name + ' ' + ATT_TH[a.status]).join(', '))); }
   const sc = S.sched.filter(x => x.owner === uid && x.status !== 'cancelled');
@@ -2095,6 +2114,12 @@ async function askClaude(uid, text) {
 async function handleRules(uid, text) {
   const me = P(uid);
   const p = findPerson(text);
+  if (/^งานพิเศษ/.test(text) || (/^ให้/.test(text) && /งานพิเศษ/.test(text))) {
+    const t2 = text.replace(/^งานพิเศษ\s*[:：]?\s*/, '').replace(/งานพิเศษ\s*/, '');
+    const p2 = findPerson(t2);
+    if (p2) return assign(uid, t2, p2, true);
+  }
+  if (/รออนุมัติ|^อนุมัติ/.test(text) && !p) return approvals(uid);
   if (/งานของ(ฉัน|ผม|หนู|เรา)|^ผมมีงาน|^ฉันมีงาน|มีงานอะไรบ้าง/.test(text) && !p) return myTasks(uid, text);
   const isUpdate = /\d{1,3}\s*%|เสร็จ(แล้ว)?|ส่งงานแล้ว|ติดปัญหา|ติดขัด/.test(text) && !/ถึงไหน|ใคร/.test(text) && !/^ให้/.test(text);
   if (isUpdate && !p) return updateIntent(uid, text);
@@ -2181,40 +2206,106 @@ async function askStatus(uid, text) {
   setChips(uid, pool.map(n => ({ label: n, text: 'งานของ' + n + 'ถึงไหน' })));
 }
 
-async function assign(uid, text, p) {
+async function assign(uid, text, p, special) {
   const me = P(uid);
   traceStart(text, 'inbound');
   if (!p.internal) { preamble(uid, text, null); replyTrace('มอบงานไม่ได้'); render(); await say(uid, 'มอบงานได้เฉพาะคนในบริษัทครับ ' + p.name + ' เป็น' + p.title + ' ถ้าต้องการติดต่อ ลองสั่งให้ทักแทนได้ครับ'); return; }
   if (me.role === 'head' && p.dept !== me.dept) { preamble(uid, text, 'assign_task', { owner: p.name }); tr('เลขาเป็ด', 'ตรวจสิทธิ์: หัวหน้ามอบงานได้เฉพาะลูกทีม → ปฏิเสธ', { allowed: false }); replyTrace('ไม่มีสิทธิ์'); render(); await say(uid, p.name + ' อยู่' + DEPTS[p.dept] + 'ครับ หัวหน้ามอบงานได้เฉพาะคนใน' + DEPTS[me.dept] + ' ถ้าจำเป็นให้ขอผ่าน' + headOf(p.dept).name + 'หรือ CEO'); return; }
+  const head = headOf(p.dept);
+  // the department head must hear about it first, unless the head is the one assigning or receiving
+  const informHead = head && head.id !== uid && head.id !== p.id;
+  let specialNote = '';
+  if (special && !(me.role === 'ceo' && informHead)) { specialNote = me.role !== 'ceo' ? 'งานพิเศษสั่งได้เฉพาะ CEO จึงส่งเป็นงานปกติ' : p.name + ' เป็นหัวหน้าฝ่ายเอง ไม่ต้องรออนุมัติ จึงส่งเป็นงานปกติ'; special = false; }
   const parts = text.split(/ภายใน|ก่อน(?=วัน|พรุ่ง|\s*\d)/);
-  const title = cleanTopic(stripTime(parts[0].replace(/^ให้/, '').replace(p.name, ''))) || 'งานที่มอบหมาย';
+  const title = cleanTopic(stripTime(parts[0].replace(/^ให้/, '').replace(p.name, '').replace(/งานพิเศษ/, ''))) || 'งานที่มอบหมาย';
   let due = parts[1] ? parseWhen(parts[1], S.now, 17) : parseWhen(text, S.now, 17);
   if (!due || due <= S.now) due = at(addDays(S.now, 1), 17, 0);
   const id = 'tsk_0' + (++S.seq.task);
-  preamble(uid, text, 'assign_task', { owner: p.name, title, due_at: iso(due) });
-  replyTrace('ยืนยันมอบหมายงาน'); render();
-  const msg = 'งานใหม่จาก ' + me.name + ': ' + title + ' กำหนดส่ง ' + when(due);
+  preamble(uid, text, 'assign_task', { owner: p.name, title, due_at: iso(due), special: !!special });
+  replyTrace(special ? 'ยืนยันงานพิเศษ' : 'ยืนยันมอบหมายงาน'); render();
+  const steps = special
+    ? rowx('a', '1. ส่งให้' + head.name + ' (หัวหน้าฝ่าย) อนุมัติก่อน', 'การ์ดมีปุ่ม อนุมัติ / ไม่อนุมัติ') +
+      rowx('n', '2. ' + p.name + ' เห็นว่ามีงานพิเศษรออยู่', 'ยังเริ่มไม่ได้ และยังไม่มีการตาม') +
+      rowx('', '3. อนุมัติแล้วงานจึงเปิดให้' + p.name + 'ทำ', 'แจ้งท่านและ' + p.name + 'ทันที')
+    : (informHead ? rowx('a', '1. แจ้ง' + head.name + ' (หัวหน้าฝ่าย) ก่อน', 'ให้หัวหน้ารับรู้ว่าลูกทีมได้งานอะไร') + rowx('', '2. ส่งงานให้' + p.name, 'พร้อมปุ่มรับทราบ') : rowx('', 'ส่งงานให้' + p.name + 'ทันที', '')) +
+      rowx('a', 'รอบ 09:00 ก่อนครบกำหนด 1 วัน', 'ตาม' + p.name + 'เอง') + rowx('r', 'ถ้าเลยกำหนด', 'แจ้ง' + p.name + ' และหัวหน้าฝ่ายทันที');
   await card(uid, {
-    head: 'ยืนยันมอบหมายงาน',
-    body: kv('ผู้รับงาน', p.name + ' · ' + p.title) + kv('งาน', title) + kv('กำหนดส่ง', when(due)) + kv('หัวหน้าฝ่าย', headOf(p.dept).name) + '<div class="fx-t">เลขาเป็ดจะดูแลต่อให้</div>' +
-      rowx('a', 'รอบ 09:00 ก่อนครบกำหนด 1 วัน', 'ตาม' + p.name + 'เอง') + rowx('r', 'ถ้าเลยกำหนด', 'แจ้ง' + p.name + ' และหัวหน้าฝ่ายทันที'),
+    head: special ? 'ยืนยันงานพิเศษ' : 'ยืนยันมอบหมายงาน', tone: special ? 'warn' : '',
+    body: kv('ผู้รับงาน', p.name + ' · ' + p.title) + kv('งาน', title) + kv('กำหนดส่ง', when(due)) + kv('หัวหน้าฝ่าย', head.name) +
+      (special ? kv('ประเภท', 'งานพิเศษ · ต้องให้' + head.name + 'อนุมัติก่อน') : '') + (specialNote ? '<div class="fx-note">' + esc(specialNote) + '</div>' : '') +
+      '<div class="fx-t">ลำดับขั้น</div>' + steps,
     buttons: [
-      { label: 'ยืนยัน', fn: async () => {
-        traceStart('ยืนยันมอบหมาย ' + id, 'inbound');
+      { label: special ? 'ส่งขออนุมัติ' : 'ยืนยัน', fn: async () => {
+        traceStart((special ? 'ส่งงานพิเศษ ' : 'ยืนยันมอบหมาย ') + id, 'inbound');
         tr('LINE', me.name + ' กดยืนยัน → postback', { type: 'postback', data: 'action=confirm&task=' + id });
         const t = { id, title, kw: [title.slice(0, Math.min(10, title.length))], owner: p.id, dept: p.dept, by: uid, due, p: 0, blocked: false, nudges: 0 };
+        if (special) { t.special = true; t.approval = 'pending'; t.approver = head.id; }
         S.tasks.push(t); flash(id);
-        const q = "insert into tasks (id, title, owner_id, department_id, created_by, due_at, progress, status)\nvalues ('" + id + "', '" + title + "', '" + p.id + "', '" + p.dept + "', '" + uid + "', '" + iso(due) + "', 0, 'todo');";
-        sql(q); tr('Postgres', 'บันทึกงานใหม่', q);
+        const q = "insert into tasks (id, title, owner_id, department_id, created_by, due_at, progress, status, is_special, approval_status, approver_id)\nvalues ('" + id + "', '" + title + "', '" + p.id + "', '" + p.dept + "', '" + uid + "', '" + iso(due) + "', 0, 'todo', " + (special ? "true, 'pending', '" + head.id + "'" : "false, 'none', null") + ");";
+        sql(q); tr('Postgres', special ? 'บันทึกงานพิเศษ สถานะรออนุมัติ (ยังไม่เข้าระบบตามงาน)' : 'บันทึกงานใหม่', q);
+        if (special) {
+          pushTrace(head.id, 'ขออนุมัติงานพิเศษ'); logPush(head.id, 'ขออนุมัติงานพิเศษ ' + id);
+          pushTrace(p.id, 'มีงานพิเศษรออนุมัติ'); logPush(p.id, 'แจ้งงานพิเศษรออนุมัติ ' + id);
+          render();
+          await say(uid, 'ส่งงานพิเศษให้' + head.name + 'อนุมัติแล้วครับ\n' + p.name + ' จะเห็นว่ามีงานรออยู่ และเริ่มทำได้ทันทีที่' + head.name + 'อนุมัติ ผมจะแจ้งผลให้ครับ');
+          await approvalCard(t);
+          await card(p.id, { head: 'มีงานพิเศษจาก ' + me.name + ' รออยู่', tone: 'warn', body: taskBlock(t, false) + '<div class="fx-note">งานนี้ต้องรอ' + esc(head.name) + 'อนุมัติก่อน ยังไม่ต้องเริ่มทำ ผมจะแจ้งทันทีเมื่ออนุมัติแล้วครับ</div>' }, true);
+          return;
+        }
+        if (informHead) {
+          pushTrace(head.id, me.name + ' มอบงานให้ลูกทีม'); logPush(head.id, 'แจ้งหัวหน้า: งานใหม่ของ' + p.name);
+          await card(head.id, { head: me.name + ' มอบงานให้ลูกทีม', body: kv('ผู้รับงาน', p.name) + taskBlock(t, false) + '<div class="fx-note">แจ้งคุณก่อน แล้วจึงส่งงานให้' + esc(p.name) + '</div>',
+            buttons: [{ label: 'รับทราบ', fn: async () => { traceStart(head.name + ' รับทราบงานของลูกทีม', 'nudge'); sql("insert into task_updates (task_id, by_id, progress, note) values ('" + id + "', '" + head.id + "', 0, 'หัวหน้ารับทราบ');"); tr('Postgres', 'บันทึกว่าหัวหน้ารับทราบ', S.sql); render(); await say(head.id, 'บันทึกแล้วครับ'); } }] }, true);
+        }
         pushTrace(p.id, 'งานใหม่'); logPush(p.id, 'แจ้งงานใหม่ ' + id);
         render();
-        await say(uid, 'มอบงานให้' + p.name + 'แล้วครับ ครบ ' + rel(due, S.now) + ' เลขาเป็ดจะตามให้เองและรายงานในรอบ 09:00');
-        await card(p.id, { head: 'งานใหม่จาก ' + me.name, tone: 'duckh', body: taskBlock(t, false) + '<div class="fx-note">ตอบความคืบหน้ากลับมาที่แชตนี้ได้ตลอด</div>',
-          buttons: [{ label: 'รับทราบ', fn: async () => { traceStart(p.name + ' รับทราบงาน', 'nudge'); const u = { id: ++S.seq.upd, task: id, by: p.id, p: 0, note: 'รับทราบงานแล้ว', at: new Date(S.now) }; S.updates.push(u); flash('upd:' + u.id); sql("insert into task_updates (task_id, by_id, progress, note) values ('" + id + "', '" + p.id + "', 0, 'รับทราบงานแล้ว');"); tr('Postgres', 'บันทึกว่ารับทราบ', S.sql); render(); await say(p.id, 'บันทึกแล้วครับ'); } }] }, true);
+        await say(uid, 'มอบงานให้' + p.name + 'แล้วครับ' + (informHead ? ' (แจ้ง' + head.name + 'ก่อนแล้ว)' : '') + ' ครบ ' + rel(due, S.now) + ' เลขาเป็ดจะตามให้เองและรายงานในรอบ 09:00');
+        await newTaskCard(t, me.name);
       }},
       { label: 'ยกเลิก', cls: 'x', fn: async () => say(uid, 'ไม่ได้มอบหมายครับ') }
     ]
   });
+}
+async function newTaskCard(t, fromName, approvedBy) {
+  const p = P(t.owner);
+  await card(p.id, { head: approvedBy ? 'งานพิเศษอนุมัติแล้ว เริ่มได้เลย' : 'งานใหม่จาก ' + fromName, tone: 'duckh',
+    body: taskBlock(t, false) + (approvedBy ? kv('อนุมัติโดย', approvedBy) : '') + '<div class="fx-note">ตอบความคืบหน้ากลับมาที่แชตนี้ได้ตลอด</div>',
+    buttons: [{ label: 'รับทราบ', fn: async () => { traceStart(p.name + ' รับทราบงาน', 'nudge'); const u = { id: ++S.seq.upd, task: t.id, by: p.id, p: t.p, note: 'รับทราบงานแล้ว', at: new Date(S.now) }; S.updates.push(u); flash('upd:' + u.id); sql("insert into task_updates (task_id, by_id, progress, note) values ('" + t.id + "', '" + p.id + "', " + t.p + ", 'รับทราบงานแล้ว');"); tr('Postgres', 'บันทึกว่ารับทราบ', S.sql); render(); await say(p.id, 'บันทึกแล้วครับ'); } }] }, true);
+}
+async function approvalCard(t) {
+  const head = P(t.approver), p = P(t.owner);
+  await card(head.id, { head: 'งานพิเศษจาก ' + P(t.by).name + ' รอคุณอนุมัติ', tone: 'warn',
+    body: kv('ผู้รับงาน', p.name + ' · ' + p.title) + kv('งาน', t.title) + kv('กำหนดส่ง', when(t.due)) +
+      '<div class="fx-note">' + esc(p.name) + ' เห็นแล้วว่ามีงานรออยู่ แต่จะเริ่มทำได้หลังคุณอนุมัติ</div>',
+    buttons: [{ label: 'อนุมัติ', fn: () => decide(t, true) }, { label: 'ไม่อนุมัติ', cls: 'x', fn: () => decide(t, false) }] }, true);
+}
+async function decide(t, ok) {
+  if (t.approval !== 'pending') { await say(t.approver, 'งานนี้ตัดสินไปแล้วครับ'); return; }
+  const head = P(t.approver), p = P(t.owner), boss = P(t.by);
+  traceStart(head.name + (ok ? ' อนุมัติ ' : ' ไม่อนุมัติ ') + t.id, 'inbound');
+  tr('LINE', head.name + ' กด "' + (ok ? 'อนุมัติ' : 'ไม่อนุมัติ') + '" → postback', { type: 'postback', data: 'action=' + (ok ? 'approve' : 'reject') + '&task=' + t.id });
+  tr('Edge Function', 'ตรวจสิทธิ์: ผู้กดต้องเป็น approver_id ของงานนี้', "select approver_id from tasks where id = '" + t.id + "';  -- " + head.id + " ✓");
+  t.approval = ok ? 'approved' : 'rejected'; t.decidedAt = new Date(S.now); flash(t.id);
+  const u = { id: ++S.seq.upd, task: t.id, by: head.id, p: t.p, note: ok ? 'หัวหน้าอนุมัติงานพิเศษ' : 'หัวหน้าไม่อนุมัติงานพิเศษ', at: new Date(S.now) }; S.updates.push(u); flash('upd:' + u.id);
+  sql("update tasks set approval_status = '" + t.approval + "', approved_by = '" + head.id + "', approved_at = now()\n where id = '" + t.id + "' and approval_status = 'pending';\ninsert into task_updates (task_id, by_id, progress, note) values ('" + t.id + "', '" + head.id + "', " + t.p + ", '" + u.note + "');");
+  tr('Postgres', ok ? 'อนุมัติ → งานเข้าระบบตามงานตามปกติ' : 'ไม่อนุมัติ → ปิดงาน', S.sql);
+  pushTrace(p.id, ok ? 'งานพิเศษอนุมัติแล้ว' : 'งานพิเศษไม่ได้รับอนุมัติ'); logPush(p.id, (ok ? 'แจ้งอนุมัติ ' : 'แจ้งไม่อนุมัติ ') + t.id);
+  pushTrace(boss.id, 'ผลการอนุมัติ'); logPush(boss.id, 'แจ้งผลอนุมัติ ' + t.id);
+  render();
+  await say(head.id, ok ? 'อนุมัติแล้วครับ แจ้ง' + p.name + 'ให้เริ่มทำ และแจ้ง ' + boss.name + ' แล้ว' : 'บันทึกว่าไม่อนุมัติแล้วครับ แจ้ง ' + boss.name + ' และ' + p.name + 'ให้แล้ว');
+  if (ok) await newTaskCard(t, boss.name, head.name);
+  else await say(p.id, 'งานพิเศษ "' + t.title + '" ไม่ได้รับอนุมัติจาก' + head.name + ' ยังไม่ต้องทำครับ');
+  await say(boss.id, head.name + (ok ? ' อนุมัติงานพิเศษ "' + t.title + '" แล้วครับ ส่งให้' + p.name + 'เริ่มทำแล้ว ครบ ' + rel(t.due, S.now) : ' ไม่อนุมัติงานพิเศษ "' + t.title + '" ครับ ' + p.name + ' ยังไม่ได้เริ่มทำ ถ้าต้องการให้ทำต่อ ลองคุยกับ' + head.name + 'โดยตรง'));
+}
+async function approvals(uid) {
+  const me = P(uid);
+  traceStart('ดูงานพิเศษรออนุมัติ', 'ask');
+  sql("select t.*, p.display_name from tasks t join profiles p on p.id = t.owner_id\n where t.approval_status = 'pending'" + (me.role === 'head' ? " and t.approver_id = '" + uid + "'" : me.role === 'staff' ? " and t.owner_id = '" + uid + "'" : '') + ";");
+  tr('Postgres', 'ดึงงานพิเศษที่ยังรออนุมัติ (ตามสิทธิ์)', S.sql); replyTrace('งานรออนุมัติ'); render();
+  const list = S.tasks.filter(t => t.approval === 'pending' && (me.role === 'ceo' ? t.by === uid : me.role === 'head' ? t.approver === uid : t.owner === uid));
+  if (!list.length) { await say(uid, 'ตอนนี้ไม่มีงานพิเศษรออนุมัติครับ'); return; }
+  if (me.role === 'head') { await say(uid, 'มีงานพิเศษรอคุณอนุมัติ ' + list.length + ' งานครับ'); for (const t of list) await approvalCard(t); return; }
+  await card(uid, { head: 'งานพิเศษรออนุมัติ', tone: 'warn', body: list.map(t => taskBlock(t, me.role === 'ceo') + '<em style="font-size:12px;color:var(--muted)">รอ ' + esc(P(t.approver).name) + ' อนุมัติ</em>').join('') });
 }
 
 /* ---------- business & finance Q&A (numbers computed in SQL, AI only words them) ---------- */
@@ -2520,7 +2611,7 @@ function next0900() { let c = at(S.now, 9, 0); if (c < S.now || S.reportedDay ==
 function events() {
   const ev = [{ at: next0900(), kind: 'report' }];
   S.sched.filter(s => s.status === 'scheduled').forEach(s => ev.push({ at: s.run_at, kind: s.kind, id: s.id }));
-  S.tasks.filter(t => openTask(t) && t.due >= S.now && !t.dueFired).forEach(t => ev.push({ at: t.due, kind: 'due', id: t.id }));
+  S.tasks.filter(t => activeTask(t) && t.due >= S.now && !t.dueFired).forEach(t => ev.push({ at: t.due, kind: 'due', id: t.id }));
   S.meetings.filter(m => !m.reminded && m.status !== 'cancelled').forEach(m => ev.push({ at: new Date(Math.max(S.now, m.start - 15 * 60000)), kind: 'meeting', id: m.id }));
   return ev.sort((a, b) => a.at - b.at);
 }
@@ -2544,7 +2635,7 @@ async function fireReport() {
     logPush(p.id, 'รายงาน 09:00');
     if (isPersona(p.id)) { bubble(p.id, 'bot', 'สวัสดีตอนเช้าครับ ' + (p.role === 'ceo' ? 'นี่คือภาพรวมทั้งบริษัท' : 'นี่คือสถานะ' + DEPTS[p.dept])); await card(p.id, reportCard(p.id), true); }
   }
-  const due = S.tasks.filter(t => openTask(t) && t.due < at(addDays(S.now, 2), 0, 0)).sort((a, b) => a.due - b.due);
+  const due = S.tasks.filter(t => activeTask(t) && t.due < at(addDays(S.now, 2), 0, 0)).sort((a, b) => a.due - b.due);
   tr('Postgres', 'หางานที่ครบภายในพรุ่งนี้ หรือเลยกำหนด: ' + due.length + ' งาน', "select * from tasks where status <> 'done' and due_at < current_date + 2;\n-- " + due.map(t => P(t.owner).name + ': ' + t.title).join(' | '));
   for (const t of due) await nudge(t, null);
   render();
@@ -2625,8 +2716,8 @@ const SM = [
       { t: 'กรอกรหัส OTP จากอีเมลบริษัท', k: 'liff', d: 'กันคนอื่นใส่รหัสพนักงานที่ไม่ใช่ของตัวเอง' },
       { t: 'ผูกบัญชีสำเร็จ', k: 'db', d: 'บันทึก line_links แล้วดึงชื่อ ฝ่าย ตำแหน่งจากข้อมูลเดิมอัตโนมัติ' } ] },
     { t: 'Rich Menu ตามตำแหน่ง', k: 'rm', d: 'ระบบผูกเมนูให้ตาม role ทันทีหลังยืนยันตัวตน', kids: [
-      { t: 'เมนู CEO', k: 'rm', r: ['ceo'], d: 'ภาพรวมบริษัท · รายงานวันนี้ · ฝ่ายที่น่าห่วง · มอบงาน · นัดประชุม · การเงิน', try: ['u_ceo', '#menu'] },
-      { t: 'เมนูหัวหน้าฝ่าย', k: 'rm', r: ['head'], d: 'งานในฝ่าย · รายงานวันนี้ · ใครน่าห่วง · มอบงานลูกทีม · นัดประชุมทีม · ช่วยเหลือ', try: ['u_nid', '#menu'] },
+      { t: 'เมนู CEO', k: 'rm', r: ['ceo'], d: 'ภาพรวมบริษัท · รายงานวันนี้ · งานพิเศษ · มอบงาน · นัดประชุม · การเงิน', try: ['u_ceo', '#menu'] },
+      { t: 'เมนูหัวหน้าฝ่าย', k: 'rm', r: ['head'], d: 'งานในฝ่าย · รายงานวันนี้ · รออนุมัติ · มอบงานลูกทีม · นัดประชุมทีม · ช่วยเหลือ', try: ['u_nid', '#menu'] },
       { t: 'เมนูพนักงาน', k: 'rm', r: ['staff'], d: 'งานของฉัน · อัปเดตงาน · แจ้งติดปัญหา · ทำอะไรก่อนดี · ถามเลขา · ช่วยเหลือ', try: ['u_ton', '#menu'] } ] } ] },
 
   { t: 'ถาม-ตอบกับเลขาเป็ด', d: 'คำถามภาษาพูด ตอบด้วย Claude จากข้อมูลที่ตำแหน่งนั้นเห็นได้', kids: [
@@ -2655,8 +2746,17 @@ const SM = [
     { t: 'มอบงาน', k: 'chat', q: 'ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้', r: ['ceo', 'head'], try: ['u_ceo', 'ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้'], kids: [
       { t: 'การ์ดยืนยันมอบหมายงาน', k: 'card', d: 'ผู้รับงาน · งาน · กำหนดส่ง · ข้อความที่จะแจ้ง · ปุ่ม ยืนยัน / ยกเลิก' },
       { t: 'บันทึกงาน', k: 'db', d: 'tasks (owner_id, department_id, due_at, progress = 0)' },
+      { t: 'แจ้งหัวหน้าฝ่ายก่อน', k: 'push', r: ['head'], d: 'การ์ด "CEO มอบงานให้ลูกทีม" ถึงหัวหน้า ก่อนส่งงานให้ลูกน้อง (ข้ามขั้นนี้ถ้าหัวหน้าเป็นคนสั่งหรือเป็นผู้รับเอง)' },
       { t: 'การ์ด "งานใหม่" ถึงผู้รับ', k: 'push', d: 'ปุ่ม รับทราบ → บันทึก task_updates' },
       { t: 'หัวหน้ามอบงานข้ามฝ่าย แล้วถูกปฏิเสธ', k: 'chat', r: ['head'], try: ['u_nid', 'ให้คุณมิ้นท์ทำโปสเตอร์ภายในพรุ่งนี้'] } ] },
+    { t: 'งานพิเศษจาก CEO (ต้องให้หัวหน้าอนุมัติก่อน)', k: 'chat', q: 'งานพิเศษ ให้คุณต้นเตรียมเอกสารประมูลโครงการรัฐ ภายในศุกร์นี้', r: ['ceo'], try: ['u_ceo', 'งานพิเศษ ให้คุณต้นเตรียมเอกสารประมูลโครงการรัฐ ภายในศุกร์นี้'], kids: [
+      { t: 'การ์ดยืนยันงานพิเศษ', k: 'card', d: 'แสดงลำดับขั้น: หัวหน้าอนุมัติ → ลูกน้องเห็นงานรออยู่ → อนุมัติแล้วจึงเริ่มทำ · ปุ่ม ส่งขออนุมัติ / ยกเลิก' },
+      { t: 'บันทึกงานสถานะรออนุมัติ', k: 'db', d: 'tasks.is_special = true · approval_status = pending · approver_id = หัวหน้าฝ่าย · ยังไม่ถูกตามหรือเช็กกำหนดส่ง' },
+      { t: 'การ์ดขออนุมัติถึงหัวหน้าฝ่าย', k: 'push', r: ['head'], d: 'ปุ่ม อนุมัติ / ไม่อนุมัติ · ระบบตรวจว่าคนกดคือผู้อนุมัติของงานนี้', try: ['u_nid', 'งานพิเศษรออนุมัติ'] },
+      { t: 'การ์ด "มีงานพิเศษรออยู่" ถึงลูกน้อง', k: 'push', r: ['staff'], d: 'เห็นชื่องานและกำหนดส่ง แต่ยังเริ่มไม่ได้', try: ['u_ton', 'งานพิเศษของผมรออนุมัติอยู่ไหม'] },
+      { t: 'อนุมัติ → งานเปิดให้ลูกน้องทำ', k: 'push', d: 'ลูกน้องได้การ์ด "อนุมัติแล้ว เริ่มได้เลย" · CEO ได้รับแจ้งผล · งานเข้าระบบตามงานตามปกติ' },
+      { t: 'ไม่อนุมัติ → ปิดงาน', k: 'push', d: 'แจ้ง CEO และลูกน้องว่ายังไม่ต้องทำ' },
+      { t: 'หัวหน้าดูงานที่รออนุมัติ', k: 'rm', r: ['head'], d: 'ปุ่ม "รออนุมัติ" ใน Rich Menu หรือในรายงาน 09:00', try: ['u_nid', 'งานพิเศษรออนุมัติ'] } ] },
     { t: 'อัปเดตความคืบหน้า', k: 'chat', q: 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์', r: ['staff', 'head'], try: ['u_ton', 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์'], kids: [
       { t: 'บันทึก % และหมายเหตุ', k: 'db', d: 'tasks.progress + task_updates' },
       { t: 'ถามกลับว่างานไหน (ถ้ามีหลายงาน)', k: 'btn', d: 'Quick reply รายชื่องานของคนนั้น' },
@@ -2806,7 +2906,7 @@ const RICH = {
   ceo: [
     { l: 'ภาพรวมบริษัท', ic: 'chart', c: '#2563eb', q: 'ภาพรวมบริษัทตอนนี้เป็นยังไง' },
     { l: 'รายงานวันนี้', ic: 'report', c: '#0d9488', q: 'รายงานตอนนี้' },
-    { l: 'ฝ่ายที่น่าห่วง', ic: 'alert', c: '#dc2626', q: 'ฝ่ายไหนน่าห่วงที่สุด เพราะอะไร' },
+    { l: 'งานพิเศษ', ic: 'bolt', c: '#c98200', pre: 'งานพิเศษ ให้คุณต้นเตรียมเอกสารประมูลโครงการรัฐ ภายในศุกร์นี้' },
     { l: 'มอบงาน', ic: 'task', c: '#16a34a', pre: 'ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้' },
     { l: 'นัดประชุม', ic: 'cal', c: '#ea580c', q: 'ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง' },
     { l: 'การเงิน', ic: 'money', c: '#c98200', q: 'การเงินเดือนนี้เป็นยังไง' }
@@ -2814,7 +2914,7 @@ const RICH = {
   head: [
     { l: 'งานในฝ่าย', ic: 'team', c: '#2563eb', q: 'งานในฝ่ายถึงไหนแล้ว' },
     { l: 'รายงานวันนี้', ic: 'report', c: '#0d9488', q: 'รายงานตอนนี้' },
-    { l: 'ใครน่าห่วง', ic: 'alert', c: '#dc2626', q: 'ทีมผมตอนนี้ใครน่าห่วงที่สุด' },
+    { l: 'รออนุมัติ', ic: 'alert', c: '#c98200', q: 'งานพิเศษรออนุมัติ' },
     { l: 'มอบงานลูกทีม', ic: 'task', c: '#16a34a', pre: 'ให้คุณต้นสรุปลูกค้าเก่าภายในศุกร์นี้' },
     { l: 'นัดประชุมทีม', ic: 'cal', c: '#ea580c', q: 'นัดประชุมทีมฝ่ายขายพรุ่งนี้บ่าย 2 เรื่องยอดขายไตรมาส 4' },
     { l: 'ช่วยเหลือ', ic: 'help', c: '#52525b', help: true }
@@ -2858,9 +2958,9 @@ async function helpMsg(uid) {
 
 /* ---------- chips & personas ---------- */
 const CHIPS = {
-  u_ceo: ['วันนี้ผมควรโฟกัสเรื่องอะไรก่อน', 'ฝ่ายไหนน่าห่วงที่สุด เพราะอะไร', 'ทำไมกำไรเดือนนี้ลดลง', 'ภาพรวมบริษัทตอนนี้เป็นยังไง', 'แนวโน้มยอดขาย 6 เดือน', 'การเงินเดือนนี้เป็นยังไง', 'ยอดขายแยกสาขา', 'ลูกหนี้ค้างจ่ายมีใครบ้าง', 'ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง', 'งานของคุณต้นไปถึงไหน', 'ฝ่ายการตลาดถึงไหนแล้ว', 'ใครรับผิดชอบงบประมาณ', 'ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้', 'รายงานตอนนี้', 'พรุ่งนี้ 9 โมง ทักคุณสมชายเรื่องใบเสนอราคา', 'เตือนผมบ่าย 3 โทรหาธนาคาร', 'ร่างข้อความถึงคุณสมชาย ขอเลื่อนประชุมไปพุธหน้า', 'ร่างข้อความถึงคุณวิชัย ขอนัดคุยเรื่องสัญญาขนส่งปีหน้า'],
-  u_nid: ['ทีมผมตอนนี้ใครน่าห่วงที่สุด', 'นัดประชุมทีมฝ่ายขายพรุ่งนี้บ่าย 2 เรื่องยอดขายไตรมาส 4', 'งานในฝ่ายถึงไหนแล้ว', 'การเงินบริษัทเดือนนี้เป็นยังไง', 'งานของคุณแพรถึงไหน', 'ให้คุณต้นสรุปลูกค้าเก่าภายในศุกร์นี้', 'งานของคุณฝนถึงไหน', 'แผนยอดขายไตรมาส 1 คืบหน้า 50%', 'ให้คุณมิ้นท์ทำโปสเตอร์ภายในพรุ่งนี้'],
-  u_ton: ['พรุ่งนี้ผมต้องรีบทำอะไรก่อน', 'งานของผมมีอะไรบ้าง', 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์', 'ใบเสนอราคาเสร็จแล้ว', 'ติดปัญหาเรื่องใบเสนอราคา ลูกค้ายังไม่ส่งสเปก', 'งานของคุณแพรถึงไหน', 'ให้คุณแพรช่วยโทรหาลูกค้า']
+  u_ceo: ['งานพิเศษ ให้คุณต้นเตรียมเอกสารประมูลโครงการรัฐ ภายในศุกร์นี้', 'วันนี้ผมควรโฟกัสเรื่องอะไรก่อน', 'ฝ่ายไหนน่าห่วงที่สุด เพราะอะไร', 'ทำไมกำไรเดือนนี้ลดลง', 'ภาพรวมบริษัทตอนนี้เป็นยังไง', 'แนวโน้มยอดขาย 6 เดือน', 'การเงินเดือนนี้เป็นยังไง', 'ยอดขายแยกสาขา', 'ลูกหนี้ค้างจ่ายมีใครบ้าง', 'ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง', 'งานของคุณต้นไปถึงไหน', 'ฝ่ายการตลาดถึงไหนแล้ว', 'ใครรับผิดชอบงบประมาณ', 'ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้', 'รายงานตอนนี้', 'พรุ่งนี้ 9 โมง ทักคุณสมชายเรื่องใบเสนอราคา', 'เตือนผมบ่าย 3 โทรหาธนาคาร', 'ร่างข้อความถึงคุณสมชาย ขอเลื่อนประชุมไปพุธหน้า', 'ร่างข้อความถึงคุณวิชัย ขอนัดคุยเรื่องสัญญาขนส่งปีหน้า'],
+  u_nid: ['งานพิเศษรออนุมัติ', 'ทีมผมตอนนี้ใครน่าห่วงที่สุด', 'นัดประชุมทีมฝ่ายขายพรุ่งนี้บ่าย 2 เรื่องยอดขายไตรมาส 4', 'งานในฝ่ายถึงไหนแล้ว', 'การเงินบริษัทเดือนนี้เป็นยังไง', 'งานของคุณแพรถึงไหน', 'ให้คุณต้นสรุปลูกค้าเก่าภายในศุกร์นี้', 'งานของคุณฝนถึงไหน', 'แผนยอดขายไตรมาส 1 คืบหน้า 50%', 'ให้คุณมิ้นท์ทำโปสเตอร์ภายในพรุ่งนี้'],
+  u_ton: ['งานพิเศษของผมรออนุมัติอยู่ไหม', 'พรุ่งนี้ผมต้องรีบทำอะไรก่อน', 'งานของผมมีอะไรบ้าง', 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์', 'ใบเสนอราคาเสร็จแล้ว', 'ติดปัญหาเรื่องใบเสนอราคา ลูกค้ายังไม่ส่งสเปก', 'งานของคุณแพรถึงไหน', 'ให้คุณแพรช่วยโทรหาลูกค้า']
 };
 function setChips(uid, list) {
   S.chips = S.chips || {};
@@ -2917,7 +3017,7 @@ function render() {
     const s = wstatus(t), lu = lastUpdate(t);
     return '<div class="row' + F(t.id) + '"><div class="t">' + esc(t.title) + '<small>' + esc(P(t.owner).name) + (lu ? ' · "' + lu.note + '"' : '') + '</small></div>' +
       '<div class="pg"><div class="pb ' + s + '"><i style="width:' + t.p + '%"></i></div>' + t.p + '% · ตามแล้ว ' + t.nudges + '</div>' +
-      '<time>' + esc(dueText(t)) + '</time><div class="acts">' + pillW(t) + (openTask(t) && !isPersona(t.owner) ? '<button class="btn sm" data-sim="' + t.id + '" title="จำลองว่า' + esc(P(t.owner).name) + 'ตอบกลับ">จำลอง +20%</button>' : '') + '</div></div>';
+      '<time>' + esc(dueText(t)) + '</time><div class="acts">' + pillW(t) + (activeTask(t) && !isPersona(t.owner) ? '<button class="btn sm" data-sim="' + t.id + '" title="จำลองว่า' + esc(P(t.owner).name) + 'ตอบกลับ">จำลอง +20%</button>' : '') + '</div></div>';
   }).join('') : '<div class="empty">ไม่มีงาน</div>';
   let dash = '<div class="scope">กำลังดูในฐานะ <b>' + esc(me.name + ' · ' + me.title) + '</b> · RLS ให้เห็น ' + scopeTxt + ' สลับคนที่ปุ่มเหนือโทรศัพท์</div>' +
     '<div class="kpis"><div class="kpi"><b>' + open.length + '</b><span>งานเปิดอยู่</span></div>' +
