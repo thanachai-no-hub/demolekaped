@@ -313,6 +313,7 @@ code, pre, .mono { font-family: var(--font-mono); }
 .pill.overdue, .pill.failed { background: var(--bad-bg); color: var(--bad); border-color: transparent; }
 .pill.blocked { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
 .pill.awaiting { background: var(--warn-bg); color: var(--warn); border: 1px dashed var(--warn); }
+.pill.extpend { background: var(--warn-bg); color: var(--warn); border: 1px dashed var(--warn); }
 .pill.rejected { color: var(--muted); text-decoration: line-through; }
 .pb.awaiting i { background: repeating-linear-gradient(45deg, #e8a317 0 4px, transparent 4px 8px); }
 .pill.draft, .pill.not_started { border-style: dashed; color: var(--muted); }
@@ -369,7 +370,7 @@ main, .view { min-width: 0; max-width: 100%; }
 .loop b { display: block; font-size: 14px; }
 .loop span { color: var(--muted); }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.schema { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.schema { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .tbl { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; min-width: 0; }
 .tbl h4 { font-family: var(--font-mono); font-weight: 500; font-size: 14px; padding: 8px 12px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
 .tbl h4 small { font-family: var(--font-body); color: var(--muted); font-size: 12px; margin-left: 6px; }
@@ -849,6 +850,7 @@ h1, h2, h3, h4 { letter-spacing: -0.015em; }
               <tr><td><code>get_work_status</code></td><td>ตอบว่างานของคน ฝ่าย หรือเรื่องหนึ่งไปถึงไหน ใครรับผิดชอบ</td><td>ทุกคน ตามขอบเขต role</td><td>ไม่ต้อง</td></tr>
               <tr><td><code>get_business_metrics</code></td><td>ภาพรวม แนวโน้มรายได้ กำไร เงินสด ลูกหนี้ ยอดขายแยกสาขา อ่านจาก view ที่ฝ่ายการเงินกำหนดเท่านั้น</td><td>CEO, ฝ่ายการเงิน</td><td>ไม่ต้อง (อ่านอย่างเดียว)</td></tr>
               <tr><td><code>update_progress</code></td><td>บันทึก % ความคืบหน้า สถานะ และหมายเหตุ</td><td>เจ้าของงาน</td><td>ไม่ต้อง</td></tr>
+              <tr><td><code>request_extension</code> / <code>decide_extension</code></td><td>ขอเลื่อนกำหนดส่ง และพิจารณา (งานปกติ: หัวหน้า · การ์ดดำหรือครั้งที่ 3: หัวหน้ากรองแล้ว CEO ตัดสิน)</td><td>เจ้าของงานขอ · หัวหน้า/CEO ตัดสิน</td><td class="yes">ต้อง (การ์ดยืนยัน)</td></tr>
               <tr><td><code>approve_task</code></td><td>อนุมัติหรือไม่อนุมัติการ์ดดำจาก CEO ก่อนส่งถึงลูกทีม</td><td>หัวหน้าฝ่าย (ผู้อนุมัติของงานนั้น)</td><td>ไม่ต้อง (การกดคือการยืนยัน)</td></tr>
               <tr><td><code>assign_task</code></td><td>มอบงานพร้อมกำหนดส่ง แจ้งผู้รับทันที</td><td>CEO, หัวหน้า (ลูกทีม)</td><td class="yes">ต้อง</td></tr>
               <tr><td><code>nudge_owner</code></td><td>ตามคนรับผิดชอบตอนนี้เลย</td><td>CEO, หัวหน้า</td><td>ไม่ต้อง</td></tr>
@@ -877,6 +879,8 @@ h1, h2, h3, h4 { letter-spacing: -0.015em; }
             <li class="pk">id <span>bigint PK</span></li><li class="fk">task_id <span>→ tasks</span></li><li class="fk">by_id <span>→ profiles</span></li><li>progress <span>int</span></li><li>note <span>text</span></li><li>created_at <span>timestamptz</span></li></ul></div>
           <div class="tbl"><h4>scheduled_messages<small>ส่งตามเวลา / เตือน</small></h4><ul>
             <li class="pk">id <span>text PK</span></li><li class="fk">owner_id <span>→ profiles</span></li><li>to_line_id <span>text</span></li><li>kind <span>send | reminder</span></li><li>message <span>text</span></li><li>run_at <span>timestamptz</span></li><li>status <span>draft → scheduled → sent</span></li></ul></div>
+          <div class="tbl"><h4>task_extensions<small>คำขอเลื่อนกำหนดส่ง</small></h4><ul>
+            <li class="pk">id <span>text PK</span></li><li class="fk">task_id <span>→ tasks</span></li><li class="fk">requested_by <span>→ profiles</span></li><li>old_due, new_due <span>timestamptz</span></li><li>reason <span>text</span></li><li>status <span>head | ceo | approved | rejected</span></li><li>head_note, decided_by <span>text, → profiles</span></li></ul></div>
           <div class="tbl"><h4>meetings<small>นัดหมาย</small></h4><ul>
             <li class="pk">id <span>text PK</span></li><li>title <span>text</span></li><li class="fk">organizer_id <span>→ profiles</span></li><li>start_at <span>timestamptz</span></li><li>remind_at <span>start_at − 15 นาที</span></li><li>reminded <span>bool</span></li></ul></div>
           <div class="tbl"><h4>meeting_attendees<small>ผู้เข้าร่วม</small></h4><ul>
@@ -981,7 +985,7 @@ for (const t of due) {
           <div class="wk"><span class="w">สัปดาห์ 1</span><b>วางพื้นฐาน</b><span>สร้างโปรเจกต์ Supabase · เปิด LINE OA · Edge Function line-webhook ตอบ "รับทราบ" ได้ · สร้าง schema duck ในฐานข้อมูลเดิม และ view profiles อ่านจากตารางพนักงาน</span></div>
           <div class="wk"><span class="w">สัปดาห์ 2</span><b>ผูก LINE กับพนักงาน</b><span>ตาราง line_links · หน้า LIFF ล็อกอินด้วย LINE แล้วยืนยันด้วยรหัสพนักงาน + OTP · ไม่ต้องกรอกฝ่ายหรือตำแหน่งใหม่</span></div>
           <div class="wk"><span class="w">สัปดาห์ 3</span><b>สิทธิ์ตาม role</b><span>ออก JWT ให้แต่ละคนจาก LINE userId · เขียน RLS ทุกตาราง · ทดสอบว่าหัวหน้าเห็นข้ามฝ่ายไม่ได้</span></div>
-          <div class="wk"><span class="w">สัปดาห์ 4</span><b>เลขาเป็ดคุยได้</b><span>เชื่อม LLM แบบ tool use · มอบงาน (แจ้งหัวหน้าก่อน) · การ์ดดำและการอนุมัติ · ถามสถานะ อัปเดตความคืบหน้า · การ์ดยืนยันและกันการกดซ้ำ</span></div>
+          <div class="wk"><span class="w">สัปดาห์ 4</span><b>เลขาเป็ดคุยได้</b><span>เชื่อม LLM แบบ tool use · มอบงาน (แจ้งหัวหน้าก่อน) · การ์ดดำและการอนุมัติ · ขอเลื่อนกำหนดส่ง · ถามสถานะ อัปเดตความคืบหน้า · การ์ดยืนยันและกันการกดซ้ำ</span></div>
           <div class="wk"><span class="w">สัปดาห์ 5</span><b>รายงาน 09:00 และการตาม</b><span>pg_cron + daily-report · รายงานตาม role · ตามงานที่ครบภายในวันพรุ่งนี้ · แจ้งหัวหน้าเมื่อเลยกำหนด</span></div>
           <div class="wk"><span class="w">สัปดาห์ 6</span><b>นัดหมายและตั้งเวลา</b><span>หน้า LIFF เลือกผู้เข้าร่วม · ปุ่ม "ส่งจาก LINE ของฉัน" (Share Target Picker) · แจ้งและรับคำตอบ · เตือนก่อน 15 นาที · ตั้งเวลาส่งข้อความ เตือน</span></div>
           <div class="wk"><span class="w">สัปดาห์ 7</span><b>ความจำและทดสอบภายใน</b><span>ร่างข้อความ ความจำ ค้นย้อนหลัง · ทีมพัฒนาลองใช้เองให้ครบทุกเส้นทาง</span></div>
@@ -1022,7 +1026,7 @@ for (const t of due) {
 
     <div class="plan">
       <div class="verdict">
-        <div class="vd"><b>12</b><span>ทำได้เลยตามที่ออกแบบ</span></div>
+        <div class="vd"><b>13</b><span>ทำได้เลยตามที่ออกแบบ</span></div>
         <div class="vd adj"><b>10</b><span>ทำได้ ด้วยวิธีที่ปรับให้เข้ากับ LINE</span></div>
         <div class="vd no"><b>0</b><span>ข้อที่ไม่มีทางทำ ทุกข้อมีวิธีที่ใช้ได้</span></div>
         <p>ภาพรวม: <strong>ทำได้จริง</strong> ส่วนหลัก คือ รายงาน 09:00 ตาม role, ตามงานเอง, ถามว่างานใครถึงไหน, มอบงาน และนัดหมาย ทำได้ทั้งหมด ข้อที่ LINE ไม่รองรับตรงๆ เปลี่ยนเป็นวิธีที่ใช้ได้จริงแล้ว เช่น ส่งในนาม CEO ใช้ปุ่มส่งจาก LINE ของ CEO เอง ความเสี่ยงใหญ่ที่สุดไม่ใช่เทคนิค แต่เป็นเรื่องว่าพนักงานจะตอบเลขาเป็ดสม่ำเสมอหรือไม่</p>
@@ -1044,6 +1048,7 @@ for (const t of due) {
               <tr><td>กราฟในแชต LINE</td><td><span class="pill done">ทำได้</span></td><td>กราฟแท่งง่ายๆ สร้างจาก Flex Message ได้เลย ถ้าอยากได้กราฟเส้นหรือซับซ้อนกว่านั้น ต้องสร้างเป็นรูปแล้วส่ง</td></tr>
               <tr><td>คาดการณ์ตัวเลขเดือนหน้า</td><td><span class="pill blocked">ทำได้ด้วยวิธีนี้</span></td><td>แสดงเป็นค่าประมาณจากแนวโน้มล่าสุดและต้องบอกทุกครั้งว่าเป็นค่าประมาณ ไม่ใช่การพยากรณ์ทางการเงิน</td></tr>
               <tr><td>มอบงาน แจ้งหัวหน้าเมื่อเลยกำหนด</td><td><span class="pill done">ทำได้</span></td><td>แจ้งหัวหน้าฝ่ายก่อน แล้วจึงส่งถึงลูกน้อง ผู้รับงานต้องลงทะเบียนในระบบแล้ว</td></tr>
+              <tr><td>ติดปัญหาแล้วขอเลื่อนกำหนดส่ง</td><td><span class="pill done">ทำได้</span></td><td>ตาราง task_extensions + การ์ดตัดสินตามลำดับขั้น หัวหน้ากรองก่อน การ์ดดำส่งต่อ CEO ระหว่างรอหยุดตามชั่วคราว</td></tr>
               <tr><td>การ์ดดำที่ต้องให้หัวหน้าอนุมัติก่อน</td><td><span class="pill done">ทำได้</span></td><td>สถานะ approval_status ในตาราง tasks + การ์ดมีปุ่มอนุมัติ ระบบตรวจว่าคนกดเป็นผู้อนุมัติจริง ลูกน้องเห็นงานรออยู่แต่ยังไม่ถูกตาม</td></tr>
               <tr><td>ตั้งเวลาส่งข้อความ เตือนความจำ</td><td><span class="pill done">ทำได้</span></td><td>scheduler รันทุก 1 นาที ข้อความอาจออกช้าได้ไม่เกินประมาณ 1 นาที</td></tr>
               <tr><td>ความจำ ค้นย้อนหลัง ร่างข้อความตามสไตล์</td><td><span class="pill done">ทำได้</span></td><td>เก็บใน Postgres + pgvector เป็นการจดความชอบ ไม่ใช่การฝึกโมเดลใหม่</td></tr>
@@ -1716,8 +1721,9 @@ function seed() {
   const d = (dd, h, m) => new Date(2026, 10, dd, h, m || 0);
   S = {
     now, busy: false, active: 'u_ceo', unread: {}, stampDay: {}, reportedDay: null,
-    seq: { task: 207, sched: 40, upd: 300, log: 80, mem: 9, meet: 11 },
+    seq: { task: 207, sched: 40, upd: 300, log: 80, mem: 9, meet: 11, ext: 20 },
     meetings: [],
+    exts: [],
     people: [
       { id: 'u_ceo', name: 'CEO', full: 'คุณประเสริฐ', role: 'ceo', dept: null, title: 'CEO', line: 'U••••ceo', internal: true, friend: true },
       { id: 'u_nid', name: 'คุณนิด', role: 'head', dept: 'sales', title: 'หัวหน้าฝ่ายขาย', line: 'U3b7…nid', internal: true, friend: true },
@@ -1767,8 +1773,8 @@ function seed() {
 const P = id => S.people.find(p => p.id === id);
 const T = id => S.tasks.find(t => t.id === id);
 const headOf = dept => S.people.find(p => p.role === 'head' && p.dept === dept);
-function wstatus(t) { if (t.approval === 'pending') return 'awaiting'; if (t.approval === 'rejected') return 'rejected'; if (t.p >= 100) return 'done'; if (t.due < S.now) return 'overdue'; if (t.blocked) return 'blocked'; return t.p > 0 ? 'in_progress' : 'not_started'; }
-const WS_TH = { awaiting: 'รอหัวหน้าอนุมัติ', rejected: 'ไม่อนุมัติ', done: 'เสร็จ', overdue: 'เลยกำหนด', blocked: 'ติดปัญหา', in_progress: 'กำลังทำ', not_started: 'ยังไม่เริ่ม' };
+function wstatus(t) { if (t.approval === 'pending') return 'awaiting'; if (t.ext) return 'extpend'; if (t.approval === 'rejected') return 'rejected'; if (t.p >= 100) return 'done'; if (t.due < S.now) return 'overdue'; if (t.blocked) return 'blocked'; return t.p > 0 ? 'in_progress' : 'not_started'; }
+const WS_TH = { extpend: 'รอพิจารณาเลื่อน', awaiting: 'รอหัวหน้าอนุมัติ', rejected: 'ไม่อนุมัติ', done: 'เสร็จ', overdue: 'เลยกำหนด', blocked: 'ติดปัญหา', in_progress: 'กำลังทำ', not_started: 'ยังไม่เริ่ม' };
 const SCH_TH = { draft: 'ร่าง', scheduled: 'รอส่ง', sent: 'ส่งแล้ว', done: 'เตือนแล้ว', cancelled: 'ยกเลิก', failed: 'ส่งไม่สำเร็จ' };
 const pillW = t => { const s = wstatus(t); return '<span class="pill ' + s + '">' + (s === 'awaiting' ? 'รอ' + P(t.approver).name + 'อนุมัติ' : WS_TH[s]) + '</span>'; };
 const pillS = s => '<span class="pill ' + s + '">' + SCH_TH[s] + '</span>';
@@ -1785,7 +1791,7 @@ function canSeePerson(viewer, p) { const v = P(viewer); return v.role === 'ceo' 
 const visibleTasks = viewer => S.tasks.filter(t => canSee(viewer, t));
 const openTask = t => t.p < 100 && t.approval !== 'rejected';
 // active = the owner may work on it (special tasks waiting for approval are visible but not chased)
-const activeTask = t => openTask(t) && t.approval !== 'pending';
+const activeTask = t => openTask(t) && t.approval !== 'pending' && !t.ext;
 function sql(q) { S.sql = q; }
 function flash(id) { S.flash.add(id); }
 function logPush(toId, what) { S.log.push({ id: ++S.seq.log, to: P(toId).name, what, method: 'push', at: new Date(S.now) }); flash('log:' + S.seq.log); }
@@ -1878,7 +1884,7 @@ function parseWhen(text, now, defH) {
   else if (/วันนี้|เดี๋ยวนี้|ตอนนี้/.test(text)) day = new Date(now);
   else for (const [nm, dw] of DAYMAP) {
     const mm = text.match(new RegExp(nm + '(\\s*(หน้า|นี้))?'));
-    if (mm) { let diff = (dw - now.getDay() + 7) % 7; if (mm[2] === 'หน้า') diff += 7; day = addDays(now, diff); break; }
+    if (mm) { let diff = (dw - now.getDay() + 7) % 7; if (mm[2] === 'หน้า' && (diff === 0 || now.getDay() + diff < 7)) diff += 7; day = addDays(now, diff); break; }
   }
   if ((x = text.match(/(\d{1,2})[:.](\d{2})/))) { h = +x[1]; m = +x[2]; }
   else if ((x = text.match(/บ่าย\s*(\d{1,2}|โมง|สอง|สาม|สี่|ห้า)(\s*โมง)?(\s*ครึ่ง)?/))) { const n = /\d/.test(x[1]) ? +x[1] : WORDNUM[x[1]]; h = n === 12 ? 12 : 12 + n; if (x[3]) m = 30; }
@@ -1916,7 +1922,7 @@ function findTaskByKw(text, pool) {
 function reportCard(uid, label) {
   const me = P(uid);
   const vis = visibleTasks(uid).filter(openTask);
-  const sev = t => ({ overdue: 0, blocked: 1, in_progress: 2, not_started: 2, awaiting: 3, rejected: 4, done: 5 })[wstatus(t)] * 10 + (t.due - S.now) / 864e5;
+  const sev = t => ({ extpend: 1, overdue: 0, blocked: 1, in_progress: 2, not_started: 2, awaiting: 3, rejected: 4, done: 5 })[wstatus(t)] * 10 + (t.due - S.now) / 864e5;
   if (me.role === 'ceo') {
     let body = '<div class="fx-t">ภาพรวมแต่ละฝ่าย</div>';
     Object.keys(DEPTS).forEach(dk => {
@@ -1929,6 +1935,8 @@ function reportCard(uid, label) {
     const pend = vis.filter(t => t.approval === 'pending');
     const bc = vis.filter(t => t.special && activeTask(t));
     if (bc.length) body += '<div class="fx-t">การ์ดดำที่กำลังทำ</div>' + bc.map(t => taskBlock(t, true)).join('');
+    const exw = S.exts.filter(x => x.status === 'ceo' || (x.status === 'approved' && S.now - x.decidedAt < 7 * 864e5));
+    if (exw.length) body += '<div class="fx-t">การขอเลื่อนสัปดาห์นี้</div>' + exw.map(x => rowx(x.status === 'ceo' ? 'a' : '', esc(P(x.by).name + ' · ' + T(x.task).title), (x.status === 'ceo' ? 'รอท่านพิจารณา · ' : 'เลื่อนแล้ว · ') + dayStr(x.oldDue) + ' → ' + dayStr(x.newDue))).join('');
     if (pend.length) body += '<div class="fx-t">การ์ดดำรอหัวหน้าอนุมัติ</div>' + pend.map(t => rowx('a', esc(P(t.owner).name + ' · ' + t.title), 'ผู้อนุมัติ ' + P(t.approver).name)).join('');
     body += '<div class="fx-t">ต้องจับตา · ใครรับผิดชอบ</div>' + (watch.length ? watch.map(t => taskBlock(t, true)).join('') : '<div class="fx-r"><i class="dot n"></i><span>ไม่มีงานเสี่ยง</span></div>');
     const od = vis.filter(t => wstatus(t) === 'overdue');
@@ -1939,9 +1947,10 @@ function reportCard(uid, label) {
     const ts = vis.filter(t => t.dept === me.dept).sort((a, b) => sev(a) - sev(b));
     const lag = ts.filter(t => ['overdue', 'blocked'].includes(wstatus(t)) && t.owner !== uid);
     const pend = ts.filter(t => t.approval === 'pending' && t.approver === uid);
-    const pendHtml = pend.length ? '<div class="fx-note">มีการ์ดดำจาก CEO รอคุณอนุมัติ ' + pend.length + ' งาน</div>' : '';
+    const extWait = S.tasks.filter(t => t.ext && extApprover(t) === uid);
+    const pendHtml = (pend.length ? '<div class="fx-note">มีการ์ดดำจาก CEO รอคุณอนุมัติ ' + pend.length + ' งาน</div>' : '') + (extWait.length ? '<div class="fx-note">มีคำขอเลื่อนรอคุณพิจารณา ' + extWait.length + ' งาน</div>' : '');
     return { head: label || 'รายงาน 09:00 · ' + DEPTS[me.dept], tone: 'duckh', body: pendHtml + (ts.length ? ts.map(t => taskBlock(t, true)).join('') : 'ไม่มีงานเปิดในฝ่าย'),
-      buttons: pend.length ? [{ label: 'ดูงานรออนุมัติ', fn: () => approvals(uid) }] : lag.length ? [{ label: 'ตามคนที่ค้าง', fn: async () => { traceStart(me.name + ' สั่งตามลูกทีมที่ค้าง', 'nudge'); for (const t of lag) await nudge(t, uid, true); render(); await say(uid, 'ตามแล้วครับ: ' + lag.map(t => P(t.owner).name).join(', ')); } }] : [] };
+      buttons: pend.length || extWait.length ? [{ label: 'ดูงานรออนุมัติ', fn: () => approvals(uid) }] : lag.length ? [{ label: 'ตามคนที่ค้าง', fn: async () => { traceStart(me.name + ' สั่งตามลูกทีมที่ค้าง', 'nudge'); for (const t of lag) await nudge(t, uid, true); render(); await say(uid, 'ตามแล้วครับ: ' + lag.map(t => P(t.owner).name).join(', ')); } }] : [] };
   }
   const mine = vis.filter(t => t.owner === uid).sort((a, b) => a.due - b.due);
   return { head: label || 'งานของคุณ · ' + dayStr(S.now), tone: 'duckh', body: mine.length ? mine.map(t => taskBlock(t, false)).join('') : 'ไม่มีงานค้าง' };
@@ -1970,7 +1979,8 @@ async function nudge(t, byUid, silentReport) {
     buttons: [
       { label: 'คืบหน้า +20%', fn: () => applyUpdate(t.owner, t, { p: Math.min(100, t.p + 20), note: 'อัปเดตผ่านปุ่ม +20%' }) },
       { label: 'เสร็จแล้ว', fn: () => applyUpdate(t.owner, t, { p: 100, note: 'เสร็จแล้ว' }) },
-      { label: 'ติดปัญหา', cls: 'x', fn: () => applyUpdate(t.owner, t, { blocked: true, note: 'แจ้งติดปัญหา (ผ่านปุ่ม)' }) }
+      { label: 'ติดปัญหา', cls: 'x', fn: () => applyUpdate(t.owner, t, { blocked: true, note: 'แจ้งติดปัญหา (ผ่านปุ่ม)' }) },
+      { label: 'ขอเลื่อน', cls: 'x', fn: () => extAskDate(t.owner, t, (lastUpdate(t) || {}).note || 'ขอเลื่อนผ่านปุ่ม') }
     ]
   }, true);
 }
@@ -1996,10 +2006,11 @@ async function applyUpdate(uid, t, ch, fromText) {
   notify.forEach(n => { pushTrace(n, 'แจ้งความคืบหน้า'); logPush(n, (t.p >= 100 ? 'แจ้งงานเสร็จ ' : 'แจ้งติดปัญหา ') + t.id); });
   render();
   await say(uid, t.p >= 100 ? 'ปิดงาน "' + t.title + '" แล้วครับ ขอบคุณครับ' + (notify.length ? ' แจ้ง' + notify.map(n => P(n).name).join(' และ ') + ' ให้แล้ว' : '')
-    : t.blocked ? 'บันทึกว่าติดปัญหาแล้วครับ แจ้ง' + notify.map(n => P(n).name).join(', ') + 'ให้ช่วยดูแล้ว'
+    : t.blocked ? 'บันทึกว่าติดปัญหาแล้วครับ แจ้ง' + notify.map(n => P(n).name).join(', ') + 'ให้ช่วยดูแล้ว\nถ้าต้องการเลื่อนกำหนดส่ง แตะปุ่มด้านล่างได้เลยครับ'
     : 'บันทึกแล้วครับ "' + t.title + '" ' + t.p + '%');
   if (tellIssuer) await card(t.by, { head: 'อัปเดตการ์ดดำ · ' + P(uid).name, tone: 'black', body: taskBlock(t, false) + (ch.note ? kv('หมายเหตุ', ch.note, true) : ''),
     buttons: t.p < 100 ? [{ label: 'ตาม' + P(uid).name + 'ต่อ', fn: async () => { traceStart(P(t.by).name + ' ตามการ์ดดำ ' + t.id, 'nudge'); await nudge(t, t.by); render(); await say(t.by, 'ตาม' + P(uid).name + 'แล้วครับ'); } }] : [] }, true);
+  if (t.blocked && t.p < 100 && !t.ext && t.owner === uid) setChips(uid, [{ label: 'ขอเลื่อนกำหนดส่ง', fn: () => extAskDate(uid, t, ch.note || 'ติดปัญหา') }]);
   for (const n of notify) {
     await say(n, (t.p >= 100 ? 'งานเสร็จแล้วครับ: ' : 'มีงานติดปัญหาครับ: ') + P(uid).name + ' · "' + t.title + '"' + (ch.note && t.p < 100 ? '\nหมายเหตุ: ' + ch.note : ''));
   }
@@ -2031,7 +2042,8 @@ function isAction(text) {
   if (/(การ์ดดำ|งานพิเศษ)/.test(text) && /ถึงไหน|คืบหน้า|ทั้งหมด|มีอะไร|สถานะ|ตาม/.test(text) && !/รออนุมัติ/.test(text)) return true;
   if (/^(ช่วย)?(ติด)?ตาม(งาน)?\s*คุณ/.test(text)) return true;
   if (/^(การ์ดดำ|งานพิเศษ)/.test(text) || (/^ให้/.test(text) && /การ์ดดำ|งานพิเศษ/.test(text))) return true;
-  if (/^(การ์ดดำ|งานพิเศษ)รออนุมัติ$|^รออนุมัติ|^อนุมัติ/.test(text)) return true;
+  if (/^(การ์ดดำ|งานพิเศษ)รออนุมัติ$|^รออนุมัติ|^อนุมัติ|คำขอเลื่อน/.test(text)) return true;
+  if (/ขอเลื่อน/.test(text) && !/^ร่าง|ประชุม|นัด/.test(text)) return true;
   const question = /ถึงไหน|ใครรับผิดชอบ|อะไร|ยังไง|อย่างไร|เท่าไร|ไหม|มั้ย|หรือยัง|\?|วิเคราะห์|แนะนำ|ทำไม|สรุป|รายงาน|ภาพรวม|แนวโน้ม/.test(text);
   if (question && !/^(ให้|ช่วยนัด|นัด|ร่าง|เตือน|ยกเลิก)/.test(text)) return false;
   const p = findPerson(text);
@@ -2062,7 +2074,7 @@ function buildContext(uid) {
   L.push('ลูกค้าในสมุดรายชื่อ: ' + S.people.filter(p => !p.internal).map(p => p.name + ' (' + p.title + (p.friend ? '' : ', ยังไม่ได้แอดเลขาเป็ด') + ')').join(', '));
   L.push('\n### งานที่ตำแหน่งนี้มองเห็น');
   visibleTasks(uid).forEach(t => { const lu = lastUpdate(t);
-    L.push('- ' + t.title + ' · ผู้รับผิดชอบ ' + P(t.owner).name + ' · ' + DEPTS[t.dept] + ' · ' + t.p + '% · ' + WS_TH[wstatus(t)] + ' · ' + dueText(t) + ' · สั่งโดย ' + P(t.by).name + ' · ตามแล้ว ' + t.nudges + ' ครั้ง' + (t.special ? ' · การ์ดดำจาก CEO (' + (t.approval === 'pending' ? 'รอ ' + P(t.approver).name + ' อนุมัติ ยังเริ่มไม่ได้' : t.approval === 'approved' ? 'อนุมัติแล้วโดย ' + P(t.approver).name : 'ไม่อนุมัติ') + ')' : '') + (lu ? ' · อัปเดตล่าสุด ' + dayStr(lu.at) + ' ' + hm(lu.at) + ': "' + lu.note + '"' : '')); });
+    L.push('- ' + t.title + ' · ผู้รับผิดชอบ ' + P(t.owner).name + ' · ' + DEPTS[t.dept] + ' · ' + t.p + '% · ' + WS_TH[wstatus(t)] + ' · ' + dueText(t) + ' · สั่งโดย ' + P(t.by).name + ' · ตามแล้ว ' + t.nudges + ' ครั้ง' + (t.ext ? ' · ขอเลื่อนเป็น ' + when(t.ext.newDue) + ' (รอ ' + P(extApprover(t)).name + ' พิจารณา) เหตุผล: ' + t.ext.reason : '') + (t.extCount ? ' · เคยเลื่อนแล้ว ' + t.extCount + ' ครั้ง' : '') + (t.special ? ' · การ์ดดำจาก CEO (' + (t.approval === 'pending' ? 'รอ ' + P(t.approver).name + ' อนุมัติ ยังเริ่มไม่ได้' : t.approval === 'approved' ? 'อนุมัติแล้วโดย ' + P(t.approver).name : 'ไม่อนุมัติ') + ')' : '') + (lu ? ' · อัปเดตล่าสุด ' + dayStr(lu.at) + ' ' + hm(lu.at) + ': "' + lu.note + '"' : '')); });
   const mt = S.meetings.filter(m => m.org === uid || m.att.some(a => a.id === uid));
   if (mt.length) { L.push('\n### นัดหมายของผู้ใช้'); mt.forEach(m => L.push('- ' + m.title + ' · ' + when(m.start) + ' · ผู้จัด ' + P(m.org).name + ' · ' + m.att.map(a => P(a.id).name + ' ' + ATT_TH[a.status]).join(', '))); }
   const sc = S.sched.filter(x => x.owner === uid && x.status !== 'cancelled');
@@ -2134,7 +2146,8 @@ async function handleRules(uid, text) {
     const p2 = findPerson(t2);
     if (p2) return assign(uid, t2, p2, true);
   }
-  if (/รออนุมัติ|^อนุมัติ/.test(text) && !p) return approvals(uid);
+  if (/รออนุมัติ|^อนุมัติ|คำขอเลื่อน/.test(text) && !p) return approvals(uid);
+  if (/ขอเลื่อน/.test(text) && !/^ร่าง|ประชุม|นัด/.test(text)) return extIntent(uid, text);
   if (/งานของ(ฉัน|ผม|หนู|เรา)|^ผมมีงาน|^ฉันมีงาน|มีงานอะไรบ้าง/.test(text) && !p) return myTasks(uid, text);
   const isUpdate = /\d{1,3}\s*%|เสร็จ(แล้ว)?|ส่งงานแล้ว|ติดปัญหา|ติดขัด/.test(text) && !/ถึงไหน|ใคร/.test(text) && !/^ให้/.test(text);
   if (isUpdate && !p) return updateIntent(uid, text);
@@ -2313,6 +2326,108 @@ async function decide(t, ok) {
     buttons: [{ label: 'ตาม' + p.name + 'ตอนนี้', fn: async () => { traceStart(boss.name + ' ตามการ์ดดำ ' + t.id, 'nudge'); await nudge(t, boss.id); render(); await say(boss.id, 'ตาม' + p.name + 'แล้วครับ จะแจ้งทันทีที่ตอบกลับ'); } }, { label: 'ดูการ์ดดำทั้งหมด', fn: () => blackCards(boss.id) }] }, true);
   else await say(boss.id, head.name + ' ไม่อนุมัติการ์ดดำ "' + t.title + '" ครับ ' + p.name + ' ยังไม่ได้เริ่มทำ ถ้าต้องการให้ทำต่อ ลองคุยกับ' + head.name + 'โดยตรง');
 }
+
+/* ---------- postponement requests: normal task → head decides; black card or 3rd request → head screens, CEO decides ---------- */
+function extNeedsCeo(t) { return !!t.special || (t.extCount || 0) >= 2 || P(t.owner).role === 'head'; }
+function extApprover(t) { if (!t.ext) return null; if (t.ext.status === 'ceo') return t.by && P(t.by).role === 'ceo' ? t.by : 'u_ceo'; const h = headOf(t.dept); return h.id === t.owner ? 'u_ceo' : h.id; }
+function daysBetween(a, b) { return Math.round((at(b, 0, 0) - at(a, 0, 0)) / 864e5); }
+function extOptions(t) {
+  const base = t.due > S.now ? t.due : S.now;
+  const work = n => { let d = new Date(base); while (n > 0) { d = addDays(d, 1); if (d.getDay() !== 0 && d.getDay() !== 6) n--; } return d; };
+  const opts = [work(1), work(2), work(5)].map(d => at(d, t.due.getHours(), t.due.getMinutes()));
+  return opts.filter((d, i) => opts.findIndex(x => sameDay(x, d)) === i);
+}
+async function extIntent(uid, text) {
+  traceStart(text, 'nudge');
+  const mine = S.tasks.filter(t => t.owner === uid && openTask(t) && t.approval !== 'pending');
+  const t = findTaskByKw(text, mine) || (mine.length === 1 ? mine[0] : null);
+  const reason = cleanTopic(text.replace(/ขอเลื่อน.*$/, '')) || cleanTopic(text);
+  preamble(uid, text, 'request_extension', t ? { task: t.title, reason } : { reason });
+  if (!t) { replyTrace('ถามว่างานไหน'); render(); if (!mine.length) { await say(uid, 'คุณไม่มีงานที่ขอเลื่อนได้ครับ'); return; } await say(uid, 'ขอเลื่อนงานไหนครับ'); setChips(uid, mine.map(x => ({ label: x.title, fn: () => extAskDate(uid, x, reason) }))); return; }
+  if (t.ext) { replyTrace('มีคำขออยู่แล้ว'); render(); await say(uid, 'งานนี้มีคำขอเลื่อนรอ' + P(extApprover(t)).name + 'พิจารณาอยู่แล้วครับ'); return; }
+  const m = text.match(/ขอเลื่อน(?:กำหนด(?:ส่ง)?)?\s*(?:เป็น|ไป(?:เป็น)?|ถึง)?\s*(.+)$/);
+  let nd = m ? parseWhen(m[1], S.now, t.due.getHours()) : null;
+  if (nd) nd = at(nd, t.due.getHours(), t.due.getMinutes());
+  if (/ติดปัญหา|ติดขัด/.test(text) && !t.blocked) { t.blocked = true; const u = { id: ++S.seq.upd, task: t.id, by: uid, p: t.p, note: reason, at: new Date(S.now) }; S.updates.push(u); flash('upd:' + u.id); }
+  replyTrace('ยืนยันคำขอเลื่อน'); render();
+  if (!nd || nd <= t.due) return extAskDate(uid, t, reason, true);
+  return extConfirm(uid, t, nd, reason);
+}
+async function extAskDate(uid, t, reason, quiet) {
+  if (t.ext) { await say(uid, 'งานนี้มีคำขอเลื่อนรอพิจารณาอยู่แล้วครับ'); return; }
+  await say(uid, (quiet ? '' : 'ได้ครับ ') + 'อยากเลื่อน "' + t.title + '" จาก ' + dayStr(t.due) + ' เป็นวันไหนครับ');
+  setChips(uid, extOptions(t).map(d => ({ label: 'เลื่อนเป็น ' + dayStr(d), fn: () => extConfirm(uid, t, d, reason) })));
+}
+async function extConfirm(uid, t, nd, reason) {
+  const n = daysBetween(t.due, nd), toCeo = extNeedsCeo(t), head = headOf(t.dept);
+  const route = P(t.owner).role === 'head' ? rowx('a', 'ส่งให้ CEO พิจารณา', '') :
+    toCeo ? rowx('a', '1. ' + head.name + ' ดูก่อน', 'ส่งต่อหรือไม่อนุมัติ') + rowx('a', '2. CEO ตัดสิน', t.special ? 'เพราะเป็นการ์ดดำ' : 'เพราะเป็นการขอเลื่อนครั้งที่ ' + ((t.extCount || 0) + 1)) : rowx('a', head.name + ' พิจารณา', '');
+  await card(uid, { head: 'ยืนยันคำขอเลื่อน', tone: t.special ? 'black' : 'warn',
+    body: kv('งาน', t.title) + kv('กำหนดเดิม', when(t.due)) + kv('ขอเป็น', when(nd) + ' (+' + n + ' วัน)') + kv('เหตุผล', reason, true) + (t.extCount ? kv('เคยเลื่อน', t.extCount + ' ครั้ง') : '') + '<div class="fx-t">ผู้พิจารณา</div>' + route +
+      '<div class="fx-note">ระหว่างรอ กำหนดส่งยังเป็นวันเดิม และเลขาเป็ดจะหยุดตามงานนี้ไว้ก่อน</div>',
+    buttons: [{ label: 'ส่งคำขอ', fn: () => extSend(uid, t, nd, reason) }, { label: 'ยกเลิก', cls: 'x', fn: async () => say(uid, 'ไม่ได้ส่งคำขอครับ') }] });
+}
+async function extSend(uid, t, nd, reason) {
+  traceStart(P(uid).name + ' ขอเลื่อน ' + t.id, 'nudge');
+  tr('LINE', P(uid).name + ' กดส่งคำขอ → postback', { type: 'postback', data: 'action=extend&task=' + t.id });
+  const x = { id: 'ext_0' + (++S.seq.ext), task: t.id, by: uid, oldDue: new Date(t.due), newDue: nd, reason, status: P(t.owner).role === 'head' ? 'ceo' : 'head', at: new Date(S.now) };
+  S.exts.push(x); t.ext = { id: x.id, newDue: nd, reason, status: x.status }; flash(t.id); flash(x.id);
+  sql("insert into task_extensions (id, task_id, requested_by, old_due, new_due, reason, status)\nvalues ('" + x.id + "', '" + t.id + "', '" + uid + "', '" + iso(x.oldDue) + "', '" + iso(nd) + "', '" + reason + "', '" + x.status + "');");
+  tr('Postgres', 'บันทึกคำขอเลื่อน · งานนี้หยุดถูกตามชั่วคราว', S.sql);
+  const ap = extApprover(t);
+  pushTrace(ap, 'คำขอเลื่อน'); logPush(ap, 'คำขอเลื่อน ' + t.id); render();
+  await say(uid, 'ส่งคำขอให้' + P(ap).name + 'แล้วครับ' + (extNeedsCeo(t) && x.status === 'head' ? ' (จากนั้นส่งต่อ CEO)' : '') + ' ระหว่างนี้ผมหยุดตามงานนี้ไว้ก่อน และจะแจ้งผลทันที');
+  await extDecisionCard(t);
+}
+async function extDecisionCard(t) {
+  const ap = extApprover(t), o = P(t.owner), x = S.exts.find(e => e.id === t.ext.id);
+  const atHead = t.ext.status === 'head', forward = atHead && extNeedsCeo(t);
+  const n = daysBetween(t.due, t.ext.newDue);
+  const body = kv('ผู้ขอ', o.name) + kv('งาน', t.title) + kv('กำหนดเดิม', when(t.due)) + kv('ขอเป็น', when(t.ext.newDue) + ' (+' + n + ' วัน)') + kv('เหตุผล', t.ext.reason, true) +
+    kv('คืบหน้า', t.p + '%') + kv('เคยเลื่อน', (t.extCount || 0) + ' ครั้ง') + (x && x.headNote ? kv('ความเห็น' + P(headOf(t.dept).id).name, x.headNote, true) : '') +
+    (forward ? '<div class="fx-note">' + (t.special ? 'เป็นการ์ดดำ' : 'ขอเลื่อนเกิน 2 ครั้ง') + ' คุณกรองก่อน แล้ว CEO เป็นคนตัดสิน</div>' : '');
+  let alt = at(addDays(t.due, Math.max(1, Math.floor(n / 2))), t.due.getHours(), t.due.getMinutes());
+  while (alt.getDay() === 0 || alt.getDay() === 6) alt = addDays(alt, 1);
+  await card(ap, { head: 'คำขอเลื่อนกำหนดส่ง · ' + o.name, tone: t.special ? 'black' : 'warn', body,
+    buttons: forward
+      ? [{ label: 'ส่งต่อให้ CEO', fn: () => extForward(t) }, { label: 'ไม่อนุมัติ', cls: 'x', fn: () => extDecide(t, ap, 'rejected') }]
+      : [{ label: 'อนุมัติ', fn: () => extDecide(t, ap, 'approved', t.ext.newDue) }].concat(alt < t.ext.newDue ? [{ label: 'ให้แค่ ' + dayStr(alt), fn: () => extDecide(t, ap, 'approved', alt, true) }] : []).concat([{ label: 'ไม่อนุมัติ', cls: 'x', fn: () => extDecide(t, ap, 'rejected') }]) }, true);
+}
+async function extForward(t) {
+  const head = headOf(t.dept), x = S.exts.find(e => e.id === t.ext.id);
+  traceStart(head.name + ' ส่งต่อคำขอเลื่อนให้ CEO', 'nudge');
+  tr('LINE', head.name + ' กด "ส่งต่อให้ CEO" → postback', { data: 'action=extend_forward&ext=' + x.id });
+  x.status = 'ceo'; x.headNote = 'เห็นด้วยให้เลื่อน ส่งต่อให้ CEO ตัดสิน'; t.ext.status = 'ceo'; flash(x.id);
+  sql("update task_extensions set status = 'ceo', head_note = '" + x.headNote + "', head_by = '" + head.id + "' where id = '" + x.id + "';"); tr('Postgres', 'หัวหน้ากรองแล้ว ส่งต่อ CEO', S.sql);
+  pushTrace(extApprover(t), 'คำขอเลื่อน (ผ่านหัวหน้าแล้ว)'); logPush(extApprover(t), 'คำขอเลื่อนจากหัวหน้า ' + t.id); render();
+  await say(head.id, 'ส่งต่อให้ CEO แล้วครับ');
+  await say(t.owner, head.name + 'ส่งคำขอเลื่อน "' + t.title + '" ต่อให้ CEO แล้วครับ รอผลอีกขั้นเดียว');
+  await extDecisionCard(t);
+}
+async function extDecide(t, by, result, date, counter) {
+  if (!t.ext) { await say(by, 'คำขอนี้ตัดสินไปแล้วครับ'); return; }
+  const x = S.exts.find(e => e.id === t.ext.id), o = P(t.owner), head = headOf(t.dept);
+  traceStart(P(by).name + (result === 'approved' ? ' อนุมัติเลื่อน ' : ' ไม่อนุมัติเลื่อน ') + t.id, 'nudge');
+  tr('Edge Function', 'ตรวจสิทธิ์: ผู้กดต้องเป็นผู้พิจารณาขั้นนี้', "-- expected " + extApprover(t) + ", got " + by + " ✓");
+  x.status = result; x.decidedBy = by; x.decidedAt = new Date(S.now); if (date) x.finalDue = date; flash(x.id);
+  const old = new Date(t.due);
+  if (result === 'approved') { t.due = date; t.dueFired = false; t.extCount = (t.extCount || 0) + 1; t.nudges = 0; }
+  t.ext = null; flash(t.id);
+  const note = result === 'approved' ? 'เลื่อนกำหนดส่ง ' + dayStr(old) + ' → ' + dayStr(date) + ' (อนุมัติโดย ' + P(by).name + ')' : 'ไม่อนุมัติการเลื่อน คงกำหนดเดิม ' + dayStr(old);
+  const u = { id: ++S.seq.upd, task: t.id, by, p: t.p, note, at: new Date(S.now) }; S.updates.push(u); flash('upd:' + u.id);
+  sql("update task_extensions set status = '" + result + "', decided_by = '" + by + "', decided_at = now()" + (date ? ", final_due = '" + iso(date) + "'" : '') + " where id = '" + x.id + "';" + (result === 'approved' ? "\nupdate tasks set due_at = '" + iso(date) + "', extension_count = extension_count + 1 where id = '" + t.id + "';" : '') + "\ninsert into task_updates (task_id, by_id, note) values ('" + t.id + "', '" + by + "', '" + note + "');");
+  tr('Postgres', result === 'approved' ? 'เปลี่ยนกำหนดส่ง · กลับเข้าระบบตามงานด้วยวันใหม่' : 'คงวันเดิม · กลับเข้าระบบตามงาน', S.sql);
+  const tell = [o.id]; if (by !== head.id && head.id !== o.id) tell.push(head.id); if (t.by !== by && !tell.includes(t.by)) tell.push(t.by);
+  tell.forEach(n => { pushTrace(n, 'ผลคำขอเลื่อน'); logPush(n, 'ผลคำขอเลื่อน ' + t.id); });
+  render();
+  await say(by, result === 'approved' ? 'อนุมัติแล้วครับ กำหนดส่งใหม่ ' + when(date) + ' แจ้ง' + tell.map(n => P(n).name).join(', ') + ' แล้ว' : 'บันทึกว่าไม่อนุมัติแล้วครับ แจ้ง' + tell.map(n => P(n).name).join(', ') + ' แล้ว');
+  for (const n of tell) {
+    if (n === o.id) await card(o.id, { head: result === 'approved' ? (counter ? 'อนุมัติให้เลื่อน (วันใหม่ต่างจากที่ขอ)' : 'อนุมัติให้เลื่อนแล้ว') : 'ไม่อนุมัติการเลื่อน', tone: result === 'approved' ? (t.special ? 'black' : '') : 'bad',
+      body: kv('งาน', t.title) + (result === 'approved' ? kv('กำหนดใหม่', when(date)) : kv('กำหนดเดิม', when(old))) + kv('โดย', P(by).name) + (result === 'approved' ? '' : '<div class="fx-note">ถ้ายังติดปัญหา บอกผมได้ ผมจะแจ้ง' + esc(head.id === o.id ? 'CEO' : head.name) + 'ให้ช่วยดูครับ</div>') }, true);
+    else await say(n, P(by).name + (result === 'approved' ? ' อนุมัติให้' + o.name + 'เลื่อน "' + t.title + '" เป็น ' + when(date) : ' ไม่อนุมัติให้' + o.name + 'เลื่อน "' + t.title + '" คงกำหนดเดิม ' + when(old)));
+  }
+}
+
 async function blackCards(uid, onlyOwner) {
   const me = P(uid);
   traceStart('ติดตามการ์ดดำ', 'ask');
@@ -2342,7 +2457,13 @@ async function approvals(uid) {
   sql("select t.*, p.display_name from tasks t join profiles p on p.id = t.owner_id\n where t.approval_status = 'pending'" + (me.role === 'head' ? " and t.approver_id = '" + uid + "'" : me.role === 'staff' ? " and t.owner_id = '" + uid + "'" : '') + ";");
   tr('Postgres', 'ดึงการ์ดดำที่ยังรออนุมัติ (ตามสิทธิ์)', S.sql); replyTrace('งานรออนุมัติ'); render();
   const list = S.tasks.filter(t => t.approval === 'pending' && (me.role === 'ceo' ? t.by === uid : me.role === 'head' ? t.approver === uid : t.owner === uid));
-  if (!list.length) { await say(uid, 'ตอนนี้ไม่มีการ์ดดำรออนุมัติครับ'); return; }
+  const exts = S.tasks.filter(t => t.ext && (me.role === 'staff' ? t.owner === uid : extApprover(t) === uid));
+  if (exts.length) {
+    if (me.role === 'staff') await card(uid, { head: 'คำขอเลื่อนของคุณ', tone: 'warn', body: exts.map(t => taskBlock(t, false) + kv('ขอเป็น', when(t.ext.newDue)) + kv('รอ', P(extApprover(t)).name)).join('') });
+    else { await say(uid, 'มีคำขอเลื่อนรอคุณพิจารณา ' + exts.length + ' งานครับ'); for (const t of exts) await extDecisionCard(t); }
+    if (!list.length) return;
+  }
+  if (!list.length) { await say(uid, 'ตอนนี้ไม่มีการ์ดดำหรือคำขอเลื่อนรออนุมัติครับ'); return; }
   if (me.role === 'head') { await say(uid, 'มีการ์ดดำรอคุณอนุมัติ ' + list.length + ' งานครับ'); for (const t of list) await approvalCard(t); return; }
   await card(uid, { head: 'การ์ดดำรออนุมัติ', tone: 'black', body: list.map(t => taskBlock(t, me.role === 'ceo') + '<em style="font-size:12px;color:var(--muted)">ผู้อนุมัติ ' + esc(P(t.approver).name) + '</em>').join('') });
 }
@@ -2651,11 +2772,13 @@ function events() {
   const ev = [{ at: next0900(), kind: 'report' }];
   S.sched.filter(s => s.status === 'scheduled').forEach(s => ev.push({ at: s.run_at, kind: s.kind, id: s.id }));
   S.tasks.filter(t => activeTask(t) && t.due >= S.now && !t.dueFired).forEach(t => ev.push({ at: t.due, kind: 'due', id: t.id }));
+  S.tasks.filter(t => t.ext && !t.ext.reminded && t.due >= S.now).forEach(t => ev.push({ at: t.due, kind: 'extdue', id: t.id }));
   S.meetings.filter(m => !m.reminded && m.status !== 'cancelled').forEach(m => ev.push({ at: new Date(Math.max(S.now, m.start - 15 * 60000)), kind: 'meeting', id: m.id }));
   return ev.sort((a, b) => a.at - b.at);
 }
 function evLabel(e) {
   if (e.kind === 'report') return 'รายงาน 09:00 ตาม role + ตามงานที่ใกล้ครบ';
+  if (e.kind === 'extdue') { const t = T(e.id); return 'ครบกำหนดเดิมของ ' + P(t.owner).name + ' · คำขอเลื่อนยังรอ ' + P(extApprover(t)).name; }
   if (e.kind === 'meeting') { const m = S.meetings.find(x => x.id === e.id); return 'เตือนนัด "' + m.title + '" ' + hm(m.start) + ' ถึงผู้จัดและผู้เข้าร่วม'; }
   if (e.kind === 'due') { const t = T(e.id); return 'ครบกำหนด: ' + P(t.owner).name + ' · ' + t.title; }
   const s = S.sched.find(x => x.id === e.id);
@@ -2726,6 +2849,7 @@ async function advanceTo(target) {
       if (e.kind === 'report') await fireReport();
       else if (e.kind === 'due') await fireDue(T(e.id));
       else if (e.kind === 'meeting') await fireMeeting(S.meetings.find(x => x.id === e.id));
+      else if (e.kind === 'extdue') { const t = T(e.id); t.ext.reminded = true; traceStart('ครบกำหนดเดิม คำขอเลื่อนยังค้าง ' + t.id, 'nudge'); tr('pg_cron', 'scheduler: งานถึงกำหนดเดิมแต่คำขอเลื่อนยังไม่ถูกตัดสิน', "select * from task_extensions where status in ('head','ceo') and old_due <= now();"); pushTrace(extApprover(t), 'เตือนพิจารณาคำขอเลื่อน'); render(); await say(extApprover(t), 'ถึงกำหนดเดิมของ "' + t.title + '" แล้วครับ คำขอเลื่อนของ' + P(t.owner).name + 'ยังรอคุณพิจารณา'); await extDecisionCard(t); }
       else await fireSched(S.sched.find(x => x.id === e.id));
       render(); await sleep(200);
     }
@@ -2804,6 +2928,14 @@ const SM = [
       { t: 'ถามกลับว่างานไหน (ถ้ามีหลายงาน)', k: 'btn', d: 'Quick reply รายชื่องานของคนนั้น' },
       { t: 'งานเสร็จ → แจ้งหัวหน้าและคนสั่ง', k: 'push', try: ['u_ton', 'ใบเสนอราคาเสร็จแล้ว'] },
       { t: 'ติดปัญหา → แจ้งหัวหน้า', k: 'push', try: ['u_ton', 'ติดปัญหาเรื่องใบเสนอราคา ลูกค้ายังไม่ส่งสเปก'] } ] },
+    { t: 'ติดปัญหาและขอเลื่อนกำหนดส่ง', k: 'chat', q: 'ใบเสนอราคาติดปัญหา ลูกค้ายังไม่ส่งสเปก ขอเลื่อนเป็นจันทร์หน้า', r: ['staff', 'head'], try: ['u_ton', 'ใบเสนอราคาติดปัญหา ลูกค้ายังไม่ส่งสเปก ขอเลื่อนเป็นจันทร์หน้า'], kids: [
+      { t: 'เลือกวันใหม่ (ถ้าไม่ได้บอก)', k: 'btn', d: 'Quick reply: +1 วัน · +3 วัน · จันทร์หน้า · มีปุ่ม "ขอเลื่อน" บนการ์ดตามงาน และหลังแจ้งติดปัญหา' },
+      { t: 'การ์ดยืนยันคำขอเลื่อน', k: 'card', d: 'กำหนดเดิม → ใหม่ (+วัน) · เหตุผล · ผู้พิจารณา · ระหว่างรอกำหนดเดิมยังอยู่และหยุดตามชั่วคราว' },
+      { t: 'บันทึกคำขอ', k: 'db', d: 'task_extensions (old_due, new_due, reason, status = head | ceo)' },
+      { t: 'งานปกติ: หัวหน้าตัดสิน', k: 'card', r: ['head'], d: 'ปุ่ม อนุมัติ / ให้แค่วันที่สั้นกว่า / ไม่อนุมัติ', try: ['u_nid', 'รออนุมัติ'] },
+      { t: 'การ์ดดำ หรือขอเลื่อนครั้งที่ 3: หัวหน้ากรอง แล้ว CEO ตัดสิน', k: 'card', r: ['head', 'ceo'], d: 'หัวหน้ากด ส่งต่อให้ CEO / ไม่อนุมัติ → CEO เห็นเหตุผลและความเห็นหัวหน้า แล้วกด อนุมัติ / ให้แค่… / ไม่อนุมัติ' },
+      { t: 'แจ้งผลทุกฝ่าย', k: 'push', d: 'ลูกน้องได้การ์ดผล · หัวหน้าและคนสั่งงานได้รับแจ้ง · อนุมัติแล้วเริ่มตามใหม่ตามวันใหม่' },
+      { t: 'ถึงกำหนดเดิมแต่ยังไม่ตัดสิน', k: 'push', d: 'เตือนผู้พิจารณาอีกครั้งพร้อมการ์ดตัดสิน' } ] },
     { t: 'ตามงาน', k: 'push', kids: [
       { t: 'ตามอัตโนมัติรอบ 09:00', k: 'push', d: 'งานที่ครบภายในพรุ่งนี้หรือเลยกำหนด · ปุ่ม คืบหน้า +20% / เสร็จแล้ว / ติดปัญหา', try: ['u_ton', '#next'] },
       { t: 'สั่งตามเองจากการ์ด', k: 'btn', r: ['ceo', 'head'], d: 'ปุ่ม "ตาม…ตอนนี้" / "ตามคนที่ค้าง" / "ตามคนที่เลยกำหนด"' },
@@ -2956,7 +3088,7 @@ const RICH = {
   head: [
     { l: 'งานในฝ่าย', ic: 'team', c: '#2563eb', q: 'งานในฝ่ายถึงไหนแล้ว' },
     { l: 'รายงานวันนี้', ic: 'report', c: '#0d9488', q: 'รายงานตอนนี้' },
-    { l: 'รออนุมัติ', ic: 'alert', c: '#c98200', q: 'การ์ดดำรออนุมัติ' },
+    { l: 'รออนุมัติ', ic: 'alert', c: '#c98200', q: 'รออนุมัติ' },
     { l: 'มอบงานลูกทีม', ic: 'task', c: '#16a34a', pre: 'ให้คุณต้นสรุปลูกค้าเก่าภายในศุกร์นี้' },
     { l: 'นัดประชุมทีม', ic: 'cal', c: '#ea580c', q: 'นัดประชุมทีมฝ่ายขายพรุ่งนี้บ่าย 2 เรื่องยอดขายไตรมาส 4' },
     { l: 'ช่วยเหลือ', ic: 'help', c: '#52525b', help: true }
@@ -2964,7 +3096,7 @@ const RICH = {
   staff: [
     { l: 'งานของฉัน', ic: 'task', c: '#2563eb', q: 'งานของผมมีอะไรบ้าง' },
     { l: 'อัปเดตงาน', ic: 'up', c: '#16a34a', pre: 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์' },
-    { l: 'แจ้งติดปัญหา', ic: 'block', c: '#dc2626', pre: 'ติดปัญหาเรื่องใบเสนอราคา ลูกค้ายังไม่ส่งสเปก' },
+    { l: 'ติดปัญหา / ขอเลื่อน', ic: 'block', c: '#dc2626', pre: 'ใบเสนอราคาติดปัญหา ลูกค้ายังไม่ส่งสเปก ขอเลื่อนเป็นจันทร์หน้า' },
     { l: 'ทำอะไรก่อนดี', ic: 'bolt', c: '#c98200', q: 'พรุ่งนี้ผมต้องรีบทำอะไรก่อน' },
     { l: 'ถามเลขา', ic: 'ask', c: '#9333ea', pre: '' },
     { l: 'ช่วยเหลือ', ic: 'help', c: '#52525b', help: true }
@@ -3001,8 +3133,8 @@ async function helpMsg(uid) {
 /* ---------- chips & personas ---------- */
 const CHIPS = {
   u_ceo: ['การ์ดดำ ให้คุณต้นเตรียมเอกสารประมูลโครงการรัฐ ภายในศุกร์นี้', 'การ์ดดำถึงไหนแล้ว', 'ตามงานคุณต้น', 'วันนี้ผมควรโฟกัสเรื่องอะไรก่อน', 'ฝ่ายไหนน่าห่วงที่สุด เพราะอะไร', 'ทำไมกำไรเดือนนี้ลดลง', 'ภาพรวมบริษัทตอนนี้เป็นยังไง', 'แนวโน้มยอดขาย 6 เดือน', 'การเงินเดือนนี้เป็นยังไง', 'ยอดขายแยกสาขา', 'ลูกหนี้ค้างจ่ายมีใครบ้าง', 'ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง', 'งานของคุณต้นไปถึงไหน', 'ฝ่ายการตลาดถึงไหนแล้ว', 'ใครรับผิดชอบงบประมาณ', 'ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้', 'รายงานตอนนี้', 'พรุ่งนี้ 9 โมง ทักคุณสมชายเรื่องใบเสนอราคา', 'เตือนผมบ่าย 3 โทรหาธนาคาร', 'ร่างข้อความถึงคุณสมชาย ขอเลื่อนประชุมไปพุธหน้า', 'ร่างข้อความถึงคุณวิชัย ขอนัดคุยเรื่องสัญญาขนส่งปีหน้า'],
-  u_nid: ['การ์ดดำรออนุมัติ', 'ทีมผมตอนนี้ใครน่าห่วงที่สุด', 'นัดประชุมทีมฝ่ายขายพรุ่งนี้บ่าย 2 เรื่องยอดขายไตรมาส 4', 'งานในฝ่ายถึงไหนแล้ว', 'การเงินบริษัทเดือนนี้เป็นยังไง', 'งานของคุณแพรถึงไหน', 'ให้คุณต้นสรุปลูกค้าเก่าภายในศุกร์นี้', 'งานของคุณฝนถึงไหน', 'แผนยอดขายไตรมาส 1 คืบหน้า 50%', 'ให้คุณมิ้นท์ทำโปสเตอร์ภายในพรุ่งนี้'],
-  u_ton: ['การ์ดดำของผมรออนุมัติอยู่ไหม', 'พรุ่งนี้ผมต้องรีบทำอะไรก่อน', 'งานของผมมีอะไรบ้าง', 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์', 'ใบเสนอราคาเสร็จแล้ว', 'ติดปัญหาเรื่องใบเสนอราคา ลูกค้ายังไม่ส่งสเปก', 'งานของคุณแพรถึงไหน', 'ให้คุณแพรช่วยโทรหาลูกค้า']
+  u_nid: ['รออนุมัติ', 'การ์ดดำรออนุมัติ', 'ทีมผมตอนนี้ใครน่าห่วงที่สุด', 'นัดประชุมทีมฝ่ายขายพรุ่งนี้บ่าย 2 เรื่องยอดขายไตรมาส 4', 'งานในฝ่ายถึงไหนแล้ว', 'การเงินบริษัทเดือนนี้เป็นยังไง', 'งานของคุณแพรถึงไหน', 'ให้คุณต้นสรุปลูกค้าเก่าภายในศุกร์นี้', 'งานของคุณฝนถึงไหน', 'แผนยอดขายไตรมาส 1 คืบหน้า 50%', 'ให้คุณมิ้นท์ทำโปสเตอร์ภายในพรุ่งนี้'],
+  u_ton: ['ใบเสนอราคาติดปัญหา ลูกค้ายังไม่ส่งสเปก ขอเลื่อนเป็นจันทร์หน้า', 'การ์ดดำของผมรออนุมัติอยู่ไหม', 'พรุ่งนี้ผมต้องรีบทำอะไรก่อน', 'งานของผมมีอะไรบ้าง', 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์', 'ใบเสนอราคาเสร็จแล้ว', 'ติดปัญหาเรื่องใบเสนอราคา ลูกค้ายังไม่ส่งสเปก', 'งานของคุณแพรถึงไหน', 'ให้คุณแพรช่วยโทรหาลูกค้า']
 };
 function setChips(uid, list) {
   S.chips = S.chips || {};
@@ -3012,7 +3144,12 @@ function setChips(uid, list) {
 function drawChips() {
   const list = (S.chips && S.chips[S.active]) || CHIPS[S.active].map(t => ({ label: t, text: t }));
   const q = $('#qrow'); q.innerHTML = '';
-  list.forEach(it => { const b = document.createElement('button'); b.type = 'button'; b.textContent = it.label; b.addEventListener('click', () => submit(it.text)); q.appendChild(b); });
+  list.forEach(it => { const b = document.createElement('button'); b.type = 'button'; b.textContent = it.label; b.addEventListener('click', () => it.fn ? runChip(it) : submit(it.text)); q.appendChild(b); });
+}
+async function runChip(it) {
+  if (S.busy) return; const uid = S.active; setChips(uid, null);
+  bubble(uid, 'me', it.label); S.busy = true;
+  try { await it.fn(); } finally { S.busy = false; render(); }
 }
 function renderWho() {
   const pu = $('#phUnread'); if (pu) { const o = PERSONAS.filter(id => id !== S.active).reduce((a, id) => a + (S.unread[id] || 0), 0); pu.textContent = o ? String(o) : ''; }
@@ -3096,6 +3233,8 @@ function render() {
     S.sched.slice().reverse().map(s => '<tr class="' + F(s.id) + '"><td class="mono">' + s.id + '</td><td>' + esc(P(s.owner).name) + '</td><td class="mono">' + s.kind + '</td><td>' + esc(P(s.to).name) + '</td><td>' + esc(s.message || s.title) + '</td><td class="mono">' + isoShort(s.run_at) + '</td><td>' + pillS(s.status) + '</td></tr>').join('') + '</tbody></table>';
   if (TB === 'message_log') tbl = '<table><thead><tr><th>id</th><th>to</th><th>what</th><th>method</th><th>sent_at</th></tr></thead><tbody>' +
     S.log.slice().reverse().map(l => '<tr class="' + F('log:' + l.id) + '"><td class="mono">' + l.id + '</td><td>' + esc(l.to) + '</td><td>' + esc(l.what) + '</td><td class="mono">' + l.method + '</td><td class="mono">' + isoShort(l.at) + '</td></tr>').join('') + '</tbody></table>';
+  if (TB === 'task_extensions') tbl = '<table><thead><tr><th>id</th><th>task_id</th><th>requested_by</th><th>old_due</th><th>new_due</th><th>reason</th><th>status</th><th>decided_by</th></tr></thead><tbody>' +
+    (S.exts.length ? S.exts.slice().reverse().map(x => '<tr class="' + F(x.id) + '"><td class="mono">' + x.id + '</td><td class="mono">' + x.task + '</td><td>' + esc(P(x.by).name) + '</td><td class="mono">' + isoShort(x.oldDue) + '</td><td class="mono">' + isoShort(x.finalDue || x.newDue) + '</td><td>' + esc(x.reason) + '</td><td class="mono">' + x.status + '</td><td>' + (x.decidedBy ? esc(P(x.decidedBy).name) : '—') + '</td></tr>').join('') : '<tr><td colspan="8">ยังไม่มีคำขอเลื่อน</td></tr>') + '</tbody></table>';
   if (TB === 'meetings') tbl = '<table><thead><tr><th>id</th><th>title</th><th>organizer_id</th><th>start_at</th><th>remind_at</th><th>reminded</th></tr></thead><tbody>' +
     (S.meetings.length ? S.meetings.slice().reverse().map(m => '<tr class="' + F(m.id) + '"><td class="mono">' + m.id + '</td><td>' + esc(m.title) + '</td><td>' + esc(P(m.org).name) + '</td><td class="mono">' + isoShort(m.start) + '</td><td class="mono">' + isoShort(new Date(m.start - 15 * 60000)) + '</td><td class="mono">' + m.reminded + '</td></tr>').join('') : '<tr><td colspan="6">ยังไม่มีนัด</td></tr>') + '</tbody></table>';
   if (TB === 'meeting_attendees') { const rows = S.meetings.flatMap(m => m.att.map(a => ({ m, a }))).reverse(); tbl = '<table><thead><tr><th>meeting_id</th><th>profile_id</th><th>ชื่อ</th><th>status</th></tr></thead><tbody>' +
@@ -3107,7 +3246,7 @@ function render() {
   const ev = events().slice(0, 6);
   $('#p-db').innerHTML =
     '<div class="dbnote" style="margin-top:0">SQL ล่าสุดที่ Edge Function รันบน Supabase</div><pre class="sql">' + hl(S.sql) + '</pre>' +
-    '<div class="dbsel">' + ['tasks', 'task_updates', 'meetings', 'meeting_attendees', 'finance.v_monthly_summary', 'profiles', 'scheduled_messages', 'message_log', 'memories'].map(k => '<button data-t="' + k + '" aria-pressed="' + (k === TB) + '">' + k + '</button>').join('') + '</div>' +
+    '<div class="dbsel">' + ['tasks', 'task_updates', 'task_extensions', 'meetings', 'meeting_attendees', 'finance.v_monthly_summary', 'profiles', 'scheduled_messages', 'message_log', 'memories'].map(k => '<button data-t="' + k + '" aria-pressed="' + (k === TB) + '">' + k + '</button>').join('') + '</div>' +
     '<div class="tbl-wrap">' + tbl + '</div>' +
     '<div class="dbnote">pg_cron · cron.job (เวลาในตารางเป็น UTC)</div>' +
     '<div class="tbl-wrap"><table><thead><tr><th>jobname</th><th>schedule</th><th>เวลาไทย</th><th>เรียก</th></tr></thead><tbody>' +
