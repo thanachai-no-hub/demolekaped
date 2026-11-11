@@ -1779,7 +1779,7 @@ function dueText(t) {
   if (t.due < S.now) { const dd = Math.max(1, Math.floor((S.now - t.due) / 864e5) + (sameDay(t.due, S.now) ? 0 : 0)); return sameDay(t.due, S.now) ? 'เลยกำหนดวันนี้ ' + hm(t.due) : 'เลยกำหนด ' + dd + ' วัน'; }
   return 'ครบ ' + rel(t.due, S.now);
 }
-const lastUpdate = t => S.updates.filter(u => u.task === t.id).sort((a, b) => b.at - a.at)[0];
+const lastUpdate = t => S.updates.filter(u => u.task === t.id).sort((a, b) => (b.at - a.at) || (b.id - a.id))[0];
 function canSee(viewer, t) { const v = P(viewer); return v.role === 'ceo' || (v.role === 'head' && v.dept === t.dept) || t.owner === viewer; }
 function canSeePerson(viewer, p) { const v = P(viewer); return v.role === 'ceo' || (v.role === 'head' && v.dept === p.dept) || v.id === p.id; }
 const visibleTasks = viewer => S.tasks.filter(t => canSee(viewer, t));
@@ -1907,7 +1907,10 @@ function findDept(uid, text) {
   if (me.dept && /ในฝ่าย|ทีม(ผม|ฉัน|เรา|หนู)?|ฝ่าย(ผม|ฉัน|เรา)|ลูกทีม/.test(text)) return me.dept;
   return null;
 }
-function findTaskByKw(text, pool) { return pool.find(t => text.includes(t.title) || t.kw.some(k => text.includes(k))); }
+function findTaskByKw(text, pool) {
+  return pool.find(t => text.includes(t.title) || t.kw.some(k => text.includes(k))) ||
+    pool.find(t => { for (let i = 0; i + 6 <= t.title.length; i++) if (text.includes(t.title.substr(i, 6))) return true; return false; });
+}
 
 /* ---------- reports by role ---------- */
 function reportCard(uid, label) {
@@ -1924,6 +1927,8 @@ function reportCard(uid, label) {
     });
     const watch = vis.filter(activeTask).filter(t => ['overdue', 'blocked'].includes(wstatus(t)) || (t.due - S.now) < 1.6 * 864e5).sort((a, b) => sev(a) - sev(b));
     const pend = vis.filter(t => t.approval === 'pending');
+    const bc = vis.filter(t => t.special && activeTask(t));
+    if (bc.length) body += '<div class="fx-t">การ์ดดำที่กำลังทำ</div>' + bc.map(t => taskBlock(t, true)).join('');
     if (pend.length) body += '<div class="fx-t">การ์ดดำรอหัวหน้าอนุมัติ</div>' + pend.map(t => rowx('a', esc(P(t.owner).name + ' · ' + t.title), 'ผู้อนุมัติ ' + P(t.approver).name)).join('');
     body += '<div class="fx-t">ต้องจับตา · ใครรับผิดชอบ</div>' + (watch.length ? watch.map(t => taskBlock(t, true)).join('') : '<div class="fx-r"><i class="dot n"></i><span>ไม่มีงานเสี่ยง</span></div>');
     const od = vis.filter(t => wstatus(t) === 'overdue');
@@ -1960,7 +1965,7 @@ async function nudge(t, byUid, silentReport) {
   pushTrace(t.owner, 'เลขาเป็ดขอติดตามงาน');
   logPush(t.owner, 'ตามงาน ' + t.id);
   await card(t.owner, {
-    head: 'เลขาเป็ดขอติดตามงาน', tone: wstatus(t) === 'overdue' ? 'bad' : 'warn',
+    head: t.special ? 'เลขาเป็ดขอติดตามการ์ดดำ' : 'เลขาเป็ดขอติดตามงาน', tone: t.special ? 'black' : wstatus(t) === 'overdue' ? 'bad' : 'warn',
     body: '<div>' + esc(msg) + '</div>' + taskBlock(t, false) + '<div class="fx-note">ตอบกลับเป็นข้อความก็ได้ เช่น "ได้ 80% แล้ว รอเอกสาร"</div>',
     buttons: [
       { label: 'คืบหน้า +20%', fn: () => applyUpdate(t.owner, t, { p: Math.min(100, t.p + 20), note: 'อัปเดตผ่านปุ่ม +20%' }) },
@@ -1986,11 +1991,15 @@ async function applyUpdate(uid, t, ch, fromText) {
   const notify = [];
   if (t.p >= 100 && !wasDone) { if (head.id !== uid) notify.push(head.id); if (t.by !== uid && t.by !== head.id) notify.push(t.by); }
   else if (t.blocked) { if (head.id !== uid) notify.push(head.id); else notify.push('u_ceo'); }
+  const tellIssuer = t.special && t.by !== uid && !notify.includes(t.by);
+  if (tellIssuer) { pushTrace(t.by, 'อัปเดตการ์ดดำ'); logPush(t.by, 'แจ้งความคืบหน้าการ์ดดำ ' + t.id); }
   notify.forEach(n => { pushTrace(n, 'แจ้งความคืบหน้า'); logPush(n, (t.p >= 100 ? 'แจ้งงานเสร็จ ' : 'แจ้งติดปัญหา ') + t.id); });
   render();
   await say(uid, t.p >= 100 ? 'ปิดงาน "' + t.title + '" แล้วครับ ขอบคุณครับ' + (notify.length ? ' แจ้ง' + notify.map(n => P(n).name).join(' และ ') + ' ให้แล้ว' : '')
     : t.blocked ? 'บันทึกว่าติดปัญหาแล้วครับ แจ้ง' + notify.map(n => P(n).name).join(', ') + 'ให้ช่วยดูแล้ว'
     : 'บันทึกแล้วครับ "' + t.title + '" ' + t.p + '%');
+  if (tellIssuer) await card(t.by, { head: 'อัปเดตการ์ดดำ · ' + P(uid).name, tone: 'black', body: taskBlock(t, false) + (ch.note ? kv('หมายเหตุ', ch.note, true) : ''),
+    buttons: t.p < 100 ? [{ label: 'ตาม' + P(uid).name + 'ต่อ', fn: async () => { traceStart(P(t.by).name + ' ตามการ์ดดำ ' + t.id, 'nudge'); await nudge(t, t.by); render(); await say(t.by, 'ตาม' + P(uid).name + 'แล้วครับ'); } }] : [] }, true);
   for (const n of notify) {
     await say(n, (t.p >= 100 ? 'งานเสร็จแล้วครับ: ' : 'มีงานติดปัญหาครับ: ') + P(uid).name + ' · "' + t.title + '"' + (ch.note && t.p < 100 ? '\nหมายเหตุ: ' + ch.note : ''));
   }
@@ -2019,6 +2028,8 @@ function aiBadge() {
   el.title = AI.ok ? 'คำถามทั่วไปตอบด้วย Claude จริง ส่วนคำสั่งงานใช้การ์ดยืนยัน' : 'ตอบด้วยกฎตายตัว (เปิดหน้านี้ใน Claude เพื่อคุยกับ AI จริง)';
 }
 function isAction(text) {
+  if (/(การ์ดดำ|งานพิเศษ)/.test(text) && /ถึงไหน|คืบหน้า|ทั้งหมด|มีอะไร|สถานะ|ตาม/.test(text) && !/รออนุมัติ/.test(text)) return true;
+  if (/^(ช่วย)?(ติด)?ตาม(งาน)?\s*คุณ/.test(text)) return true;
   if (/^(การ์ดดำ|งานพิเศษ)/.test(text) || (/^ให้/.test(text) && /การ์ดดำ|งานพิเศษ/.test(text))) return true;
   if (/^(การ์ดดำ|งานพิเศษ)รออนุมัติ$|^รออนุมัติ|^อนุมัติ/.test(text)) return true;
   const question = /ถึงไหน|ใครรับผิดชอบ|อะไร|ยังไง|อย่างไร|เท่าไร|ไหม|มั้ย|หรือยัง|\?|วิเคราะห์|แนะนำ|ทำไม|สรุป|รายงาน|ภาพรวม|แนวโน้ม/.test(text);
@@ -2116,6 +2127,8 @@ async function askClaude(uid, text) {
 async function handleRules(uid, text) {
   const me = P(uid);
   const p = findPerson(text);
+  if (/(การ์ดดำ|งานพิเศษ)/.test(text) && /ถึงไหน|คืบหน้า|ทั้งหมด|มีอะไร|สถานะ|ตาม/.test(text) && !/^ให้/.test(text) && !/รออนุมัติ/.test(text)) return blackCards(uid, p && p.internal ? p.id : null);
+  if (/^(ช่วย)?(ติด)?ตาม(งาน)?\s*คุณ/.test(text) && p && p.internal) return followUp(uid, p);
   if (/^(การ์ดดำ|งานพิเศษ)/.test(text) || (/^ให้/.test(text) && /การ์ดดำ|งานพิเศษ/.test(text))) {
     const t2 = text.replace(/^(การ์ดดำ|งานพิเศษ)\s*[:：]?\s*/, '').replace(/(การ์ดดำ|งานพิเศษ)\s*/, '');
     const p2 = findPerson(t2);
@@ -2187,7 +2200,7 @@ async function askStatus(uid, text) {
     tr('Postgres', 'ได้งานของ' + p.name + ' ' + ts.length + ' รายการ (RLS ผ่าน)', ts.map(t => ({ id: t.id, progress: t.p, status: wstatus(t) })));
     tr('เลขาเป็ด', 'ส่ง tool_result ให้ LLM เรียบเรียง', { type: 'tool_result', content: ts.length + ' rows' });
     replyTrace('งานของ' + p.name); render();
-    const open = ts.filter(openTask);
+    const open = ts.filter(activeTask);
     await card(uid, { head: 'งานของ' + p.name + ' · ' + p.title, body: ts.length ? ts.map(t => taskBlock(t, false)).join('') : 'ไม่มีงานในระบบ',
       buttons: open.length && p.id !== uid ? [{ label: 'ตาม' + p.name + 'ตอนนี้', fn: async () => { traceStart(me.name + ' สั่งตาม' + p.name, 'nudge'); for (const t of open) await nudge(t, uid); render(); await say(uid, 'ตาม' + p.name + 'แล้วครับ จะแจ้งทันทีที่ตอบกลับ'); } }, { label: 'ดูทั้งฝ่าย', fn: () => deptCard(uid, p.dept) }] : [] });
     return;
@@ -2296,7 +2309,32 @@ async function decide(t, ok) {
   await say(head.id, ok ? 'อนุมัติแล้วครับ แจ้ง' + p.name + 'ให้เริ่มทำ และแจ้ง ' + boss.name + ' แล้ว' : 'บันทึกว่าไม่อนุมัติแล้วครับ แจ้ง ' + boss.name + ' และ' + p.name + 'ให้แล้ว');
   if (ok) await newTaskCard(t, boss.name, head.name);
   else await say(p.id, 'การ์ดดำ "' + t.title + '" ไม่ได้รับอนุมัติจาก' + head.name + ' ยังไม่ต้องทำครับ');
-  await say(boss.id, head.name + (ok ? ' อนุมัติการ์ดดำ "' + t.title + '" แล้วครับ ส่งให้' + p.name + 'เริ่มทำแล้ว ครบ ' + rel(t.due, S.now) : ' ไม่อนุมัติการ์ดดำ "' + t.title + '" ครับ ' + p.name + ' ยังไม่ได้เริ่มทำ ถ้าต้องการให้ทำต่อ ลองคุยกับ' + head.name + 'โดยตรง'));
+  if (ok) await card(boss.id, { head: head.name + ' อนุมัติการ์ดดำแล้ว', tone: 'black', body: taskBlock(t, true) + '<div class="fx-note">ส่งให้' + esc(p.name) + 'เริ่มทำแล้ว เลขาเป็ดจะแจ้งท่านทุกครั้งที่' + esc(p.name) + 'อัปเดต และตามให้เองก่อนครบกำหนด</div>',
+    buttons: [{ label: 'ตาม' + p.name + 'ตอนนี้', fn: async () => { traceStart(boss.name + ' ตามการ์ดดำ ' + t.id, 'nudge'); await nudge(t, boss.id); render(); await say(boss.id, 'ตาม' + p.name + 'แล้วครับ จะแจ้งทันทีที่ตอบกลับ'); } }, { label: 'ดูการ์ดดำทั้งหมด', fn: () => blackCards(boss.id) }] }, true);
+  else await say(boss.id, head.name + ' ไม่อนุมัติการ์ดดำ "' + t.title + '" ครับ ' + p.name + ' ยังไม่ได้เริ่มทำ ถ้าต้องการให้ทำต่อ ลองคุยกับ' + head.name + 'โดยตรง');
+}
+async function blackCards(uid, onlyOwner) {
+  const me = P(uid);
+  traceStart('ติดตามการ์ดดำ', 'ask');
+  sql("select t.*, u.note from tasks t left join lateral (select note from task_updates where task_id = t.id order by created_at desc limit 1) u on true\n where t.is_special" + (me.role === 'ceo' ? '' : me.role === 'head' ? " and t.department_id = '" + me.dept + "'" : " and t.owner_id = '" + uid + "'") + (onlyOwner ? " and t.owner_id = '" + onlyOwner + "'" : '') + "\n order by t.due_at;");
+  tr('Postgres', 'ดึงการ์ดดำตามสิทธิ์', S.sql); replyTrace('การ์ดดำ'); render();
+  const list = visibleTasks(uid).filter(t => t.special && t.approval !== 'rejected' && (!onlyOwner || t.owner === onlyOwner)).sort((a, b) => a.due - b.due);
+  if (!list.length) { await say(uid, 'ยังไม่มีการ์ดดำ' + (onlyOwner ? 'ของ' + P(onlyOwner).name : '') + 'ครับ'); return; }
+  const act = list.filter(activeTask);
+  await card(uid, { head: 'การ์ดดำ' + (onlyOwner ? 'ของ' + P(onlyOwner).name : 'ทั้งหมด') + ' · ' + list.length + ' งาน', tone: 'black',
+    body: list.map(t => taskBlock(t, true)).join(''),
+    buttons: act.length && me.role !== 'staff' ? [{ label: 'ตามทุกคนตอนนี้', fn: async () => { traceStart(me.name + ' ตามการ์ดดำทั้งหมด', 'nudge'); for (const t of act) await nudge(t, uid); render(); await say(uid, 'ตามแล้วครับ: ' + [...new Set(act.map(t => P(t.owner).name))].join(', ')); } }] : [] });
+}
+async function followUp(uid, p) {
+  const me = P(uid);
+  traceStart('ตามงาน' + p.name, 'nudge');
+  if (!canSeePerson(uid, p)) { tr('Postgres', 'RLS: ไม่มีสิทธิ์ตามงานของ' + p.name, '-- 0 rows'); render(); await say(uid, 'ขอโทษครับ ' + me.name + ' ตามได้เฉพาะ' + (me.role === 'head' ? 'ลูกทีมใน' + DEPTS[me.dept] : 'งานของตัวเอง')); return; }
+  const ts = S.tasks.filter(t => t.owner === p.id && activeTask(t)).sort((a, b) => (b.special ? 1 : 0) - (a.special ? 1 : 0) || a.due - b.due);
+  const waiting = S.tasks.filter(t => t.owner === p.id && t.approval === 'pending');
+  if (!ts.length) { render(); await say(uid, p.name + ' ไม่มีงานที่ต้องตามตอนนี้ครับ' + (waiting.length ? ' (มีการ์ดดำรอ' + P(waiting[0].approver).name + 'อนุมัติ ' + waiting.length + ' งาน ยังตามไม่ได้)' : '')); return; }
+  for (const t of ts) await nudge(t, uid);
+  render();
+  await say(uid, 'ตาม' + p.name + 'แล้ว ' + ts.length + ' งานครับ' + (ts.some(t => t.special) ? ' (รวมการ์ดดำ)' : '') + ' จะแจ้งทันทีที่ตอบกลับ');
 }
 async function approvals(uid) {
   const me = P(uid);
@@ -2757,6 +2795,9 @@ const SM = [
       { t: 'การ์ด "มีการ์ดดำรออยู่" ถึงลูกน้อง', k: 'push', r: ['staff'], d: 'เห็นชื่องานและกำหนดส่ง แต่ยังเริ่มไม่ได้', try: ['u_ton', 'การ์ดดำของผมรออนุมัติอยู่ไหม'] },
       { t: 'อนุมัติ → งานเปิดให้ลูกน้องทำ', k: 'push', d: 'ลูกน้องได้การ์ด "อนุมัติแล้ว เริ่มได้เลย" · CEO ได้รับแจ้งผล · งานเข้าระบบตามงานตามปกติ' },
       { t: 'ไม่อนุมัติ → ปิดงาน', k: 'push', d: 'แจ้ง CEO และลูกน้องว่ายังไม่ต้องทำ' },
+      { t: 'ลูกน้องอัปเดต → แจ้ง CEO ทุกครั้ง', k: 'push', r: ['ceo'], d: 'การ์ด "อัปเดตการ์ดดำ" พร้อม % หมายเหตุ และปุ่ม "ตามต่อ"' },
+      { t: 'ติดตามการ์ดดำทั้งหมด', k: 'card', q: 'การ์ดดำถึงไหนแล้ว', r: ['ceo', 'head'], d: 'รายการการ์ดดำ สถานะ ผู้รับผิดชอบ · ปุ่ม "ตามทุกคนตอนนี้"', try: ['u_ceo', 'การ์ดดำถึงไหนแล้ว'] },
+      { t: 'สั่งตามคนเดียว', k: 'chat', q: 'ตามงานคุณต้น', r: ['ceo', 'head'], d: 'ตามทุกงานที่ทำได้ของคนนั้น การ์ดดำขึ้นก่อน (งานที่รออนุมัติยังไม่ถูกตาม)', try: ['u_ceo', 'ตามงานคุณต้น'] },
       { t: 'หัวหน้าดูงานที่รออนุมัติ', k: 'rm', r: ['head'], d: 'ปุ่ม "รออนุมัติ" ใน Rich Menu หรือในรายงาน 09:00', try: ['u_nid', 'การ์ดดำรออนุมัติ'] } ] },
     { t: 'อัปเดตความคืบหน้า', k: 'chat', q: 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์', r: ['staff', 'head'], try: ['u_ton', 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์'], kids: [
       { t: 'บันทึก % และหมายเหตุ', k: 'db', d: 'tasks.progress + task_updates' },
@@ -2959,7 +3000,7 @@ async function helpMsg(uid) {
 
 /* ---------- chips & personas ---------- */
 const CHIPS = {
-  u_ceo: ['การ์ดดำ ให้คุณต้นเตรียมเอกสารประมูลโครงการรัฐ ภายในศุกร์นี้', 'วันนี้ผมควรโฟกัสเรื่องอะไรก่อน', 'ฝ่ายไหนน่าห่วงที่สุด เพราะอะไร', 'ทำไมกำไรเดือนนี้ลดลง', 'ภาพรวมบริษัทตอนนี้เป็นยังไง', 'แนวโน้มยอดขาย 6 เดือน', 'การเงินเดือนนี้เป็นยังไง', 'ยอดขายแยกสาขา', 'ลูกหนี้ค้างจ่ายมีใครบ้าง', 'ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง', 'งานของคุณต้นไปถึงไหน', 'ฝ่ายการตลาดถึงไหนแล้ว', 'ใครรับผิดชอบงบประมาณ', 'ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้', 'รายงานตอนนี้', 'พรุ่งนี้ 9 โมง ทักคุณสมชายเรื่องใบเสนอราคา', 'เตือนผมบ่าย 3 โทรหาธนาคาร', 'ร่างข้อความถึงคุณสมชาย ขอเลื่อนประชุมไปพุธหน้า', 'ร่างข้อความถึงคุณวิชัย ขอนัดคุยเรื่องสัญญาขนส่งปีหน้า'],
+  u_ceo: ['การ์ดดำ ให้คุณต้นเตรียมเอกสารประมูลโครงการรัฐ ภายในศุกร์นี้', 'การ์ดดำถึงไหนแล้ว', 'ตามงานคุณต้น', 'วันนี้ผมควรโฟกัสเรื่องอะไรก่อน', 'ฝ่ายไหนน่าห่วงที่สุด เพราะอะไร', 'ทำไมกำไรเดือนนี้ลดลง', 'ภาพรวมบริษัทตอนนี้เป็นยังไง', 'แนวโน้มยอดขาย 6 เดือน', 'การเงินเดือนนี้เป็นยังไง', 'ยอดขายแยกสาขา', 'ลูกหนี้ค้างจ่ายมีใครบ้าง', 'ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง', 'งานของคุณต้นไปถึงไหน', 'ฝ่ายการตลาดถึงไหนแล้ว', 'ใครรับผิดชอบงบประมาณ', 'ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้', 'รายงานตอนนี้', 'พรุ่งนี้ 9 โมง ทักคุณสมชายเรื่องใบเสนอราคา', 'เตือนผมบ่าย 3 โทรหาธนาคาร', 'ร่างข้อความถึงคุณสมชาย ขอเลื่อนประชุมไปพุธหน้า', 'ร่างข้อความถึงคุณวิชัย ขอนัดคุยเรื่องสัญญาขนส่งปีหน้า'],
   u_nid: ['การ์ดดำรออนุมัติ', 'ทีมผมตอนนี้ใครน่าห่วงที่สุด', 'นัดประชุมทีมฝ่ายขายพรุ่งนี้บ่าย 2 เรื่องยอดขายไตรมาส 4', 'งานในฝ่ายถึงไหนแล้ว', 'การเงินบริษัทเดือนนี้เป็นยังไง', 'งานของคุณแพรถึงไหน', 'ให้คุณต้นสรุปลูกค้าเก่าภายในศุกร์นี้', 'งานของคุณฝนถึงไหน', 'แผนยอดขายไตรมาส 1 คืบหน้า 50%', 'ให้คุณมิ้นท์ทำโปสเตอร์ภายในพรุ่งนี้'],
   u_ton: ['การ์ดดำของผมรออนุมัติอยู่ไหม', 'พรุ่งนี้ผมต้องรีบทำอะไรก่อน', 'งานของผมมีอะไรบ้าง', 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์', 'ใบเสนอราคาเสร็จแล้ว', 'ติดปัญหาเรื่องใบเสนอราคา ลูกค้ายังไม่ส่งสเปก', 'งานของคุณแพรถึงไหน', 'ให้คุณแพรช่วยโทรหาลูกค้า']
 };
