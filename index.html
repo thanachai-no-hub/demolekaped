@@ -1,0 +1,2260 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="เลขาเป็ด: AI เลขาบน LINE + Supabase ต้นแบบสำหรับนำเสนอ">
+<style>
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font: 14px system-ui, sans-serif; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>เลขาเป็ด</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Prompt:wght@500;600;700&display=swap">
+</head>
+<body>
+<style>
+/* Layout: sticky top nav → three views (3D architecture on Supabase / playable multi-role mockup / build plan); LINE-green identity, Supabase mint for the backend plate */
+:root {
+  --bg: #f4f7f5;
+  --surface: #ffffff;
+  --surface-2: #eaf0ec;
+  --fg: #12201a;
+  --muted: #56655d;
+  --line: #d6dfd9;
+  --accent: #067a39;
+  --accent-fill: #06c755;
+  --on-accent: #022410;
+  --warn: #8a5a00;
+  --warn-bg: #fff3d6;
+  --bad: #c2362f;
+  --bad-bg: #fde9e7;
+  --info: #2f6fde;
+  --chat-bg: #dce6ef;
+  --bubble-me: #8de08f;
+  --bubble-bot: #ffffff;
+  --stage: #e6ede8;
+  --grid: #c7d3cb;
+  --c-line: #06c755;
+  --c-supa: #2fb67c;
+  --c-api: #2f6fde;
+  --c-ai: #c98200;
+  --c-db: #138a8a;
+  --c-queue: #d4552b;
+  --c-worker: #5b6b8a;
+  --c-ext: #9aa49e;
+  --duck: #f2b705;
+  --font-display: "Prompt", "Noto Sans Thai", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b100e; --surface: #161c19; --surface-2: #111613; --fg: #eef4f0; --muted: #a0aea6;
+    --line: #2a332e; --accent: #4fdc88; --accent-fill: #06c755; --on-accent: #02180a;
+    --warn: #f3c566; --warn-bg: #2a2110; --bad: #ff7b72; --bad-bg: #2d1513; --info: #6b9cff;
+    --chat-bg: #131b22; --bubble-me: #2f8f4a; --bubble-bot: #232a26;
+    --stage: #0f1513; --grid: #26302b;
+    --c-line: #2fdc75; --c-supa: #3ecf8e; --c-api: #6b9cff; --c-ai: #f0b429; --c-db: #3cc4c4; --c-queue: #ff7a4d; --c-worker: #9aa8c7; --c-ext: #5f6a64;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b100e; --surface: #161c19; --surface-2: #111613; --fg: #eef4f0; --muted: #a0aea6;
+  --line: #2a332e; --accent: #4fdc88; --accent-fill: #06c755; --on-accent: #02180a;
+  --warn: #f3c566; --warn-bg: #2a2110; --bad: #ff7b72; --bad-bg: #2d1513; --info: #6b9cff;
+  --chat-bg: #131b22; --bubble-me: #2f8f4a; --bubble-bot: #232a26;
+  --stage: #0f1513; --grid: #26302b;
+  --c-line: #2fdc75; --c-supa: #3ecf8e; --c-api: #6b9cff; --c-ai: #f0b429; --c-db: #3cc4c4; --c-queue: #ff7a4d; --c-worker: #9aa8c7; --c-ext: #5f6a64;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body);
+  font-size: 16px; line-height: 1.65; padding-block: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1180px; margin: 0 auto; }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.3; margin: 0; text-wrap: balance; font-weight: 600; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+code, pre, .mono { font-family: var(--font-mono); }
+
+/* duck avatar */
+.duck { width: 34px; height: 34px; border-radius: 50%; background: var(--duck); display: grid; place-items: center; flex: none; }
+.duck svg { width: 24px; height: 24px; }
+
+/* Top nav */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg);
+  border-bottom: 1px solid var(--line); margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  padding-inline: max(16px, env(safe-area-inset-left, 0px));
+}
+.top-in { max-width: 1180px; margin: 0 auto; display: flex; align-items: center; gap: 12px 20px; padding-block: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+.brand b { font-family: var(--font-display); font-size: 17px; font-weight: 600; display: block; line-height: 1.2; }
+.brand span { font-size: 12.5px; color: var(--muted); }
+.nav { display: flex; gap: 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px; overflow-x: auto; max-width: 100%; }
+.nav a { text-decoration: none; color: var(--muted); font-size: 14.5px; font-weight: 500; padding: 6px 14px; border-radius: 999px; white-space: nowrap; }
+.nav a[aria-current="page"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
+
+.view { padding-block: 28px 56px; }
+.vh { display: grid; gap: 6px; margin-bottom: 20px; max-width: 74ch; }
+.eyebrow { font-size: 12.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.vh h1 { font-size: clamp(26px, 4.4vw, 36px); }
+.vh p { color: var(--muted); }
+
+/* ---------- 3D view ---------- */
+.arch { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
+.stage3d { position: relative; background: var(--stage); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; height: 620px; min-width: 0; }
+.stage3d canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.stage3d canvas:active { cursor: grabbing; }
+.labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.lbl {
+  position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); white-space: nowrap;
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 8px;
+  padding: 3px 9px; font-size: 12.5px; line-height: 1.3; text-align: center; box-shadow: 0 2px 6px rgb(0 0 0 / .08);
+}
+.lbl b { font-family: var(--font-display); font-weight: 600; display: block; font-size: 13px; }
+.lbl small { color: var(--muted); font-size: 11.5px; }
+.lbl .ls { display: none; }
+.lbl.on { border-color: var(--accent-fill); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-fill) 35%, transparent); }
+.lbl.dim { opacity: .65; border-style: dashed; }
+.lbl.plate { background: var(--c-supa); color: #04281a; border-color: transparent; font-family: var(--font-display); font-weight: 600; font-size: 13px; }
+.lbl.plate small { color: #04281a; opacity: .8; }
+.stage-hint { position: absolute; left: 12px; bottom: 12px; font-size: 12.5px; color: var(--muted); background: color-mix(in srgb, var(--surface) 85%, transparent); padding: 4px 10px; border-radius: 999px; }
+.legend { position: absolute; right: 12px; top: 12px; display: grid; gap: 4px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--surface) 88%, transparent); padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); }
+.legend span { display: flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.nofx { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; color: var(--muted); }
+
+.side { display: grid; gap: 12px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+.card h3 { font-size: 16px; margin-bottom: 8px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.seg button {
+  text-align: left; border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 8px 10px; cursor: pointer;
+  display: grid; gap: 0; line-height: 1.35;
+}
+.seg button b { font-family: var(--font-display); font-weight: 600; font-size: 14px; }
+.seg button span { font-size: 12px; color: var(--muted); }
+.seg button[aria-pressed="true"] { border-color: var(--accent-fill); background: var(--surface); box-shadow: inset 3px 0 0 var(--accent-fill); }
+.ctrl { display: flex; gap: 6px; margin-top: 12px; }
+.btn {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; cursor: pointer;
+  font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.pri { background: var(--accent-fill); color: var(--on-accent); border-color: var(--accent-fill); font-weight: 600; }
+.btn[disabled] { opacity: .45; cursor: default; }
+.btn.sm { padding: 3px 11px; font-size: 13px; }
+.steplist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 260px; overflow-y: auto; }
+.steplist li { display: grid; grid-template-columns: 24px 1fr; gap: 8px; font-size: 13.5px; padding: 5px 6px; border-radius: 8px; cursor: pointer; line-height: 1.4; }
+.steplist li .n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 600; background: var(--surface-2); color: var(--muted); font-variant-numeric: tabular-nums; }
+.steplist li.on { background: var(--surface-2); }
+.steplist li.on .n { background: var(--accent-fill); color: var(--on-accent); }
+.steplist li.done .n { color: var(--accent); }
+.payload { margin: 8px 0 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 12.5px; line-height: 1.55; overflow: auto; max-height: 220px; white-space: pre; }
+.cur-t { font-family: var(--font-display); font-weight: 600; font-size: 15px; }
+.cur-d { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+.nodeinfo dl { display: grid; grid-template-columns: 74px 1fr; gap: 4px 10px; margin: 8px 0 0; font-size: 13.5px; }
+.nodeinfo dt { color: var(--muted); }
+.nodeinfo dd { margin: 0; }
+.chipc { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: 0; }
+
+/* ---------- Demo view ---------- */
+.clock {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 14px; padding: 12px 16px; margin-bottom: 16px;
+}
+.clock .now { font-family: var(--font-display); font-weight: 600; font-size: 18px; font-variant-numeric: tabular-nums; }
+.clock .lab { font-size: 12px; color: var(--muted); display: block; line-height: 1.2; }
+.clock .next { font-size: 14px; color: var(--muted); flex: 1; min-width: 200px; }
+.clock .next b { color: var(--fg); font-weight: 600; }
+.clock .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.demo { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 18px; align-items: start; }
+.leftcol { display: grid; gap: 10px; min-width: 0; }
+.who { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.who button {
+  position: relative; text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 12px;
+  padding: 7px 10px; cursor: pointer; display: grid; line-height: 1.3; min-width: 0;
+}
+.who button b { font-family: var(--font-display); font-weight: 600; font-size: 14px; }
+.who button span { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.who button[aria-pressed="true"] { border-color: var(--accent-fill); box-shadow: inset 0 -3px 0 var(--accent-fill); }
+.who .badge { position: absolute; top: -6px; right: -4px; min-width: 20px; height: 20px; border-radius: 999px; background: var(--bad); color: #fff; font-size: 11.5px; font-weight: 600; display: grid; place-items: center; padding: 0 5px; }
+.phone { border: 9px solid #1b2420; border-radius: 36px; overflow: hidden; background: var(--chat-bg); display: flex; flex-direction: column; height: 700px; min-width: 0; }
+.ph-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.ph-head b { font-family: var(--font-display); font-weight: 600; font-size: 15px; display: block; line-height: 1.2; }
+.ph-head span { font-size: 11.5px; color: var(--muted); }
+.chat { flex: 1; overflow-y: auto; padding: 12px 10px; display: flex; flex-direction: column; gap: 9px; min-height: 0; }
+.stamp { align-self: center; font-size: 11.5px; color: var(--muted); background: color-mix(in srgb, var(--bubble-bot) 70%, transparent); padding: 1px 12px; border-radius: 999px; }
+.m { display: flex; align-items: flex-end; gap: 6px; max-width: 100%; }
+.m.me { justify-content: flex-end; }
+.m time { font-size: 10.5px; color: var(--muted); flex: none; padding-bottom: 2px; font-variant-numeric: tabular-nums; }
+.b { max-width: 82%; padding: 8px 12px; border-radius: 16px; font-size: 14.5px; line-height: 1.5; min-width: 0; overflow-wrap: anywhere; white-space: pre-line; }
+.me .b { background: var(--bubble-me); border-bottom-right-radius: 4px; }
+.bot .b { background: var(--bubble-bot); border-bottom-left-radius: 4px; }
+.typing .b { color: var(--muted); font-style: italic; }
+.fx { background: var(--bubble-bot); border-radius: 14px; overflow: hidden; width: 270px; max-width: 86%; border: 1px solid var(--line); min-width: 0; }
+.fx-h { background: var(--accent-fill); color: var(--on-accent); font-family: var(--font-display); font-weight: 600; font-size: 14px; padding: 8px 13px; }
+.fx-h.warn { background: #e8a317; color: #2a1a00; }
+.fx-h.bad { background: var(--bad); color: #fff; }
+.fx-h.duckh { background: var(--duck); color: #2a1a00; }
+.fx-b { padding: 10px 13px 12px; display: grid; gap: 6px; font-size: 13.5px; line-height: 1.45; }
+.fx-t { font-size: 11.5px; font-weight: 600; color: var(--muted); letter-spacing: .04em; margin-top: 4px; }
+.fx-t:first-child { margin-top: 0; }
+.fx-r { display: grid; grid-template-columns: 9px 1fr; gap: 8px; align-items: start; }
+.fx-r .dot { margin-top: 6px; }
+.fx-r em { display: block; font-style: normal; font-size: 12px; color: var(--muted); }
+.fx-kv { display: grid; grid-template-columns: 62px 1fr; gap: 8px; }
+.fx-kv span { color: var(--muted); font-size: 12.5px; }
+.fx-kv b { font-weight: 600; }
+.fx-q { background: var(--surface-2); border-radius: 8px; padding: 7px 10px; white-space: pre-line; }
+.fx-note { font-size: 12px; color: var(--warn); background: var(--warn-bg); border-radius: 8px; padding: 6px 9px; }
+.fx-w { display: grid; gap: 3px; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
+.fx-w:last-child { border-bottom: 0; padding-bottom: 0; }
+.fx-w1 { display: flex; justify-content: space-between; gap: 6px; align-items: baseline; }
+.fx-w1 b { font-weight: 600; min-width: 0; }
+.fx-w em { font-style: normal; font-size: 12px; color: var(--muted); }
+.pb { height: 5px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.pb i { display: block; height: 100%; background: var(--accent-fill); border-radius: 99px; }
+.pb.overdue i { background: var(--bad); } .pb.blocked i { background: #e8a317; }
+.fx-f { display: flex; flex-wrap: wrap; border-top: 1px solid var(--line); }
+.fx-f button { flex: 1 1 33%; background: none; border: 0; border-left: 1px solid var(--line); padding: 9px 4px; font-size: 13.5px; font-weight: 600; color: var(--accent); cursor: pointer; }
+.fx-f button:first-child { border-left: 0; }
+.fx-f button.x { color: var(--muted); font-weight: 500; }
+.fx-f button[disabled] { color: var(--muted); opacity: .5; cursor: default; }
+.pick { display: grid; gap: 4px; max-height: 240px; overflow-y: auto; padding-right: 2px; }
+.pick-g { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 4px; }
+.pick-i { display: grid; grid-template-columns: 28px minmax(0, 1fr) 18px; gap: 8px; align-items: center; text-align: left; border: 1px solid var(--line); background: var(--bubble-bot); border-radius: 10px; padding: 5px 8px; cursor: pointer; }
+.pick-i .av { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; font-size: 12px; font-weight: 600; }
+.pick-i b { display: block; font-size: 13px; font-weight: 600; line-height: 1.25; }
+.pick-i em { display: block; font-style: normal; font-size: 11.5px; color: var(--muted); line-height: 1.3; }
+.pick-i .ck { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); }
+.pick-i[aria-pressed="true"] { border-color: var(--accent-fill); }
+.pick-i[aria-pressed="true"] .av { background: var(--accent-fill); color: var(--on-accent); }
+.pick-i[aria-pressed="true"] .ck { background: var(--accent-fill); border-color: var(--accent-fill); box-shadow: inset 0 0 0 3px var(--bubble-bot); }
+.pick-i[disabled] { opacity: .5; cursor: default; }
+.bars { display: grid; gap: 5px; }
+.bar { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 6px; align-items: center; font-size: 12px; font-variant-numeric: tabular-nums; }
+.bar > span:first-child { color: var(--muted); }
+.bar > span:last-child { text-align: right; font-weight: 600; }
+.bar .tr { display: grid; gap: 2px; }
+.bar .tr i { display: block; height: 9px; border-radius: 3px; background: var(--accent-fill); }
+.bar .tr i.ex { height: 5px; background: var(--c-ext); }
+.bars.wide .bar { grid-template-columns: 58px minmax(0, 1fr) 46px; }
+.bar.hl > span:first-child { color: var(--fg); font-weight: 600; }
+.bar.hl .tr i:not(.ex) { background: var(--accent); }
+.lgd { display: flex; gap: 10px; font-size: 11.5px; color: var(--muted); }
+.lgd i { display: inline-block; width: 10px; height: 6px; border-radius: 2px; margin-right: 4px; vertical-align: 1px; }
+.kpi2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.kpi2 div { background: var(--surface-2); border-radius: 8px; padding: 6px 8px; }
+.kpi2 span { display: block; font-size: 11.5px; color: var(--muted); }
+.kpi2 b { font-family: var(--font-display); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.kpi2 em { font-style: normal; font-size: 11.5px; }
+.up { color: var(--accent); } .down { color: var(--bad); }
+.src { font-size: 11px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 5px; }
+.att { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.att span { font-size: 11.5px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.att span.accepted { border-color: var(--accent-fill); color: var(--accent); }
+.att span.declined { border-color: var(--bad); color: var(--bad); }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--accent-fill); }
+.dot.r { background: var(--bad); } .dot.a { background: #e8a317; } .dot.n { background: var(--c-ext); }
+.qrow { display: flex; gap: 6px; overflow-x: auto; padding: 8px 10px 4px; background: var(--chat-bg); scrollbar-width: none; }
+.qrow button { flex: none; font-size: 12.5px; padding: 4px 11px; border-radius: 999px; background: var(--bubble-bot); color: var(--accent); border: 1px solid var(--accent-fill); cursor: pointer; font-weight: 500; }
+.ph-in { display: flex; gap: 8px; padding: 8px 10px 10px; background: var(--surface); border-top: 1px solid var(--line); }
+.ph-in input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 14px; }
+.ph-in button { border: 0; background: var(--accent-fill); color: var(--on-accent); border-radius: 999px; padding: 0 14px; font-weight: 600; cursor: pointer; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; min-width: 0; display: flex; flex-direction: column; height: 780px; }
+.ptabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); padding: 6px 8px 0; overflow-x: auto; flex: none; }
+.ptabs button { border: 0; background: none; padding: 8px 12px 10px; cursor: pointer; color: var(--muted); font-weight: 500; font-size: 14.5px; border-bottom: 2px solid transparent; white-space: nowrap; }
+.ptabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent-fill); }
+.ptabs .cnt { font-size: 11.5px; background: var(--surface-2); border-radius: 999px; padding: 0 7px; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.pbody { padding: 16px; overflow-y: auto; flex: 1; min-height: 0; }
+.scope { font-size: 13.5px; color: var(--muted); background: var(--surface-2); border-radius: 10px; padding: 8px 12px; margin-bottom: 14px; }
+.scope b { color: var(--fg); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+.kpi { background: var(--surface-2); border-radius: 12px; padding: 10px 12px; }
+.kpi b { font-family: var(--font-display); font-size: 26px; font-weight: 600; display: block; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.kpi span { font-size: 12.5px; color: var(--muted); }
+.kpi.bad b { color: var(--bad); } .kpi.warn b { color: var(--warn); }
+.blk { margin-bottom: 20px; }
+.blk h4 { font-size: 15px; margin-bottom: 8px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.blk h4 small { font-family: var(--font-body); font-weight: 400; color: var(--muted); font-size: 12.5px; }
+.rows { display: grid; gap: 6px; }
+.row { display: grid; grid-template-columns: minmax(0, 1.4fr) 120px 110px auto; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
+.row .t { min-width: 0; }
+.row .t small { color: var(--muted); display: block; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .pg { display: grid; gap: 3px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.row time { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.row .acts { display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.row.simple { grid-template-columns: 110px minmax(0, 1fr) auto; }
+.pill { font-size: 12px; font-weight: 600; padding: 1px 9px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; background: var(--surface); }
+.pill.scheduled, .pill.in_progress { border-color: var(--info); color: var(--info); }
+.pill.sent, .pill.done { background: var(--accent-fill); color: var(--on-accent); border-color: var(--accent-fill); }
+.pill.overdue, .pill.failed { background: var(--bad-bg); color: var(--bad); border-color: transparent; }
+.pill.blocked { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+.pill.draft, .pill.not_started { border-style: dashed; color: var(--muted); }
+.pill.cancelled { color: var(--muted); text-decoration: line-through; }
+.empty { color: var(--muted); font-size: 14px; padding: 8px 0; }
+.flash { animation: flash 1.8s ease-out; }
+@keyframes flash { from { background: color-mix(in srgb, var(--accent-fill) 28%, transparent); } to { background: transparent; } }
+
+.dbsel { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.dbsel button { border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px; padding: 4px 10px; font-size: 13px; cursor: pointer; font-family: var(--font-mono); }
+.dbsel button[aria-pressed="true"] { border-color: var(--accent-fill); background: var(--surface); }
+.sql { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 12.5px; white-space: pre-wrap; margin: 0 0 12px; overflow-wrap: anywhere; }
+.sql .k { color: var(--info); font-weight: 500; }
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-weight: 500; font-size: 12px; color: var(--muted); background: var(--surface-2); white-space: nowrap; }
+td.mono { font-size: 12px; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+.dbnote { font-size: 13px; color: var(--muted); margin: 14px 0 8px; }
+
+.trace { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.trace li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; position: relative; padding-bottom: 12px; }
+.trace li:not(:last-child)::after { content: ""; position: absolute; left: 13px; top: 30px; bottom: 0; width: 2px; background: var(--line); }
+.trace .n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--line); font-variant-numeric: tabular-nums; z-index: 1; }
+.trace .tc { min-width: 0; }
+.trace .tt { font-weight: 600; font-size: 14px; }
+.lane { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 0 8px; border-radius: 999px; margin-right: 6px; color: #fff; vertical-align: 1px; }
+.trace pre { margin: 6px 0 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; line-height: 1.5; overflow-x: auto; max-height: 180px; }
+.tr-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+.tr-head p { font-size: 14px; color: var(--muted); min-width: 0; }
+.tr-head p b { color: var(--fg); }
+
+/* ---------- Plan view ---------- */
+.plan { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; }
+.plan > *, .two > *, .vd { min-width: 0; }
+main, .view { min-width: 0; max-width: 100%; }
+.plan h2 { font-size: clamp(21px, 3vw, 26px); margin-bottom: 6px; }
+.plan .lead { color: var(--muted); max-width: 72ch; margin-bottom: 16px; }
+.layers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.layer { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--lc); border-radius: 12px; padding: 14px; min-width: 0; }
+.layer .tag { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.layer h3 { font-size: 16px; margin: 2px 0 6px; }
+.layer p { font-size: 13.5px; color: var(--muted); }
+.layer code { font-size: 12px; display: block; margin-top: 8px; color: var(--fg); }
+.roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.role { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; }
+.role .tag { font-size: 12px; font-weight: 600; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; }
+.role h3 { font-size: 17px; margin: 2px 0 8px; }
+.role ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
+.loop { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; counter-reset: k; list-style: none; padding: 0; margin: 0 0 18px; }
+.loop li { counter-increment: k; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 13.5px; min-width: 0; }
+.loop li::before { content: counter(k); display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent-fill); color: var(--on-accent); font-weight: 600; font-size: 12px; margin-bottom: 6px; }
+.loop b { display: block; font-size: 14px; }
+.loop span { color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.schema { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.tbl { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; min-width: 0; }
+.tbl h4 { font-family: var(--font-mono); font-weight: 500; font-size: 14px; padding: 8px 12px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+.tbl h4 small { font-family: var(--font-body); color: var(--muted); font-size: 12px; margin-left: 6px; }
+.tbl ul { list-style: none; margin: 0; padding: 6px 12px 10px; display: grid; gap: 2px; font-size: 12.5px; }
+.tbl li { display: flex; justify-content: space-between; gap: 8px; font-family: var(--font-mono); }
+.tbl li span { color: var(--muted); text-align: right; }
+.tbl li.pk { font-weight: 500; }
+.tbl li.fk span { color: var(--info); }
+.codebox { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; min-width: 0; }
+.codebox h4 { font-size: 14px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.codebox pre { margin: 0; padding: 12px 14px; font-size: 12.5px; line-height: 1.55; overflow-x: auto; }
+.dt-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.dt { font-size: 14px; }
+.dt th { font-family: var(--font-body); font-size: 13px; font-weight: 600; }
+.dt td code { font-size: 12.5px; }
+.yes { color: var(--accent); font-weight: 600; }
+.weeks { display: grid; gap: 8px; }
+.wk { display: grid; grid-template-columns: 110px minmax(0, 1fr) minmax(0, 1.2fr); gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; align-items: start; }
+.wk b { font-family: var(--font-display); font-weight: 600; }
+.wk .w { color: var(--accent); font-family: var(--font-display); font-weight: 600; }
+.wk span { color: var(--muted); font-size: 14px; }
+.sec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.sec div { border-top: 3px solid var(--accent-fill); padding-top: 10px; }
+.sec b { display: block; font-family: var(--font-display); font-weight: 600; margin-bottom: 2px; }
+.sec span { color: var(--muted); font-size: 14px; }
+.ask { background: var(--accent-fill); color: var(--on-accent); border-radius: 16px; padding: 22px 24px; }
+.ask h3 { font-size: 20px; margin-bottom: 6px; }
+.ask ul { margin: 6px 0 0; padding-left: 1.2em; }
+footer { color: var(--muted); font-size: 13px; padding-block: 8px 40px; }
+.verdict { display: grid; grid-template-columns: repeat(3, minmax(0, 160px)) minmax(0, 1fr); gap: 12px; align-items: stretch; }
+.vd { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--accent-fill); border-radius: 12px; padding: 12px 14px; }
+.vd b { font-family: var(--font-display); font-size: 34px; font-weight: 600; display: block; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.vd span { font-size: 13.5px; color: var(--muted); }
+.vd.adj { border-top-color: #e8a317; } .vd.no { border-top-color: var(--bad); }
+.verdict p { background: var(--surface-2); border-radius: 12px; padding: 14px 16px; font-size: 15px; align-self: stretch; }
+.feas td:first-child { font-weight: 500; min-width: 180px; }
+.feas td:nth-child(2) { white-space: nowrap; }
+.feas td:last-child { color: var(--muted); min-width: 260px; }
+.dt .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dt tr.tot td { font-weight: 600; }
+.risks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.risk { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--c-ext); border-radius: 12px; padding: 12px 16px; min-width: 0; }
+.risk.hi { border-left-color: var(--bad); } .risk.mid { border-left-color: #e8a317; }
+.risk .lv { font-size: 11.5px; font-weight: 600; color: var(--muted); letter-spacing: .04em; }
+.risk.hi .lv { color: var(--bad); } .risk.mid .lv { color: var(--warn); }
+.risk b { display: block; font-family: var(--font-display); font-weight: 600; margin: 2px 0 4px; }
+.risk p { font-size: 14px; color: var(--muted); }
+@media (max-width: 1000px) { .verdict { grid-template-columns: repeat(3, 1fr); } .verdict p { grid-column: 1 / -1; } }
+@media (max-width: 640px) {
+  .risks { grid-template-columns: 1fr; } .vd b { font-size: 28px; }
+  .feas thead { display: none; }
+  .feas tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .feas tr:last-child { border-bottom: 0; }
+  .feas td { border: 0; padding: 0; min-width: 0 !important; }
+  .feas td:last-child { grid-column: 1 / -1; font-size: 14px; }
+}
+
+@media (max-width: 1000px) {
+  .arch { grid-template-columns: 1fr; }
+  .stage3d { height: 500px; }
+  .demo { grid-template-columns: 1fr; }
+  .leftcol { max-width: 420px; width: 100%; margin-inline: auto; }
+  .phone { height: 640px; }
+  .panel { height: auto; }
+  .pbody { max-height: 760px; }
+  .layers { grid-template-columns: repeat(2, 1fr); }
+  .loop { grid-template-columns: repeat(3, 1fr); }
+  .schema { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .stage3d { height: 420px; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .two, .sec, .schema, .layers, .roles { grid-template-columns: 1fr; }
+  .loop { grid-template-columns: repeat(2, 1fr); }
+  .wk { grid-template-columns: 1fr; gap: 4px; }
+  .row { grid-template-columns: minmax(0, 1fr) auto; }
+  .row .pg { grid-column: 1; }
+  .row time { grid-column: 2; grid-row: 1; justify-self: end; }
+  .row .acts { grid-column: 1 / -1; justify-content: flex-start; }
+  .row.simple { grid-template-columns: 90px minmax(0, 1fr); }
+  .legend { display: none; }
+  .brand span { display: none; }
+}
+@media (max-width: 640px) {
+  .top { position: static; }
+  .nav { display: grid; grid-template-columns: 1fr 1fr; width: 100%; border-radius: 14px; overflow: visible; }
+  .nav a { text-align: center; border-radius: 10px; padding: 7px 8px; }
+  .lbl { padding: 2px 6px; font-size: 11px; }
+  .lbl b { font-size: 11.5px; }
+  .lbl small { display: none; }
+  .lbl .lf:has(+ .ls) { display: none; }
+  .lbl .ls { display: block; }
+  .stage-hint { display: none; }
+  .lbl.plate small { display: none; }
+  .stage-hint { font-size: 11.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flash { animation: none; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="top-in">
+      <div class="brand">
+        <div class="duck" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="10" r="6" fill="#fff6d0"/><circle cx="12.6" cy="8.6" r="1.1" fill="#1b1b1b"/><path d="M15.5 10.2 21 9.6l-4.6 3.1z" fill="#e8730c"/><path d="M5 15c2 4 10 5 14 1-2 5-12 6-14-1z" fill="#fff6d0"/></svg></div>
+        <div><b>เลขาเป็ด</b><span>AI Agent ตัวเดียว ทำงานแทนเลขาทั้งบริษัท ผ่าน LINE</span></div>
+      </div>
+      <nav class="nav" aria-label="ส่วนของหน้า">
+        <a href="#architecture" data-v="architecture">โครงสร้างระบบ 3D</a>
+        <a href="#demo" data-v="demo">ลองใช้งาน</a>
+        <a href="#plan" data-v="plan">แผนการสร้าง</a>
+        <a href="#feasibility" data-v="feasibility">ทำได้จริงไหม</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+  <!-- ================= 3D ================= -->
+  <section class="view" id="v-architecture" data-view="architecture">
+    <div class="vh">
+      <div class="eyebrow">ภาพรวมสถาปัตยกรรม · Supabase</div>
+      <h1>เลขาเป็ดรับคำสั่ง ตามงาน และรายงานผลอย่างไร</h1>
+      <p>ทุกอย่างหลังบ้านอยู่บน Supabase แผ่นเดียว ได้แก่ ฐานข้อมูล Postgres, Edge Functions, ตัวตั้งเวลา pg_cron และสิทธิ์การเห็นข้อมูลตาม role เลือกสถานการณ์ด้านขวา แล้วดูจุดสีเขียววิ่งตามเส้นทางจริงของข้อมูล ลากเพื่อหมุนภาพ แตะกล่องเพื่อดูรายละเอียด</p>
+    </div>
+    <div class="arch">
+      <div class="stage3d" id="stage">
+        <canvas id="cv" aria-label="แผนภาพ 3 มิติของระบบเลขาเป็ด"></canvas>
+        <div class="labels" id="labels"></div>
+        <div class="legend" aria-hidden="true">
+          <span><i style="background:var(--c-line)"></i>LINE</span>
+          <span><i style="background:var(--c-supa)"></i>Supabase</span>
+          <span><i style="background:var(--c-ai)"></i>AI</span>
+          <span><i style="background:var(--c-db)"></i>ฐานข้อมูล</span>
+          <span><i style="background:var(--c-queue)"></i>ตั้งเวลา</span>
+        </div>
+        <div class="stage-hint">ลากเพื่อหมุน · แตะกล่องเพื่อดูรายละเอียด</div>
+      </div>
+      <div class="side">
+        <div class="card">
+          <h3>เลือกสถานการณ์</h3>
+          <div class="seg" id="scenBtns"></div>
+          <div class="ctrl">
+            <button class="btn sm" id="pPrev">ก่อนหน้า</button>
+            <button class="btn sm pri" id="pPlay">หยุด</button>
+            <button class="btn sm" id="pNext">ถัดไป</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="cur-t" id="curT"></div>
+          <div class="cur-d" id="curD"></div>
+          <pre class="payload" id="curCode"></pre>
+        </div>
+        <div class="card">
+          <h3>ทุกขั้นตอน</h3>
+          <ol class="steplist" id="stepList"></ol>
+        </div>
+        <div class="card nodeinfo" id="nodeInfo">
+          <h3>ส่วนประกอบ</h3>
+          <p class="cur-d">แตะกล่องในภาพ 3 มิติเพื่อดูหน้าที่ เทคโนโลยี และข้อมูลที่รับส่ง</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DEMO ================= -->
+  <section class="view" id="v-demo" data-view="demo" hidden>
+    <div class="vh">
+      <div class="eyebrow">ต้นแบบให้ลองเล่น</div>
+      <h1>สลับเป็น CEO หัวหน้า หรือพนักงาน แล้วคุยกับเลขาเป็ด</h1>
+      <p>เริ่มที่ 08:50 กด "ข้ามไปงานถัดไป" เพื่อดูรายงาน 09:00 ที่แต่ละคนได้รับไม่เหมือนกันตาม role และดูเลขาเป็ดตามคนที่งานใกล้ครบกำหนด ลองตอบในฐานะพนักงาน แล้วสลับกลับมาถามในฐานะ CEO ว่างานไปถึงไหน ข้อมูลทั้งหมดเป็นตัวอย่างสมมติ</p>
+    </div>
+
+    <div class="clock">
+      <div><span class="lab">เวลาจำลอง</span><span class="now" id="simNow"></span></div>
+      <div class="next" id="simNext"></div>
+      <div class="acts">
+        <button class="btn pri" id="goNext">ข้ามไปงานถัดไป</button>
+        <button class="btn" id="goHour">+1 ชั่วโมง</button>
+        <button class="btn" id="goReset">เริ่มใหม่</button>
+      </div>
+    </div>
+
+    <div class="demo">
+      <div class="leftcol">
+        <div class="who" id="who" aria-label="เลือกว่าจะดูแชตของใคร"></div>
+        <div class="phone">
+          <div class="ph-head">
+            <div class="duck" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="10" r="6" fill="#fff6d0"/><circle cx="12.6" cy="8.6" r="1.1" fill="#1b1b1b"/><path d="M15.5 10.2 21 9.6l-4.6 3.1z" fill="#e8730c"/><path d="M5 15c2 4 10 5 14 1-2 5-12 6-14-1z" fill="#fff6d0"/></svg></div>
+            <div><b>เลขาเป็ด</b><span id="phWho">แชตของ CEO</span></div>
+          </div>
+          <div id="chats" style="display:flex;flex:1;min-height:0" aria-live="polite"></div>
+          <div class="qrow" id="qrow" aria-label="คำสั่งตัวอย่าง"></div>
+          <form class="ph-in" id="cmdForm">
+            <input id="cmd" autocomplete="off" placeholder="พิมพ์ถึงเลขาเป็ด" aria-label="พิมพ์ข้อความถึงเลขาเป็ด">
+            <button type="submit">ส่ง</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ptabs" role="tablist" aria-label="มุมมองหลังบ้าน">
+          <button role="tab" aria-selected="true" data-p="dash" id="pt-dash">แดชบอร์ดตาม role</button>
+          <button role="tab" aria-selected="false" data-p="db" id="pt-db">ฐานข้อมูล Supabase</button>
+          <button role="tab" aria-selected="false" data-p="trace" id="pt-trace">เส้นทางข้อมูล<span class="cnt" id="trCnt">0</span></button>
+        </div>
+        <div class="pbody" id="p-dash"></div>
+        <div class="pbody" id="p-db" hidden></div>
+        <div class="pbody" id="p-trace" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PLAN ================= -->
+  <section class="view" id="v-plan" data-view="plan" hidden>
+    <div class="vh">
+      <div class="eyebrow">สำหรับหัวหน้าและทีมพัฒนา</div>
+      <h1>สร้างเลขาเป็ดบน Supabase: ต้องมีอะไร ต่อข้อมูลอย่างไร ใช้เวลาเท่าไร</h1>
+      <p>เลขาเป็ดเป็น AI Agent ตัวเดียว ใช้ชุดเครื่องมือเดียวกันกับทุกคน แต่สิ่งที่แต่ละคนเห็นและสั่งได้ถูกกำหนดด้วย role ในฐานข้อมูล ข้อความที่ส่งออกไปหาคนนอกต้องกดยืนยันก่อนทุกครั้ง</p>
+    </div>
+
+    <div class="plan">
+      <div>
+        <h2>3 role กับสิ่งที่เลขาเป็ดทำให้</h2>
+        <p class="lead">role เก็บในตาราง <code>profiles</code> และบังคับด้วย Row Level Security ของ Supabase AI จึงเห็นได้แค่ข้อมูลที่คนถามมีสิทธิ์เห็น</p>
+        <div class="roles">
+          <div class="role"><div class="tag">CEO</div><h3>เห็นทั้งบริษัท</h3><ul>
+            <li>09:00 ได้รายงานทุกฝ่าย: งานถึงไหน ใครรับผิดชอบ อะไรเลยกำหนด</li>
+            <li>ถามได้ทุกคน เช่น "งานของคุณต้นไปถึงไหน"</li>
+            <li>ถามภาพรวม แนวโน้มยอดขาย การเงิน ลูกหนี้ ได้คำตอบพร้อมกราฟและแหล่งข้อมูล</li>
+            <li>มอบงานให้ใครก็ได้ ตั้งเวลาส่ง เตือนนัด ร่างข้อความ</li>
+            <li>พิมพ์ "ช่วยนัดคุณนิด meeting 11 โมง" เลือกผู้เข้าร่วมจากรายชื่อ LINE แล้วกดยืนยันก่อนแจ้ง</li></ul></div>
+          <div class="role"><div class="tag">หัวหน้าฝ่าย</div><h3>เห็นเฉพาะฝ่ายตัวเอง</h3><ul>
+            <li>09:00 ได้รายงานของฝ่ายตัวเอง</li>
+            <li>ถามและมอบงานได้เฉพาะลูกทีม ถามงานฝ่ายอื่นจะถูกปฏิเสธ</li>
+            <li>ได้แจ้งทันทีเมื่อลูกทีมติดปัญหาหรือเลยกำหนด</li></ul></div>
+          <div class="role"><div class="tag">พนักงาน</div><h3>เห็นงานของตัวเอง</h3><ul>
+            <li>09:00 ถูกตามงานที่ครบภายในวันพรุ่งนี้หรือเลยกำหนด</li>
+            <li>ตอบกลับเป็นภาษาพูด เช่น "เสร็จ 80% รอราคาซัพ" ระบบอัปเดตให้</li>
+            <li>ถาม "งานของผมมีอะไรบ้าง" ได้ตลอด</li></ul></div>
+        </div>
+      </div>
+
+      <div>
+        <h2>5 ส่วนของระบบ</h2>
+        <p class="lead">ใช้ Supabase แทนการตั้งเซิร์ฟเวอร์ ฐานข้อมูล และ Redis แยกกัน ทีมดูแลน้อยลง ส่วนที่อยู่นอก Supabase มีแค่ LINE และ LLM</p>
+        <div class="layers">
+          <div class="layer" style="--lc:var(--c-line)"><div class="tag">ช่องทาง</div><h3>LINE Official Account</h3><p>ทุกคนในบริษัทเพิ่มเลขาเป็ดเป็นเพื่อน ใช้คุย รับรายงาน และกดปุ่มบนการ์ด</p><code>Messaging API</code></div>
+          <div class="layer" style="--lc:var(--c-api)"><div class="tag">รับ-ส่ง</div><h3>Edge Function: line-webhook</h3><p>ตรวจลายเซ็น หาว่าใครพิมพ์ ตอบ 200 ทันที แล้วทำงานต่อเบื้องหลังด้วย waitUntil</p><code>Supabase Edge Functions (Deno)</code></div>
+          <div class="layer" style="--lc:var(--c-ai)"><div class="tag">สมอง</div><h3>เลขาเป็ด (Agent ตัวเดียว)</h3><p>โหลด role และบริบท ส่งให้ LLM เลือกเครื่องมือ แล้วโค้ดตรวจสิทธิ์ก่อนทำจริง</p><code>Claude API · tool use</code></div>
+          <div class="layer" style="--lc:var(--c-db)"><div class="tag">ข้อมูล</div><h3>Supabase Postgres</h3><p>งาน ความคืบหน้า คน role ความจำ ประวัติการส่ง พร้อม RLS และ pgvector</p><code>Postgres + RLS + pgvector</code></div>
+          <div class="layer" style="--lc:var(--c-queue)"><div class="tag">เวลา</div><h3>pg_cron + pg_net</h3><p>ทุกวัน 09:00 เรียกรายงานและการตาม ทุกนาทีเรียก scheduler ส่งข้อความที่ถึงเวลา</p><code>cron.schedule(...)</code></div>
+        </div>
+      </div>
+
+      <div>
+        <h2>เลขาเป็ดทำงานอย่างไรในหนึ่งรอบ</h2>
+        <p class="lead">LLM ไม่ได้แตะฐานข้อมูลหรือส่งข้อความเอง มันเลือกได้แค่ว่าจะเรียกเครื่องมือไหน โค้ดของเราเป็นคนตรวจสิทธิ์และทำจริง</p>
+        <ol class="loop">
+          <li><b>รับข้อความ</b><span>webhook จาก LINE หา profile จาก userId</span></li>
+          <li><b>โหลดบริบท</b><span>role ฝ่าย งานที่เกี่ยวข้อง ความจำ เวลาปัจจุบัน</span></li>
+          <li><b>LLM ตัดสินใจ</b><span>ตอบเลย หรือเลือกเครื่องมือพร้อมกรอกข้อมูล</span></li>
+          <li><b>ตรวจสิทธิ์</b><span>RLS ตาม role ต้องยืนยันไหม ชื่อซ้ำไหม</span></li>
+          <li><b>บันทึก</b><span>เขียน tasks, task_updates หรือ scheduled_messages</span></li>
+          <li><b>ตอบกลับ</b><span>reply การ์ดทันที ไม่นับโควตา</span></li>
+        </ol>
+        <div class="dt-wrap">
+          <table class="dt">
+            <thead><tr><th>เครื่องมือของเลขาเป็ด</th><th>ทำอะไร</th><th>ใครใช้ได้</th><th>ต้องกดยืนยัน</th></tr></thead>
+            <tbody>
+              <tr><td><code>get_work_status</code></td><td>ตอบว่างานของคน ฝ่าย หรือเรื่องหนึ่งไปถึงไหน ใครรับผิดชอบ</td><td>ทุกคน ตามขอบเขต role</td><td>ไม่ต้อง</td></tr>
+              <tr><td><code>get_business_metrics</code></td><td>ภาพรวม แนวโน้มรายได้ กำไร เงินสด ลูกหนี้ ยอดขายแยกสาขา อ่านจาก view ที่ฝ่ายการเงินกำหนดเท่านั้น</td><td>CEO, ฝ่ายการเงิน</td><td>ไม่ต้อง (อ่านอย่างเดียว)</td></tr>
+              <tr><td><code>update_progress</code></td><td>บันทึก % ความคืบหน้า สถานะ และหมายเหตุ</td><td>เจ้าของงาน</td><td>ไม่ต้อง</td></tr>
+              <tr><td><code>assign_task</code></td><td>มอบงานพร้อมกำหนดส่ง แจ้งผู้รับทันที</td><td>CEO, หัวหน้า (ลูกทีม)</td><td class="yes">ต้อง</td></tr>
+              <tr><td><code>nudge_owner</code></td><td>ตามคนรับผิดชอบตอนนี้เลย</td><td>CEO, หัวหน้า</td><td>ไม่ต้อง</td></tr>
+              <tr><td><code>get_role_report</code></td><td>รายงานตาม role (ใช้ทั้ง 09:00 และเมื่อถาม)</td><td>ทุกคน</td><td>ไม่ต้อง</td></tr>
+              <tr><td><code>schedule_meeting</code></td><td>นัดประชุม ให้เลือกผู้เข้าร่วมจากรายชื่อ LINE แจ้งทุกคน รับคำตอบ และเตือนก่อน 15 นาที</td><td>ทุกคน</td><td class="yes">ต้อง</td></tr>
+              <tr><td><code>create_scheduled_message</code></td><td>ตั้งเวลาส่งข้อความหาลูกค้าหรือทีม</td><td>CEO, หัวหน้า</td><td class="yes">ต้อง</td></tr>
+              <tr><td><code>set_reminder</code></td><td>เตือนตัวเอง ครั้งเดียวหรือทำซ้ำ</td><td>ทุกคน</td><td>ไม่ต้อง</td></tr>
+              <tr><td><code>draft_message</code></td><td>เรียบเรียงข้อความตามสไตล์ผู้สั่ง</td><td>CEO, หัวหน้า</td><td class="yes">ต้อง ก่อนส่ง</td></tr>
+              <tr><td><code>search_memory</code></td><td>ค้นสิ่งที่เคยสั่งและเรื่องที่ให้จำ</td><td>ทุกคน (เฉพาะของตัวเอง)</td><td>ไม่ต้อง</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <h2>โครงสร้างฐานข้อมูลบน Supabase</h2>
+        <p class="lead">ทุกตารางเปิด RLS ไว้ Edge Function เรียกฐานข้อมูลในนามผู้ใช้คนนั้น ข้อมูลที่ AI ได้เห็นจึงถูกกรองตั้งแต่ระดับฐานข้อมูล</p>
+        <div class="schema">
+          <div class="tbl"><h4>profiles<small>view จากตารางพนักงานเดิม</small></h4><ul>
+            <li class="pk">id <span>= รหัสพนักงาน</span></li><li>display_name <span>มีอยู่แล้ว</span></li><li>role <span>แปลงจากตำแหน่ง</span></li><li class="fk">department_id <span>มีอยู่แล้ว</span></li><li class="fk">line_user_id <span>← line_links</span></li></ul></div>
+          <div class="tbl"><h4>line_links<small>ตารางใหม่ ตารางเดียวที่เพิ่ม</small></h4><ul>
+            <li class="pk">employee_id <span>→ พนักงานเดิม</span></li><li>line_user_id <span>text unique</span></li><li>linked_at <span>timestamptz</span></li><li>active <span>bool</span></li></ul></div>
+          <div class="tbl"><h4>tasks<small>งานที่มอบหมาย</small></h4><ul>
+            <li class="pk">id <span>text PK</span></li><li>title <span>text</span></li><li class="fk">owner_id <span>→ profiles</span></li><li class="fk">department_id <span>→ departments</span></li><li class="fk">created_by <span>→ profiles</span></li><li>due_at <span>timestamptz</span></li><li>progress <span>int 0–100</span></li><li>status <span>todo | doing | blocked | done</span></li><li>nudge_count <span>int</span></li></ul></div>
+          <div class="tbl"><h4>task_updates<small>ประวัติความคืบหน้า</small></h4><ul>
+            <li class="pk">id <span>bigint PK</span></li><li class="fk">task_id <span>→ tasks</span></li><li class="fk">by_id <span>→ profiles</span></li><li>progress <span>int</span></li><li>note <span>text</span></li><li>created_at <span>timestamptz</span></li></ul></div>
+          <div class="tbl"><h4>scheduled_messages<small>ส่งตามเวลา / เตือน</small></h4><ul>
+            <li class="pk">id <span>text PK</span></li><li class="fk">owner_id <span>→ profiles</span></li><li>to_line_id <span>text</span></li><li>kind <span>send | reminder</span></li><li>message <span>text</span></li><li>run_at <span>timestamptz</span></li><li>status <span>draft → scheduled → sent</span></li></ul></div>
+          <div class="tbl"><h4>meetings<small>นัดหมาย</small></h4><ul>
+            <li class="pk">id <span>text PK</span></li><li>title <span>text</span></li><li class="fk">organizer_id <span>→ profiles</span></li><li>start_at <span>timestamptz</span></li><li>remind_at <span>start_at − 15 นาที</span></li><li>reminded <span>bool</span></li></ul></div>
+          <div class="tbl"><h4>meeting_attendees<small>ผู้เข้าร่วม</small></h4><ul>
+            <li class="fk">meeting_id <span>→ meetings</span></li><li class="fk">profile_id <span>→ profiles</span></li><li>status <span>pending | accepted | declined</span></li><li>replied_at <span>timestamptz</span></li></ul></div>
+          <div class="tbl"><h4>memories / message_log<small>ความจำ และประวัติการส่ง</small></h4><ul>
+            <li>memories.fact <span>text</span></li><li>memories.embedding <span>vector(1024)</span></li><li>message_log.method <span>reply | push</span></li><li>message_log.result <span>text</span></li><li>message_log.sent_at <span>timestamptz</span></li></ul></div>
+        </div>
+      </div>
+
+      <div>
+        <h2>ใช้ข้อมูลพนักงานที่มีอยู่แล้ว</h2>
+        <p class="lead">ฐานข้อมูลเดิมเป็น Postgres / Supabase อยู่แล้ว จึงต่อตรงได้โดยไม่ต้อง sync ตารางของเลขาเป็ดทั้งหมดแยกไว้ใน schema <code>duck</code> ของฐานข้อมูลเดียวกัน ตารางพนักงานเดิมไม่ถูกแก้ เลขาเป็ดแค่อ่าน ข้อมูลจึงเป็นปัจจุบันเสมอ เช่น ย้ายฝ่ายวันนี้ รายงานพรุ่งนี้เช้าก็เปลี่ยนตาม</p>
+        <div class="two">
+          <div class="codebox"><h4>ผูก LINE ครั้งเดียวต่อคน</h4><pre><code>1. พนักงานเพิ่มเลขาเป็ดเป็นเพื่อน
+2. เลขาเป็ดส่งลิงก์ "ยืนยันตัวตน" (หน้า LIFF)
+3. หน้า LIFF ล็อกอินด้วย LINE → ได้ line_user_id
+4. พนักงานใส่รหัสพนักงาน + รหัส OTP
+   ที่ส่งไปอีเมลบริษัทจากฐานข้อมูลเดิม
+5. บันทึก line_links แล้วเริ่มใช้งานได้ทันที
+   ฝ่ายและตำแหน่งดึงจากข้อมูลเดิมอัตโนมัติ</code></pre></div>
+          <div class="codebox"><h4>ต่อตรงกับตารางพนักงานเดิม (ชื่อคอลัมน์ปรับตามของจริง)</h4><pre><code>create schema duck;   -- ตารางของเลขาเป็ดทั้งหมดอยู่ที่นี่
+
+create table duck.line_links (
+  employee_id  text primary key references public.employees(emp_id),
+  line_user_id text unique not null,
+  linked_at    timestamptz default now(),
+  active       boolean default true
+);
+
+create view duck.profiles with (security_invoker = true) as
+select e.emp_id    as id,
+       e.full_name as display_name,
+       e.dept_id   as department_id,
+       case when e.position = 'CEO' then 'ceo'
+            when e.is_manager      then 'head'
+            else 'staff' end as role,
+       l.line_user_id
+  from public.employees e
+  left join duck.line_links l on l.employee_id = e.emp_id and l.active
+ where e.status = 'active';   -- คนลาออกใช้เลขาเป็ดไม่ได้ทันที
+
+-- เลขาเป็ดได้สิทธิ์แค่ "อ่าน" ตารางพนักงาน
+grant select on public.employees to duck_app;</code></pre></div>
+        </div>
+      </div>
+
+      <div>
+        <h2>การรับส่งข้อมูล</h2>
+        <p class="lead">ขาเข้ามีทางเดียว คือ webhook จาก LINE ส่วนงานตามเวลาเริ่มจาก pg_cron ในฐานข้อมูลเอง</p>
+        <div class="dt-wrap" style="margin-bottom:16px">
+          <table class="dt">
+            <thead><tr><th>ทิศทาง</th><th>เรียกจาก → ไป</th><th>Endpoint</th><th>ส่งอะไร</th></tr></thead>
+            <tbody>
+              <tr><td>ขาเข้า</td><td>LINE → Edge Function</td><td><code>POST /functions/v1/line-webhook</code></td><td>ข้อความหรือการกดปุ่ม พร้อม <code>X-Line-Signature</code></td></tr>
+              <tr><td>ตั้งเวลา</td><td>pg_cron → Edge Function</td><td><code>POST /functions/v1/daily-report</code></td><td>ทุกวัน 09:00 น. (cron <code>0 2 * * *</code> เพราะ pg_cron ใช้เวลา UTC)</td></tr>
+              <tr><td>ตั้งเวลา</td><td>pg_cron → Edge Function</td><td><code>POST /functions/v1/scheduler</code></td><td>ทุก 1 นาที หยิบข้อความและเตือนที่ถึงเวลา และงานที่เพิ่งเลยกำหนด</td></tr>
+              <tr><td>ขาออก</td><td>Edge Function → LINE</td><td><code>/v2/bot/message/reply</code> · <code>/push</code></td><td>reply ตอบทันทีไม่นับโควตา push ใช้กับรายงานและการตาม นับโควตา</td></tr>
+              <tr><td>ขาออก</td><td>Edge Function → LLM</td><td><code>POST /v1/messages</code></td><td>ข้อความ บริบท รายการเครื่องมือ ได้ <code>tool_use</code> กลับมา</td></tr>
+              <tr><td>ภายใน</td><td>Edge Function ↔ Postgres</td><td><code>supabase-js</code></td><td>อ่านเขียนผ่าน JWT ของผู้ใช้ RLS กรองตาม role</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="two">
+          <div class="codebox"><h4>RLS: หัวหน้าเห็นเฉพาะงานในฝ่าย</h4><pre><code>alter table tasks enable row level security;
+
+create policy "เห็นงานตาม role" on tasks for select using (
+  exists (select 1 from profiles me where me.id = auth.uid() and (
+       me.role = 'ceo'
+    or (me.role = 'head'  and me.department_id = tasks.department_id)
+    or (me.role = 'staff' and tasks.owner_id = me.id)
+  ))
+);</code></pre></div>
+          <div class="codebox"><h4>ตั้งเวลารายงาน 09:00 และ scheduler ทุกนาที</h4><pre><code>select cron.schedule('daily-report-0900', '0 2 * * *', $$
+  select net.http_post(
+    url     := 'https://&lt;project&gt;.supabase.co/functions/v1/daily-report',
+    headers := '{"Authorization": "Bearer &lt;service key จาก Vault&gt;"}'::jsonb
+  );
+$$);
+
+select cron.schedule('scheduler-every-minute', '* * * * *', $$
+  select net.http_post(url := '.../functions/v1/scheduler', ...);
+$$);</code></pre></div>
+        </div>
+        <div class="codebox" style="margin-top:16px"><h4>daily-report: เลือกว่าใครได้อะไร และตามใคร</h4><pre><code>for (const p of await db.from('profiles').select('*')) {
+  const scope = p.role === 'ceo' ? 'company' : p.role === 'head' ? 'department' : 'mine';
+  const tasks = await getTasks(scope, p);                 // กรองแบบเดียวกับ RLS
+  await line.push(p.line_user_id, await duck.writeReport(p, tasks));   // ให้เลขาเป็ดเรียบเรียง
+}
+// ตามคนที่งานครบภายในวันพรุ่งนี้ หรือเลยกำหนดแล้ว
+const due = await db.from('tasks').select('*, owner:profiles(*)')
+  .neq('status', 'done').lt('due_at', endOfTomorrow());
+for (const t of due) {
+  await line.push(t.owner.line_user_id, nudgeCard(t));     // ปุ่ม: +20% / เสร็จแล้ว / ติดปัญหา
+  await db.from('tasks').update({ nudge_count: t.nudge_count + 1 }).eq('id', t.id);
+}</code></pre></div>
+      </div>
+
+      <div>
+        <h2>ขั้นตอนการสร้าง ระยะ 1 (ประมาณ 9 สัปดาห์)</h2>
+        <p class="lead">ประมาณการสำหรับนักพัฒนา 1 ถึง 2 คน รวมงานที่ต้องทำเพิ่มจากการประเมินความเป็นไปได้ ได้แก่ หน้าลงทะเบียน หน้าเลือกรายชื่อ (LIFF) และการผูกสิทธิ์กับ RLS</p>
+        <div class="weeks">
+          <div class="wk"><span class="w">สัปดาห์ 1</span><b>วางพื้นฐาน</b><span>สร้างโปรเจกต์ Supabase · เปิด LINE OA · Edge Function line-webhook ตอบ "รับทราบ" ได้ · สร้าง schema duck ในฐานข้อมูลเดิม และ view profiles อ่านจากตารางพนักงาน</span></div>
+          <div class="wk"><span class="w">สัปดาห์ 2</span><b>ผูก LINE กับพนักงาน</b><span>ตาราง line_links · หน้า LIFF ล็อกอินด้วย LINE แล้วยืนยันด้วยรหัสพนักงาน + OTP · ไม่ต้องกรอกฝ่ายหรือตำแหน่งใหม่</span></div>
+          <div class="wk"><span class="w">สัปดาห์ 3</span><b>สิทธิ์ตาม role</b><span>ออก JWT ให้แต่ละคนจาก LINE userId · เขียน RLS ทุกตาราง · ทดสอบว่าหัวหน้าเห็นข้ามฝ่ายไม่ได้</span></div>
+          <div class="wk"><span class="w">สัปดาห์ 4</span><b>เลขาเป็ดคุยได้</b><span>เชื่อม LLM แบบ tool use · มอบงาน ถามสถานะ อัปเดตความคืบหน้า · การ์ดยืนยันและกันการกดซ้ำ</span></div>
+          <div class="wk"><span class="w">สัปดาห์ 5</span><b>รายงาน 09:00 และการตาม</b><span>pg_cron + daily-report · รายงานตาม role · ตามงานที่ครบภายในวันพรุ่งนี้ · แจ้งหัวหน้าเมื่อเลยกำหนด</span></div>
+          <div class="wk"><span class="w">สัปดาห์ 6</span><b>นัดหมายและตั้งเวลา</b><span>หน้า LIFF เลือกผู้เข้าร่วม · ปุ่ม "ส่งจาก LINE ของฉัน" (Share Target Picker) · แจ้งและรับคำตอบ · เตือนก่อน 15 นาที · ตั้งเวลาส่งข้อความ เตือน</span></div>
+          <div class="wk"><span class="w">สัปดาห์ 7</span><b>ความจำและทดสอบภายใน</b><span>ร่างข้อความ ความจำ ค้นย้อนหลัง · ทีมพัฒนาลองใช้เองให้ครบทุกเส้นทาง</span></div>
+          <div class="wk"><span class="w">สัปดาห์ 8–9</span><b>นำร่อง 1 ฝ่าย</b><span>ใช้จริงกับ CEO และ 1 ฝ่าย · วัดอัตราการตอบ ความแม่นยำ จำนวนข้อความ ค่าใช้จ่าย · แก้ตามที่เจอ</span></div>
+        </div>
+      </div>
+
+      <div>
+        <h2>ความปลอดภัยที่ต้องมีตั้งแต่วันแรก</h2>
+        <div class="sec">
+          <div><b>รู้ว่าใครพิมพ์</b><span>ตอบเฉพาะ LINE userId ที่ผูกกับ profile แล้ว คนนอกทักมาจะไม่ได้ข้อมูลใด</span></div>
+          <div><b>RLS ทุกตาราง</b><span>AI เห็นได้แค่สิ่งที่ผู้ถามมีสิทธิ์เห็น ไม่พึ่งการสั่งใน prompt อย่างเดียว</span></div>
+          <div><b>ยืนยันก่อนส่งออก</b><span>มอบงานและข้อความถึงคนอื่นต้องผ่านการ์ดยืนยัน LLM สั่งส่งเองไม่ได้</span></div>
+          <div><b>เก็บความลับใน Vault</b><span>LINE channel secret, LLM API key และ service key ไม่อยู่ในโค้ด</span></div>
+          <div><b>กันส่งซ้ำ</b><span>ใช้รหัสงานเป็น X-Line-Retry-Key และอัปเดตสถานะในธุรกรรมเดียว</span></div>
+          <div><b>PDPA</b><span>กำหนดระยะเก็บข้อความ ผู้ใช้สั่งดูหรือลบความจำของตัวเองได้</span></div>
+        </div>
+      </div>
+
+      <div class="ask">
+        <h3>สิ่งที่ขออนุมัติเพื่อเริ่มระยะ 1</h3>
+        <ul>
+          <li>LINE Official Account แพ็กเกจ Basic (แพ็กเกจฟรีส่งได้ 300 ข้อความต่อเดือน ไม่พอแม้ช่วงนำร่อง)</li>
+          <li>โปรเจกต์ Supabase แบบ Pro และ API key ของบริการ LLM</li>
+          <li>เวลาพัฒนาประมาณ 9 สัปดาห์ และฝ่ายนำร่อง 1 ฝ่ายช่วงสัปดาห์ที่ 8–9</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FEASIBILITY ================= -->
+  <section class="view" id="v-feasibility" data-view="feasibility" hidden>
+    <div class="vh">
+      <div class="eyebrow">สรุปสำหรับหัวหน้า</div>
+      <h1>ที่ออกแบบมา ทำได้จริงแค่ไหน</h1>
+      <p>ประเมินจากข้อจำกัดของ LINE Messaging API, Supabase และ AI ตามข้อมูลที่ตรวจได้ ณ พฤศจิกายน 2026 ราคาและโควตาควรเช็กกับหน้าทางการอีกครั้งก่อนตั้งงบ</p>
+    </div>
+
+    <div class="plan">
+      <div class="verdict">
+        <div class="vd"><b>11</b><span>ทำได้เลยตามที่ออกแบบ</span></div>
+        <div class="vd adj"><b>10</b><span>ทำได้ ด้วยวิธีที่ปรับให้เข้ากับ LINE</span></div>
+        <div class="vd no"><b>0</b><span>ข้อที่ไม่มีทางทำ ทุกข้อมีวิธีที่ใช้ได้</span></div>
+        <p>ภาพรวม: <strong>ทำได้จริง</strong> ส่วนหลัก คือ รายงาน 09:00 ตาม role, ตามงานเอง, ถามว่างานใครถึงไหน, มอบงาน และนัดหมาย ทำได้ทั้งหมด ข้อที่ LINE ไม่รองรับตรงๆ เปลี่ยนเป็นวิธีที่ใช้ได้จริงแล้ว เช่น ส่งในนาม CEO ใช้ปุ่มส่งจาก LINE ของ CEO เอง ความเสี่ยงใหญ่ที่สุดไม่ใช่เทคนิค แต่เป็นเรื่องว่าพนักงานจะตอบเลขาเป็ดสม่ำเสมอหรือไม่</p>
+      </div>
+
+      <div>
+        <h2>ฟีเจอร์ทีละข้อ</h2>
+        <div class="dt-wrap">
+          <table class="dt feas">
+            <thead><tr><th>ฟีเจอร์</th><th>สถานะ</th><th>วิธีที่ใช้บน LINE</th></tr></thead>
+            <tbody>
+              <tr><td>สั่งงานเป็นภาษาไทยในแชต LINE</td><td><span class="pill done">ทำได้</span></td><td>Messaging API ส่งข้อความเข้า webhook ให้ AI แปลงเป็นข้อมูลด้วย tool use</td></tr>
+              <tr><td>การ์ดยืนยันก่อนส่ง</td><td><span class="pill done">ทำได้</span></td><td>Flex Message + ปุ่ม postback ตอบด้วย reply จึงไม่เสียโควตา</td></tr>
+              <tr><td>รายงาน 09:00 แยกตาม role</td><td><span class="pill done">ทำได้</span></td><td>pg_cron ของ Supabase เรียก Edge Function ทุกวัน แล้ว push หาแต่ละคน (นับโควตา)</td></tr>
+              <tr><td>ตามงานที่ใกล้ครบกำหนดเอง</td><td><span class="pill done">ทำได้</span></td><td>ใช้ cron เดียวกัน หางานที่ครบภายในพรุ่งนี้แล้ว push การ์ดตามงาน</td></tr>
+              <tr><td>พนักงานตอบความคืบหน้าเป็นภาษาพูด</td><td><span class="pill done">ทำได้</span></td><td>AI อ่าน % และหมายเหตุได้ดี แต่ขั้นนี้ไม่มีการ์ดยืนยัน อาจบันทึกผิดงานได้ถ้าคนเดียวมีหลายงานคล้ายกัน</td></tr>
+              <tr><td>CEO ถามว่างานของใครถึงไหน</td><td><span class="pill done">ทำได้</span></td><td>ตอบจากฐานข้อมูลจริง ไม่ใช่ AI เดา ถ้าไม่มีข้อมูลจะตอบว่าไม่พบ</td></tr>
+              <tr><td>CEO ถามภาพรวม แนวโน้ม และการเงินในแชต</td><td><span class="pill done">ทำได้</span></td><td>ข้อมูลการเงินอยู่ใน Postgres เดียวกันอยู่แล้ว ฝ่ายการเงินสร้าง view ที่ยืนยันตัวเลขแล้วให้เลขาเป็ดอ่าน ตัวเลขคำนวณใน SQL ส่วน AI แค่เรียบเรียงคำตอบ เปิดให้เฉพาะ CEO และฝ่ายการเงิน</td></tr>
+              <tr><td>กราฟในแชต LINE</td><td><span class="pill done">ทำได้</span></td><td>กราฟแท่งง่ายๆ สร้างจาก Flex Message ได้เลย ถ้าอยากได้กราฟเส้นหรือซับซ้อนกว่านั้น ต้องสร้างเป็นรูปแล้วส่ง</td></tr>
+              <tr><td>คาดการณ์ตัวเลขเดือนหน้า</td><td><span class="pill blocked">ทำได้ด้วยวิธีนี้</span></td><td>แสดงเป็นค่าประมาณจากแนวโน้มล่าสุดและต้องบอกทุกครั้งว่าเป็นค่าประมาณ ไม่ใช่การพยากรณ์ทางการเงิน</td></tr>
+              <tr><td>มอบงาน แจ้งหัวหน้าเมื่อเลยกำหนด</td><td><span class="pill done">ทำได้</span></td><td>ผู้รับงานต้องลงทะเบียนในระบบแล้ว</td></tr>
+              <tr><td>ตั้งเวลาส่งข้อความ เตือนความจำ</td><td><span class="pill done">ทำได้</span></td><td>scheduler รันทุก 1 นาที ข้อความอาจออกช้าได้ไม่เกินประมาณ 1 นาที</td></tr>
+              <tr><td>ความจำ ค้นย้อนหลัง ร่างข้อความตามสไตล์</td><td><span class="pill done">ทำได้</span></td><td>เก็บใน Postgres + pgvector เป็นการจดความชอบ ไม่ใช่การฝึกโมเดลใหม่</td></tr>
+              <tr><td>การ์ดเลือกผู้เข้าร่วมแบบติ๊กหลายคน</td><td><span class="pill blocked">ทำได้ด้วยวิธีนี้</span></td><td>การ์ดใน LINE จำการติ๊กไม่ได้ จึงเปิดเป็นหน้ารายชื่อในแอป LINE (LIFF) ให้ติ๊กเลือก แล้วส่งนัดพร้อมปุ่มตอบรับ ใช้เวลาทำเพิ่มราว 1 สัปดาห์</td></tr>
+              <tr><td>ปุ่มบนการ์ดหายไปหลังกด (ตามในต้นแบบ)</td><td><span class="pill blocked">ทำได้ด้วยวิธีนี้</span></td><td>LINE แก้ข้อความที่ส่งไปแล้วไม่ได้ ปุ่มจึงยังกดซ้ำได้ ระบบหลังบ้านตรวจรหัสรายการ ถ้ากดซ้ำจะตอบว่า "รายการนี้ทำไปแล้ว"</td></tr>
+              <tr><td>สิทธิ์ตาม role ด้วย RLS</td><td><span class="pill blocked">ทำได้ด้วยวิธีนี้</span></td><td>คนที่ใช้ผ่าน LINE ไม่ได้ล็อกอิน Supabase ระบบออก JWT ให้แต่ละคนจาก LINE userId แล้ว RLS กรองสิทธิ์ตามปกติ ผู้ใช้ไม่ต้องทำอะไร ใช้เวลาทำราว 1 สัปดาห์</td></tr>
+              <tr><td>ผูก LINE กับพนักงานแต่ละคน</td><td><span class="pill blocked">ทำได้ด้วยวิธีนี้</span></td><td>LINE ไม่บอก bot ว่าบัญชีนี้คือใคร พนักงานจึงแอดเลขาเป็ดแล้วกดยืนยันตัวตนครั้งเดียว (LINE Login + รหัสพนักงาน + OTP) ชื่อ ฝ่าย และตำแหน่งดึงจากฐานข้อมูลเดิมให้เอง</td></tr>
+              <tr><td>เช็กว่าผู้เข้าร่วมติดนัดอื่น</td><td><span class="pill blocked">ทำได้ด้วยวิธีนี้</span></td><td>ระยะ 1 เช็กจากนัดที่สร้างผ่านเลขาเป็ด ระยะ 2 เชื่อม Google Calendar หรือ Outlook ให้เห็นนัดทั้งหมด</td></tr>
+              <tr><td>ส่งข้อความในนาม LINE ส่วนตัวของ CEO</td><td><span class="pill blocked">ทำได้ด้วยวิธีนี้</span></td><td>bot ใช้บัญชีส่วนตัวไม่ได้ จึงให้เลขาเป็ดร่างข้อความไว้ แล้ว CEO กดปุ่ม "ส่งจาก LINE ของฉัน" เลือกเพื่อนหรือกลุ่ม ข้อความออกจาก LINE ของ CEO เอง (Share Target Picker) ต้องกดส่งเองทุกครั้ง ตั้งเวลาอัตโนมัติไม่ได้</td></tr>
+              <tr><td>เลือกคนจากรายชื่อเพื่อน LINE ของ CEO</td><td><span class="pill blocked">ทำได้ด้วยวิธีนี้</span></td><td>ระบบอ่านรายชื่อเพื่อนของ CEO ไม่ได้ แต่ปุ่ม "ส่งจาก LINE ของฉัน" เปิดหน้าเลือกเพื่อนของ LINE เองให้ CEO เลือกได้ สำหรับงานภายใน ใช้รายชื่อพนักงานจากฐานข้อมูล</td></tr>
+              <tr><td>ทักคนที่ยังไม่ได้เพิ่มเลขาเป็ดเป็นเพื่อน</td><td><span class="pill blocked">ทำได้ด้วยวิธีนี้</span></td><td>เช่น ลูกค้าใหม่ ส่งจาก LINE ของ CEO ด้วยปุ่ม "ส่งจาก LINE ของฉัน" หรือส่งลิงก์ / QR ให้เขาแอดเลขาเป็ดก่อน</td></tr>
+              <tr><td>รู้ว่าผู้รับรับทราบแล้วหรือยัง</td><td><span class="pill blocked">ทำได้ด้วยวิธีนี้</span></td><td>bot ไม่เห็นสถานะ "อ่านแล้ว" จึงใส่ปุ่ม "รับทราบ" ในทุกการ์ด ใครยังไม่กดในเวลาที่กำหนด เลขาเป็ดตามซ้ำให้</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <h2>ข้อเสียและความเสี่ยง</h2>
+        <p class="lead">เรียงจากเรื่องที่กระทบมากที่สุด</p>
+        <div class="risks">
+          <div class="risk hi"><span class="lv">สูง</span><b>รายงานแม่นเท่าที่คนอัปเดต</b><p>ถ้าพนักงานไม่ตอบการตาม รายงาน 09:00 ของ CEO ก็ผิด ต้องมีกติกาชัดว่าต้องอัปเดต และหัวหน้าต้องใช้จริง</p></div>
+          <div class="risk hi"><span class="lv">สูง</span><b>พนักงานอาจรู้สึกถูกจับตา</b><p>ถูกบอททักตามทุกวันอาจทำให้ไม่พอใจ หรือปิดเสียงและบล็อกบัญชี ซึ่งทำให้ระบบส่งไม่ถึง ควรสื่อสารก่อนเริ่ม และจำกัดการตามไม่เกินวันละครั้งต่องาน</p></div>
+          <div class="risk hi"><span class="lv">สูง</span><b>ตัวเลขการเงินผิด กระทบการตัดสินใจ</b><p>ห้ามให้ AI คิดเลขหรือเขียน SQL เอง ให้ใช้เฉพาะ view ที่ฝ่ายการเงินตรวจแล้ว ทุกคำตอบบอกแหล่งข้อมูลและวันที่ปิดบัญชี และตัวเลขเป็นปัจจุบันเท่ากับที่บันทึกในระบบเท่านั้น</p></div>
+          <div class="risk mid"><span class="lv">กลาง</span><b>AI ตีความผิด</b><p>วันเวลา ชื่อที่คล้ายกัน หรืออัปเดตผิดงาน ส่วนที่ส่งออกไปหาคนอื่นมีการ์ดยืนยันกันไว้ ส่วนการอัปเดตความคืบหน้าควรตอบกลับว่าบันทึกงานไหนเสมอ</p></div>
+          <div class="risk mid"><span class="lv">กลาง</span><b>ข้อมูลบริษัทส่งไปที่ผู้ให้บริการ AI ภายนอก</b><p>ชื่องาน ชื่อคน และข้อความภายในจะผ่าน LLM ต้องตรวจสัญญาและนโยบายการใช้ข้อมูล และแจ้งพนักงานตาม PDPA</p></div>
+          <div class="risk mid"><span class="lv">กลาง</span><b>มีค่าใช้จ่ายรายเดือนตามจำนวนคน</b><p>ทุกรายงานและการตามเป็น push ที่นับโควตา แพ็กเกจฟรีไม่พอแม้ช่วงนำร่อง ดูการคำนวณด้านล่าง</p></div>
+          <div class="risk mid"><span class="lv">กลาง</span><b>พึ่งบริการภายนอก 3 ราย</b><p>LINE, Supabase หรือ LLM ล่มตัวใดตัวหนึ่ง เลขาเป็ดจะหยุด งานที่ตั้งเวลาไว้ยังอยู่ในฐานข้อมูลและส่งต่อได้เมื่อกลับมา</p></div>
+          <div class="risk lo"><span class="lv">ต่ำ</span><b>ข้อจำกัดของ Edge Functions</b><p>มีเพดานเวลา CPU ต่อครั้ง งานของเราส่วนใหญ่รอ API จึงไม่ค่อยกระทบ แต่บริษัทใหญ่ควรแบ่งส่งรายงาน 09:00 เป็นชุด</p></div>
+          <div class="risk lo"><span class="lv">ต่ำ</span><b>ต้นแบบนี้ยังไม่ใช่ AI จริง</b><p>แชตในหน้า "ลองใช้งาน" ใช้กฎตายตัวเพื่อสาธิต ความแม่นยำจริงต้องวัดตอนนำร่อง</p></div>
+        </div>
+      </div>
+
+      <div>
+        <h2>ค่าใช้จ่ายรายเดือน (ประมาณ)</h2>
+        <p class="lead">reply ไม่นับโควตา ส่วน push (รายงาน การตาม แจ้งนัด เตือน) นับทุกข้อความต่อผู้รับ 1 คน</p>
+        <div class="two">
+          <div class="dt-wrap">
+            <table class="dt">
+              <thead><tr><th>จำนวน push ต่อเดือน</th><th class="num">นำร่อง 10 คน</th><th class="num">ทั้งบริษัท 50 คน</th></tr></thead>
+              <tbody>
+                <tr><td>รายงาน 09:00 (22 วันทำงาน)</td><td class="num">220</td><td class="num">1,100</td></tr>
+                <tr><td>ตามงาน แจ้งหัวหน้า แจ้งนัด เตือน (ประมาณ)</td><td class="num">300</td><td class="num">2,000</td></tr>
+                <tr class="tot"><td>รวม</td><td class="num">≈ 520</td><td class="num">≈ 3,100</td></tr>
+                <tr><td>แพ็กเกจที่พอ</td><td class="num">Basic</td><td class="num">Basic</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="dt-wrap">
+            <table class="dt">
+              <thead><tr><th>รายการ</th><th>ราคา</th></tr></thead>
+              <tbody>
+                <tr><td>LINE OA ฟรี</td><td>฿0 · 300 ข้อความ ซื้อเพิ่มไม่ได้</td></tr>
+                <tr><td>LINE OA Basic</td><td>฿1,280 + VAT · 15,000 ข้อความ</td></tr>
+                <tr><td>LINE OA Pro</td><td>฿1,780 + VAT · 35,000 ข้อความ</td></tr>
+                <tr><td>Supabase Pro</td><td>ราว $25 ต่อเดือนขึ้นไป</td></tr>
+                <tr><td>ค่า AI (LLM)</td><td>ตามจำนวนข้อความ ต้องวัดตอนนำร่อง</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="ask">
+        <h3>ข้อเสนอ</h3>
+        <ul>
+          <li>ทำต่อได้ ทุกฟีเจอร์ทำได้บน LINE บางข้อใช้วิธีที่ปรับให้เข้ากับข้อจำกัดของ LINE</li>
+          <li>เริ่มนำร่อง CEO + 1 ฝ่าย ใช้เวลาประมาณ 9 สัปดาห์ (จากเดิมที่ประเมิน 6 สัปดาห์) เพราะต้องเพิ่มหน้าผูก LINE หน้าเลือกรายชื่อ และระบบสิทธิ์</li>
+          <li>ต่อตรงกับฐานข้อมูลพนักงานเดิม (Postgres / Supabase) ไม่ต้อง sync ข้อมูลเป็นปัจจุบันเสมอ ตารางของเลขาเป็ดแยกไว้ใน schema ของตัวเอง และอ่านตารางพนักงานได้อย่างเดียว</li>
+          <li>เลื่อนการเชื่อมปฏิทินและอีเมลไประยะ 2</li>
+          <li>วัดผล 3 ตัว: สัดส่วนพนักงานที่ตอบการตาม ความแม่นยำของ AI และค่าใช้จ่ายต่อเดือน</li>
+        </ul>
+      </div>
+
+      <div class="codebox">
+        <h4 style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">ข้อความสรุปสำหรับส่งหัวหน้า <button class="btn sm" id="copySum">คัดลอก</button></h4>
+        <pre id="sumText" style="white-space:pre-wrap;font-family:var(--font-body);font-size:15px">สรุปโครงการ "เลขาเป็ด" (AI เลขาบน LINE)
+
+ทำได้จริง: รายงานงานทุกเช้า 09:00 แยกตามตำแหน่ง, ตามงานที่ใกล้ครบกำหนดให้อัตโนมัติ, CEO ถามได้ว่างานของใครถึงไหน, CEO ถามภาพรวม แนวโน้มยอดขาย และการเงินในแชตได้พร้อมกราฟ (ตัวเลขดึงจากฐานข้อมูลจริง เปิดให้เฉพาะ CEO และฝ่ายการเงิน), มอบงาน, นัดหมายพร้อมการ์ดยืนยัน, ตั้งเวลาส่งข้อความและเตือน
+
+ทำได้ด้วยวิธีที่ปรับให้เข้ากับ LINE: นัดประชุมเลือกหลายคนผ่านหน้ารายชื่อในแอป LINE, พนักงานกดยืนยันตัวตนครั้งเดียว (ข้อมูลดึงจากฐานข้อมูลเดิม), ส่งในนาม CEO หรือทักลูกค้าใหม่ด้วยปุ่ม "ส่งจาก LINE ของฉัน" (CEO กดส่งเอง), รู้ว่าใครรับทราบด้วยปุ่ม "รับทราบ" และตามซ้ำ, เช็กนัดชนจากนัดในระบบ (เชื่อมปฏิทินในระยะ 2)
+
+ข้อเสียหลัก: รายงานแม่นเท่าที่พนักงานอัปเดต, ตัวเลขการเงินต้องมาจาก view ที่ฝ่ายการเงินตรวจแล้วเท่านั้น, พนักงานอาจรู้สึกถูกจับตา, AI ตีความผิดได้บ้าง, ข้อมูลภายในผ่านผู้ให้บริการ AI ภายนอก
+
+ค่าใช้จ่าย: LINE OA Basic ฿1,280/เดือน + Supabase ราว $25/เดือน + ค่า AI ตามการใช้งาน
+
+ข้อเสนอ: นำร่อง CEO + 1 ฝ่าย ประมาณ 9 สัปดาห์ แล้ววัดผลก่อนขยายทั้งบริษัท</pre>
+      </div>
+    </div>
+  </section>
+  </main>
+  <footer>เลขาเป็ด · ต้นแบบประกอบการนำเสนอ ข้อมูลในหน้านี้เป็นตัวอย่างสมมติ</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* =========================================================
+   3D: nodes, edges, scenarios
+   ========================================================= */
+const NODES = {
+  ceo:    { short: 'CEO', name: 'LINE ของ CEO', sub: 'เห็นทั้งบริษัท', col: '--c-line', pos: [-12, -4.5], shape: 'phone',
+            role: 'สั่งงาน ถามว่างานของใครถึงไหน รับรายงาน 09:00 ของทั้งบริษัท', tech: 'แอป LINE ปกติ', io: 'ส่งข้อความและ postback / รับ reply และ push' },
+  head:   { short: 'หัวหน้า', name: 'LINE หัวหน้าฝ่าย', sub: 'เห็นเฉพาะฝ่าย', col: '--c-line', pos: [-12, 0.5], shape: 'phone',
+            role: 'รับรายงาน 09:00 ของฝ่ายตัวเอง ได้แจ้งเมื่อลูกทีมติดปัญหาหรือเลยกำหนด', tech: 'แอป LINE ปกติ', io: 'รับ push / ถามและมอบงานให้ลูกทีม' },
+  staff:  { short: 'พนักงาน', name: 'LINE พนักงาน', sub: 'เจ้าของงาน', col: '--c-line', pos: [-12, 5.5], shape: 'phone',
+            role: 'ถูกตามเมื่องานใกล้ครบกำหนด ตอบความคืบหน้าเป็นภาษาพูดหรือกดปุ่มบนการ์ด', tech: 'แอป LINE ปกติ', io: 'รับการตาม / ส่งความคืบหน้า' },
+  line:   { name: 'LINE Platform', sub: 'Messaging API', col: '--c-line', pos: [-7, 0.5], shape: 'hub',
+            role: 'ตัวกลางของ LINE ส่ง webhook มาหาเรา และรับคำสั่ง reply / push จากเรา', tech: 'LINE Official Account + Messaging API', io: 'webhook ออก / reply, push เข้า' },
+  api:    { name: 'Edge Function', sub: 'line-webhook', col: '--c-api', pos: [-1.5, -3.5], shape: 'server',
+            role: 'ตรวจลายเซ็น หา profile จาก LINE userId ตอบ 200 ทันที แล้วส่งงานต่อให้เลขาเป็ด', tech: 'Supabase Edge Functions (Deno) + EdgeRuntime.waitUntil', io: 'รับ POST จาก LINE / ส่งต่อให้ Agent' },
+  agent:  { name: 'เลขาเป็ด', sub: 'AI Agent ตัวเดียว', col: '--duck', pos: [3.5, -3.5], shape: 'agent',
+            role: 'Agent ตัวเดียวที่ทำทุกงาน: คุย ตอบสถานะ มอบงาน ตามงาน เขียนรายงานตาม role', tech: 'TypeScript ใน Edge Function + เครื่องมือ 11 ตัว', io: 'อ่าน/เขียน Postgres, เรียก LLM, reply และ push' },
+  llm:    { name: 'LLM', sub: 'Claude API', col: '--c-ai', pos: [10, -4.5], shape: 'llm',
+            role: 'เข้าใจภาษาไทย เลือกเครื่องมือและกรอกข้อมูล เรียบเรียงรายงานและข้อความ', tech: 'Anthropic Messages API (tool use)', io: 'รับ messages + tools / คืน tool_use หรือข้อความ' },
+  db:     { name: 'Postgres', sub: 'RLS ตาม role', col: '--c-db', pos: [3.5, 3], shape: 'db',
+            role: 'แหล่งข้อมูลจริง: คน role ฝ่าย งาน ความคืบหน้า ข้อความตั้งเวลา ความจำ RLS กรองตามคนที่ถาม', tech: 'Supabase Postgres + RLS + pgvector', io: 'supabase-js / SQL' },
+  cron:   { name: 'pg_cron', sub: '09:00 และทุกนาที', col: '--c-queue', pos: [-1.5, 7.5], shape: 'queue',
+            role: 'นาฬิกาปลุกที่อยู่ในฐานข้อมูล เรียก Edge Function ผ่าน pg_net ตามเวลาที่ตั้งไว้', tech: 'pg_cron + pg_net (เวลา UTC)', io: 'HTTP POST ไปที่ daily-report และ scheduler' },
+  worker: { name: 'Edge Function', sub: 'daily-report / scheduler', col: '--c-worker', pos: [-1.5, 3], shape: 'server',
+            role: 'ดึงงานตาม role ส่งให้เลขาเป็ดเขียนรายงาน หางานที่ใกล้ครบแล้วตามเจ้าของ', tech: 'Supabase Edge Functions', io: 'อ่าน Postgres / เรียกเลขาเป็ด' },
+  ext:    { name: 'Calendar / Email', sub: 'ระยะ 2', col: '--c-ext', pos: [10, 1.5], shape: 'ext', dim: true,
+            role: 'เชื่อมปฏิทินและอีเมลในระยะ 2 เพื่อจัดนัดและสรุปเอกสาร', tech: 'Google Calendar, Outlook', io: 'ยังไม่อยู่ในต้นแบบ' }
+};
+const EDGES = [['ceo','line'],['head','line'],['staff','line'],['line','api'],['api','agent'],['agent','llm'],['agent','db'],['agent','line',{lift:1.8}],['cron','worker'],['worker','db'],['worker','agent'],['agent','ext',{dash:true}]];
+
+const WEBHOOK = (text, uid) => `POST /functions/v1/line-webhook
+X-Line-Signature: 3q2+7wK1…=
+{
+  "events": [{
+    "type": "message",
+    "replyToken": "b60d432864f44d…",
+    "source": { "type": "user", "userId": "${uid || 'U••••ceo'}" },
+    "message": { "type": "text", "text": "${text}" }
+  }]
+}`;
+
+const SCEN = {
+  report: { name: 'รายงาน 09:00', sub: 'ตาม role ทุกวัน', steps: [
+    { p: ['cron','worker'], t: 'ครบ 09:00 pg_cron เรียก daily-report', d: 'pg_cron ใช้เวลา UTC จึงตั้งเป็น 02:00', c: "-- cron: '0 2 * * *'  (= 09:00 Asia/Bangkok)\nselect net.http_post(url := '.../functions/v1/daily-report');" },
+    { p: ['worker','db'], t: 'ดึงรายชื่อคนและ role', d: 'แต่ละคนจะได้รายงานคนละขอบเขต', c: "select id, display_name, role, department_id, line_user_id\n  from profiles where line_user_id is not null;" },
+    { p: ['db','worker'], t: 'ได้ CEO 1 คน หัวหน้า 3 คน พนักงาน 4 คน', d: '', c: '[ { "role": "ceo" }, { "role": "head", "dept": "ฝ่ายขาย" }, ... ]' },
+    { p: ['worker','db'], t: 'ดึงงานตามขอบเขตของแต่ละคน', d: 'CEO ทั้งบริษัท หัวหน้าเฉพาะฝ่าย', c: "select t.title, p.display_name as owner, t.progress, t.due_at, t.status\n  from tasks t join profiles p on p.id = t.owner_id\n where t.status <> 'done'\n   and ($scope = 'company' or t.department_id = $dept);" },
+    { p: ['db','worker'], t: 'ได้รายการงานพร้อมผู้รับผิดชอบ', d: '', c: '[ { "title": "ใบเสนอราคา", "owner": "คุณต้น", "progress": 60, "due": "12 พ.ย." }, ... ]' },
+    { p: ['worker','agent'], t: 'ส่งให้เลขาเป็ดเขียนรายงาน', d: 'Agent ตัวเดียวกับที่ใช้คุย', c: "duck.writeReport({ role: 'ceo', tasks })" },
+    { p: ['agent','llm'], t: 'ให้ LLM จัดลำดับและเขียนสั้นๆ', d: 'เรื่องเลยกำหนดและติดปัญหาขึ้นก่อน', c: '{ "model": "claude-sonnet-5-5",\n  "messages": [{ "role": "user", "content": "เขียนรายงาน 09:00 สำหรับ CEO จากข้อมูลนี้ ..." }] }' },
+    { p: ['llm','agent'], t: 'ได้รายงานพร้อมชื่อผู้รับผิดชอบ', d: '', c: '"ฝ่ายขาย 3 งาน เลยกำหนด 1 (คุณแพร 40%) ..."' },
+    { p: ['agent','line'], t: 'push การ์ดรายงานให้ CEO', d: 'นับโควตา 1 ข้อความ', c: 'POST /v2/bot/message/push\n{ "to": "U••••ceo", "messages": [{ "type": "flex", "altText": "รายงาน 09:00" }] }' },
+    { p: ['line','ceo'], t: 'CEO เห็นทั้งบริษัท', d: 'กดดูฝ่ายหรือสั่งตามคนที่ค้างได้จากการ์ด', c: '[ ดูฝ่ายขาย ]  [ ตามทุกคนที่เลยกำหนด ]' },
+    { p: ['agent','line'], t: 'push รายงานของฝ่ายให้หัวหน้าแต่ละคน', d: 'เนื้อหาไม่ซ้ำกับของ CEO', c: '{ "to": "U3b7…nid", "altText": "รายงานฝ่ายขาย 09:00" }' },
+    { p: ['line','head'], t: 'หัวหน้าเห็นเฉพาะฝ่ายตัวเอง', d: '', c: 'ฝ่ายขาย: คุณต้น 60% · คุณแพร 40% (เลยกำหนด) · คุณนิด 30%' }
+  ]},
+  nudge: { name: 'ตามงานเอง', sub: 'ใกล้ครบกำหนด', steps: [
+    { p: ['cron','worker'], t: 'รอบ 09:00 หางานที่ต้องตาม', d: 'ครบภายในวันพรุ่งนี้ หรือเลยกำหนดแล้ว', c: "select * from tasks\n where status <> 'done' and due_at < current_date + 2;" },
+    { p: ['worker','db'], t: 'ค้นงานและเจ้าของงาน', d: '', c: "select t.*, p.line_user_id from tasks t join profiles p on p.id = t.owner_id ..." },
+    { p: ['db','worker'], t: 'พบ: ใบเสนอราคา ของคุณต้น ครบพรุ่งนี้', d: '', c: '{ "id": "tsk_0201", "owner": "คุณต้น", "progress": 60, "due_at": "12 พ.ย. 17:00" }' },
+    { p: ['worker','agent'], t: 'ให้เลขาเป็ดตามแทน', d: '', c: "duck.nudge('tsk_0201')" },
+    { p: ['agent','line'], t: 'push การ์ดตามงานถึงคุณต้น', d: 'มีปุ่ม +20% / เสร็จแล้ว / ติดปัญหา', c: '{ "to": "U77a…ton", "altText": "เลขาเป็ดขอติดตามงาน" }' },
+    { p: ['line','staff'], t: 'คุณต้นได้รับการตาม', d: '', c: 'ใบเสนอราคา บ.สยามเทรด · 60% · ครบพรุ่งนี้ 17:00' },
+    { p: ['staff','line'], t: 'คุณต้นตอบเป็นภาษาพูด', d: 'ไม่ต้องจำรูปแบบ', c: '"ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์"' },
+    { p: ['line','api'], t: 'webhook เข้า Edge Function', d: 'รู้จากตาราง profiles ว่าเป็นคุณต้น role staff', c: WEBHOOK('ใบเสนอราคาได้ 80% แล้ว ...', 'U77a…ton') },
+    { p: ['api','agent'], t: 'ส่งต่อให้เลขาเป็ด', d: '', c: 'duck.handle(event, profile)' },
+    { p: ['agent','llm'], t: 'LLM อ่านและเลือก update_progress', d: '', c: '{ "type": "tool_use", "name": "update_progress",\n  "input": { "task": "ใบเสนอราคา", "progress": 80, "note": "รอราคาจากซัพพลายเออร์" } }' },
+    { p: ['llm','agent'], t: 'ได้ข้อมูลโครงสร้าง', d: '', c: '{ "progress": 80, "note": "รอราคาจากซัพพลายเออร์" }' },
+    { p: ['agent','db'], t: 'บันทึกความคืบหน้าและประวัติ', d: 'RLS อนุญาตเพราะคุณต้นเป็นเจ้าของงาน', c: "update tasks set progress = 80, status = 'doing' where id = 'tsk_0201';\ninsert into task_updates (task_id, by_id, progress, note) values (...);" },
+    { p: ['agent','line'], t: 'ตอบคุณต้น และแจ้งหัวหน้าถ้าติดปัญหา', d: '', c: 'reply: "บันทึกแล้ว 80%"' },
+    { p: ['line','head'], t: 'หัวหน้าเห็นความคืบหน้าล่าสุด', d: 'CEO ถามเมื่อไรก็ได้คำตอบใหม่นี้', c: 'tasks.tsk_0201.progress = 80' }
+  ]},
+  ask: { name: 'ถามว่างานถึงไหน', sub: 'CEO ถามเลขาเป็ด', steps: [
+    { p: ['ceo','line'], t: 'CEO ถาม', d: '', c: '"งานของคุณต้นไปถึงไหนแล้ว"' },
+    { p: ['line','api'], t: 'webhook เข้า Edge Function', d: 'หา profile: role ceo', c: WEBHOOK('งานของคุณต้นไปถึงไหนแล้ว') },
+    { p: ['api','agent'], t: 'ส่งต่อให้เลขาเป็ด', d: 'ตอบ 200 ให้ LINE ก่อน', c: 'duck.handle(event, { role: "ceo" })' },
+    { p: ['agent','llm'], t: 'ถาม LLM ว่าควรใช้เครื่องมืออะไร', d: '', c: '{ "messages": [...], "tools": [ get_work_status, ... ] }' },
+    { p: ['llm','agent'], t: 'LLM เลือก get_work_status', d: '', c: '{ "type": "tool_use", "name": "get_work_status",\n  "input": { "person": "คุณต้น" } }' },
+    { p: ['agent','db'], t: 'ค้นงานในนามของ CEO', d: 'RLS: CEO เห็นได้ทุกฝ่าย ถ้าเป็นหัวหน้าฝ่ายอื่นจะได้ 0 แถว', c: "select t.title, t.progress, t.due_at, t.status,\n       (select note from task_updates u where u.task_id = t.id order by created_at desc limit 1)\n  from tasks t where t.owner_id = 'u_ton';" },
+    { p: ['db','agent'], t: 'ได้งานพร้อมอัปเดตล่าสุด', d: '', c: '[ { "title": "ใบเสนอราคา บ.สยามเทรด", "progress": 80, "note": "รอราคาจากซัพพลายเออร์" } ]' },
+    { p: ['agent','llm'], t: 'ส่งผลให้ LLM เรียบเรียง', d: 'ห้ามเดาถ้าไม่มีข้อมูล', c: '{ "type": "tool_result", "content": "[...]" }' },
+    { p: ['llm','agent'], t: 'ได้คำตอบพร้อมที่มา', d: '', c: '"คุณต้นมี 2 งาน ใบเสนอราคา 80% รอราคาซัพ ครบพรุ่งนี้..."' },
+    { p: ['agent','line'], t: 'reply การ์ดสถานะ', d: 'ไม่นับโควตา', c: 'POST /v2/bot/message/reply  { flex: "งานของคุณต้น" }' },
+    { p: ['line','ceo'], t: 'CEO เห็นสถานะ ผู้รับผิดชอบ และกดตามต่อได้', d: '', c: '[ ตามคุณต้นตอนนี้ ]  [ ดูทั้งฝ่าย ]' }
+  ]},
+  meeting: { name: 'นัดหมาย', sub: 'เลือกรายชื่อ + ยืนยัน', steps: [
+    { p: ['ceo','line'], t: 'CEO พิมพ์ขอนัด', d: 'ภาษาพูดธรรมดา', c: '"ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง"' },
+    { p: ['line','api'], t: 'webhook เข้า Edge Function', d: 'หา profile: role ceo', c: WEBHOOK('ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง') },
+    { p: ['api','agent'], t: 'ส่งต่อให้เลขาเป็ด', d: '', c: 'duck.handle(event, { role: "ceo" })' },
+    { p: ['agent','llm'], t: 'ให้ LLM อ่านคำสั่ง', d: '', c: '{ "tools": [ schedule_meeting, ... ], "messages": [...] }' },
+    { p: ['llm','agent'], t: 'LLM เลือก schedule_meeting', d: 'แปลง "11 โมง" เป็นเวลาจริง และจับชื่อคุณนิด', c: '{ "name": "schedule_meeting",\n  "input": { "title": "Meeting", "start_at": "2026-11-11T11:00:00+07:00", "attendees": ["คุณนิด"] } }' },
+    { p: ['agent','db'], t: 'ดึงรายชื่อ LINE ที่เพิ่มเลขาเป็ดแล้ว', d: 'ใช้สร้างรายการให้เลือก', c: "select id, display_name, department_id, line_user_id\n  from profiles where line_user_id is not null;" },
+    { p: ['db','agent'], t: 'ได้รายชื่อทั้งบริษัทและลูกค้า', d: '', c: '[ "คุณนิด", "คุณต้น", "คุณแพร", "คุณบี", ... ]' },
+    { p: ['agent','line'], t: 'reply การ์ดรายชื่อให้เลือก', d: 'ติ๊กคุณนิดไว้ให้แล้ว เพิ่มคนอื่นได้', c: '[✓] คุณนิด  [ ] คุณต้น  [ ] คุณบี ...\n[ ต่อไป (1 คน) ]' },
+    { p: ['line','ceo'], t: 'CEO เลือกรายชื่อ', d: '', c: 'เลือก: คุณนิด, คุณต้น' },
+    { p: ['ceo','line'], t: 'กด "ต่อไป"', d: 'postback ส่งรายชื่อที่เลือก', c: '{ "type": "postback", "data": "action=meeting_pick&ids=u_nid,u_ton" }' },
+    { p: ['line','api'], t: 'postback เข้าระบบ', d: '', c: 'POST /functions/v1/line-webhook' },
+    { p: ['api','agent'], t: 'ส่งต่อให้เลขาเป็ด', d: 'ตรวจว่ามีใครติดนัดอื่นไหม', c: "select * from meeting_attendees a join meetings m on m.id = a.meeting_id\n where a.profile_id = any($1) and m.start_at between $2 - interval '1 hour' and $2 + interval '1 hour';" },
+    { p: ['agent','line'], t: 'reply การ์ดยืนยัน', d: 'หัวข้อ เวลา ผู้เข้าร่วม ข้อความที่จะแจ้ง', c: '[ ยืนยันและแจ้ง ]  [ แก้รายชื่อ ]  [ ยกเลิก ]' },
+    { p: ['line','ceo'], t: 'CEO กดยืนยัน', d: '', c: '{ "data": "action=meeting_confirm&id=mtg_012" }' },
+    { p: ['agent','db'], t: 'บันทึกนัดและผู้เข้าร่วม', d: 'เตือนก่อน 15 นาทีด้วย pg_cron scheduler', c: "insert into meetings (id, title, organizer_id, start_at, remind_at)\nvalues ('mtg_012', 'Meeting', 'u_ceo', '2026-11-11 11:00+07', '2026-11-11 10:45+07');\ninsert into meeting_attendees (meeting_id, profile_id, status)\nvalues ('mtg_012', 'u_nid', 'pending'), ('mtg_012', 'u_ton', 'pending');" },
+    { p: ['agent','line'], t: 'push แจ้งนัดถึงผู้เข้าร่วม', d: 'นับโควตา 1 ข้อความต่อคน', c: '{ "to": "U3b7…nid", "altText": "นัดหมายใหม่จาก CEO" }' },
+    { p: ['line','head'], t: 'คุณนิดได้รับนัด', d: '', c: '[ รับทราบ ]  [ ไม่สะดวก ]' },
+    { p: ['head','line'], t: 'คุณนิดกดรับทราบ', d: '', c: '{ "data": "action=meeting_reply&id=mtg_012&status=accepted" }' },
+    { p: ['line','api'], t: 'postback เข้าระบบ', d: '', c: 'POST /functions/v1/line-webhook' },
+    { p: ['api','agent'], t: 'ส่งต่อให้เลขาเป็ด', d: '', c: "handlePostback('meeting_reply')" },
+    { p: ['agent','db'], t: 'บันทึกการตอบรับ', d: '', c: "update meeting_attendees set status = 'accepted' where meeting_id = 'mtg_012' and profile_id = 'u_nid';" },
+    { p: ['agent','line'], t: 'แจ้ง CEO ว่าคุณนิดตอบรับ', d: '', c: '"คุณนิด ตอบรับนัด Meeting 11:00 (รอตอบอีก 1 คน)"' },
+    { p: ['line','ceo'], t: 'CEO รู้ผลทันที', d: '10:45 ทุกคนจะได้การเตือนอัตโนมัติ', c: 'meetings.mtg_012 · remind_at 10:45' }
+  ]},
+  inbound: { name: 'มอบงาน', sub: 'สั่ง + ยืนยัน', steps: [
+    { p: ['ceo','line'], t: 'CEO สั่งงาน', d: '', c: '"ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้"' },
+    { p: ['line','api'], t: 'webhook เข้า Edge Function', d: '', c: WEBHOOK('ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้') },
+    { p: ['api','agent'], t: 'ส่งต่อให้เลขาเป็ด', d: '', c: 'duck.handle(event, { role: "ceo" })' },
+    { p: ['agent','db'], t: 'โหลดบริบท: คนในบริษัท ฝ่าย ความจำ', d: '', c: "select id, display_name, role, department_id from profiles;" },
+    { p: ['db','agent'], t: 'รู้ว่าคุณแพรอยู่ฝ่ายขาย หัวหน้าคือคุณนิด', d: '', c: '{ "id": "u_prae", "dept": "ฝ่ายขาย", "head": "คุณนิด" }' },
+    { p: ['agent','llm'], t: 'ส่งคำสั่งและเครื่องมือให้ LLM', d: '', c: '{ "tools": [ assign_task, ... ], "messages": [...] }' },
+    { p: ['llm','agent'], t: 'LLM เลือก assign_task', d: '', c: '{ "name": "assign_task", "input": { "owner": "คุณแพร", "title": "ส่งรายชื่อลูกค้า POS", "due_at": "2026-11-12T17:00:00+07:00" } }' },
+    { p: ['agent','line'], t: 'reply การ์ดยืนยันให้ CEO', d: '', c: '[ ยืนยัน ]  [ ยกเลิก ]' },
+    { p: ['line','ceo'], t: 'CEO ตรวจแล้วกดยืนยัน', d: '', c: '{ "type": "postback", "data": "action=confirm&task=tsk_0208" }' },
+    { p: ['ceo','line'], t: 'postback กลับเข้าระบบ', d: '', c: 'POST /functions/v1/line-webhook' },
+    { p: ['line','api'], t: 'Edge Function รับ postback', d: '', c: '→ 200 OK' },
+    { p: ['api','agent'], t: 'ส่งต่อให้เลขาเป็ด', d: 'ไม่ต้องเรียก LLM อีก', c: "handlePostback('confirm', 'tsk_0208')" },
+    { p: ['agent','db'], t: 'บันทึกงานใหม่', d: 'pg_cron รอบ 09:00 จะเห็นงานนี้เองเมื่อใกล้ครบ', c: "insert into tasks (id, title, owner_id, department_id, created_by, due_at, progress, status)\nvalues ('tsk_0208', 'ส่งรายชื่อลูกค้า POS', 'u_prae', 'sales', 'u_ceo', '2026-11-12 17:00+07', 0, 'todo');" },
+    { p: ['agent','line'], t: 'push แจ้งคุณแพรทันที', d: '', c: '{ "to": "U5c1…prae", "text": "งานใหม่จาก CEO: ..." }' },
+    { p: ['line','staff'], t: 'คุณแพรได้รับงาน', d: '', c: '[ รับทราบ ]' }
+  ]}
+};
+
+const A3 = (function () {
+  let ok = false, renderer, scene, camera, controls, raf = 0, active = false, clock;
+  const meshes = {}, labels = {}, edgeObjs = {};
+  let packet, halo, ground, grid, plate, plateLbl;
+  const st = { scen: 'report', i: 0, t: 0, hold: 0, playing: !reduced };
+  const stage = $('#stage'), cv = $('#cv'), lblBox = $('#labels');
+  const PLATE = { x0: -4.2, x1: 6.3, z0: -6.2, z1: 9.6 };
+
+  function col(n) { return new THREE.Color(css(n) || '#888'); }
+  function anchor(id) { const n = NODES[id]; return new THREE.Vector3(n.pos[0], n.top || 1.4, n.pos[1]); }
+
+  function build() {
+    if (!window.THREE) { stage.insertAdjacentHTML('beforeend', '<div class="nofx">โหลดไลบรารี 3 มิติไม่สำเร็จ ลองรีเฟรชหน้า หรือดูขั้นตอนทั้งหมดในรายการด้านขวา</div>'); return; }
+    try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }); }
+    catch (e) { stage.insertAdjacentHTML('beforeend', '<div class="nofx">อุปกรณ์นี้เปิดภาพ 3 มิติไม่ได้ ดูขั้นตอนทั้งหมดในรายการด้านขวาแทนได้</div>'); return; }
+    ok = true;
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(42, 1, 0.1, 300);
+    controls = new THREE.OrbitControls(camera, cv);
+    controls.target.set(-1, 0, 1.5);
+    controls.enableDamping = true;
+    controls.maxPolarAngle = Math.PI * 0.46;
+    controls.minDistance = 10; controls.maxDistance = 80;
+    controls.autoRotate = !reduced; controls.autoRotateSpeed = 0.3;
+    cv.addEventListener('pointerdown', () => { controls.autoRotate = false; }, { once: true });
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x445544, 0.85));
+    const dl = new THREE.DirectionalLight(0xffffff, 0.75); dl.position.set(6, 14, 8); scene.add(dl);
+
+    ground = new THREE.Mesh(new THREE.CircleGeometry(19, 64), new THREE.MeshStandardMaterial({ roughness: 1 }));
+    ground.rotation.x = -Math.PI / 2; ground.position.y = -0.03; scene.add(ground);
+    grid = new THREE.GridHelper(36, 36); scene.add(grid);
+
+    // Supabase plate
+    const pw = PLATE.x1 - PLATE.x0, pd = PLATE.z1 - PLATE.z0;
+    plate = new THREE.Mesh(new THREE.BoxGeometry(pw, 0.12, pd), new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.32, roughness: 0.6 }));
+    plate.position.set(PLATE.x0 + pw / 2, 0.04, PLATE.z0 + pd / 2); scene.add(plate);
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(plate.geometry), new THREE.LineBasicMaterial());
+    edges.position.copy(plate.position); scene.add(edges); plate.userData.edges = edges;
+    plateLbl = document.createElement('div'); plateLbl.className = 'lbl plate';
+    plateLbl.innerHTML = 'Supabase<small> · Postgres · Edge Functions · pg_cron · RLS</small>'; lblBox.appendChild(plateLbl);
+
+    Object.keys(NODES).forEach(id => {
+      const n = NODES[id]; const g = new THREE.Group(); let h = 1.4;
+      const mat = () => new THREE.MeshStandardMaterial({ roughness: 0.45, metalness: 0.1, transparent: !!n.dim, opacity: n.dim ? 0.45 : 1 });
+      const add = (geo, y) => { const mesh = new THREE.Mesh(geo, mat()); mesh.position.y = y; mesh.userData.id = id; g.add(mesh); return mesh; };
+      switch (n.shape) {
+        case 'phone': add(new THREE.BoxGeometry(1.2, 2.1, 0.22), 1.05); h = 2.4; break;
+        case 'hub': add(new THREE.CylinderGeometry(1.4, 1.5, 0.7, 32), 0.35); add(new THREE.CylinderGeometry(0.9, 1.0, 0.5, 32), 0.95); h = 1.5; break;
+        case 'server': add(new THREE.BoxGeometry(2, 0.5, 1.5), 0.3); add(new THREE.BoxGeometry(2, 0.5, 1.5), 0.85); add(new THREE.BoxGeometry(2, 0.5, 1.5), 1.4); h = 1.8; break;
+        case 'agent': {
+          const body = add(new THREE.SphereGeometry(1.0, 28, 20), 1.0); body.scale.set(1.25, 0.85, 1);
+          const headM = add(new THREE.SphereGeometry(0.62, 24, 18), 1.95); headM.position.x = 0.75;
+          const beak = add(new THREE.ConeGeometry(0.22, 0.6, 16), 1.9); beak.rotation.z = -Math.PI / 2; beak.position.x = 1.55; beak.userData.beak = true;
+          g.userData.bob = true; h = 2.8; break;
+        }
+        case 'llm': { const m = add(new THREE.IcosahedronGeometry(1.0, 0), 1.2); m.userData.spin = -0.4; h = 2.4; break; }
+        case 'db': for (let k = 0; k < 3; k++) add(new THREE.CylinderGeometry(1.05, 1.05, 0.55, 40), 0.33 + k * 0.6); h = 2.0; break;
+        case 'queue': { const r = add(new THREE.CylinderGeometry(1.0, 1.0, 0.35, 40), 0.25); const hand = add(new THREE.BoxGeometry(0.12, 0.08, 0.8), 0.48); hand.position.z = -0.3; hand.userData.spin = 0; hand.userData.hand = true; h = 1.4; break; }
+        case 'ext': add(new THREE.BoxGeometry(1.6, 1.1, 1.6), 0.55); h = 1.4; break;
+      }
+      n.h = h; n.top = h * 0.6;
+      g.position.set(n.pos[0], n.shape === 'phone' || n.shape === 'hub' || id === 'llm' || id === 'ext' ? 0 : 0.1, n.pos[1]);
+      scene.add(g); meshes[id] = g;
+      const el = document.createElement('div');
+      el.className = 'lbl' + (n.dim ? ' dim' : '');
+      el.innerHTML = '<b class="lf">' + esc(n.name) + '</b>' + (n.short ? '<b class="ls">' + esc(n.short) + '</b>' : '') + '<small>' + esc(n.sub) + '</small>';
+      lblBox.appendChild(el); labels[id] = el;
+    });
+
+    EDGES.forEach(([a, b, o]) => {
+      o = o || {};
+      const pa = anchor(a), pb = anchor(b);
+      const mid = pa.clone().add(pb).multiplyScalar(0.5);
+      mid.y = Math.max(pa.y, pb.y) + 0.8 + pa.distanceTo(pb) * 0.12 + (o.lift || 0);
+      const curve = new THREE.QuadraticBezierCurve3(pa, mid, pb);
+      const m = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.4 });
+      const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, o.dash ? 0.03 : 0.05, 6, false), m);
+      scene.add(tube);
+      edgeObjs[a + '|' + b] = { curve, tube, dash: o.dash };
+    });
+
+    packet = new THREE.Mesh(new THREE.SphereGeometry(0.24, 20, 16), new THREE.MeshBasicMaterial());
+    halo = new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 16), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.25 }));
+    scene.add(packet); scene.add(halo);
+
+    recolor();
+    new ResizeObserver(resize).observe(stage);
+    resize();
+
+    const ray = new THREE.Raycaster(), v2 = new THREE.Vector2();
+    let down = null;
+    cv.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+    cv.addEventListener('pointerup', e => {
+      if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
+      const r = cv.getBoundingClientRect();
+      v2.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+      ray.setFromCamera(v2, camera);
+      const hit = ray.intersectObjects(Object.values(meshes), true)[0];
+      if (hit) showNode(hit.object.userData.id);
+    });
+    clock = new THREE.Clock();
+  }
+
+  function recolor() {
+    if (!ok) return;
+    ground.material.color = col('--surface');
+    grid.material.vertexColors = false; grid.material.color = col('--grid'); grid.material.transparent = true; grid.material.opacity = 0.8; grid.material.needsUpdate = true;
+    plate.material.color = col('--c-supa'); plate.userData.edges.material.color = col('--c-supa');
+    Object.keys(NODES).forEach(id => meshes[id].children.forEach(m => m.material.color = m.userData.beak ? new THREE.Color('#e8730c') : m.userData.hand ? col('--surface') : col(NODES[id].col)));
+    packet.material.color = col('--accent-fill'); halo.material.color = col('--accent-fill');
+    highlight();
+  }
+
+  function resize() {
+    if (!ok) return;
+    const w = stage.clientWidth, h = stage.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    if (camera.aspect < 1.1) {
+      // portrait phone: look along the x axis so the long side of the scene runs top-to-bottom
+      const k = Math.min(1.5, Math.max(0.9, 0.82 / camera.aspect));
+      camera.position.copy(controls.target).add(new THREE.Vector3(13, 30, 0).multiplyScalar(k));
+    } else {
+      const k = Math.min(2.7, Math.max(1.05, 1.5 / camera.aspect));
+      camera.position.copy(controls.target).add(new THREE.Vector3(-1.5, 18, 21).multiplyScalar(k));
+    }
+    camera.updateProjectionMatrix();
+  }
+
+  function edgeFor(a, b) {
+    if (edgeObjs[a + '|' + b]) return { e: edgeObjs[a + '|' + b], rev: false };
+    return { e: edgeObjs[b + '|' + a], rev: true };
+  }
+
+  function highlight() {
+    if (!ok) return;
+    const s = SCEN[st.scen].steps[st.i];
+    Object.values(edgeObjs).forEach(o => { o.tube.material.opacity = o.dash ? 0.2 : 0.32; o.tube.material.color = col('--muted'); });
+    const { e } = edgeFor(s.p[0], s.p[1]);
+    if (e) { e.tube.material.opacity = 1; e.tube.material.color = col('--accent-fill'); }
+    Object.keys(labels).forEach(id => labels[id].classList.toggle('on', s.p.includes(id)));
+  }
+
+  function setStep(i) {
+    const steps = SCEN[st.scen].steps;
+    st.i = (i + steps.length) % steps.length; st.t = 0; st.hold = 0;
+    const s = steps[st.i];
+    $('#curT').textContent = (st.i + 1) + '. ' + s.t;
+    $('#curD').textContent = NODES[s.p[0]].name + ' → ' + NODES[s.p[1]].name + (s.d ? ' · ' + s.d : '');
+    $('#curCode').textContent = s.c;
+    $$('#stepList li').forEach((li, k) => { li.classList.toggle('on', k === st.i); li.classList.toggle('done', k < st.i); });
+    const on = $('#stepList li.on'); if (on && !$('#v-architecture').hidden) { const box = $('#stepList'); box.scrollTop = on.offsetTop - box.offsetTop - 60; }
+    highlight();
+  }
+
+  function setScen(k) {
+    st.scen = k;
+    $$('#scenBtns button').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k ? 'true' : 'false'));
+    $('#stepList').innerHTML = SCEN[k].steps.map((s, i) => '<li data-i="' + i + '"><span class="n">' + (i + 1) + '</span><span>' + esc(s.t) + '</span></li>').join('');
+    $$('#stepList li').forEach(li => li.addEventListener('click', () => { setPlaying(false); setStep(+li.dataset.i); }));
+    setStep(0);
+  }
+
+  function setPlaying(p) { st.playing = p; $('#pPlay').textContent = p ? 'หยุด' : 'เล่น'; }
+
+  function showNode(id) {
+    const n = NODES[id];
+    $('#nodeInfo').innerHTML = '<h3><span class="chipc" style="background:var(' + n.col + ')"></span>' + esc(n.name) + ' · ' + esc(n.sub) + '</h3>' +
+      '<p class="cur-d">' + esc(n.role) + '</p><dl><dt>เทคโนโลยี</dt><dd>' + esc(n.tech) + '</dd><dt>รับ / ส่ง</dt><dd>' + esc(n.io) + '</dd></dl>';
+  }
+
+  function placeLabel(el, x, y, z, w, h) {
+    const v = new THREE.Vector3(x, y, z).project(camera);
+    if (v.z > 1) { el.style.display = 'none'; return; }
+    el.style.display = '';
+    el.style.transform = 'translate(' + ((v.x + 1) / 2 * w).toFixed(1) + 'px,' + ((1 - v.y) / 2 * h).toFixed(1) + 'px) translate(-50%,-100%)';
+  }
+
+  function frame() {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const tnow = performance.now() / 1000;
+    controls.update();
+    if (!reduced) Object.keys(meshes).forEach(id => {
+      const g = meshes[id];
+      if (g.userData.bob) g.position.y = 0.1 + Math.sin(tnow * 2) * 0.08;
+      g.children.forEach(m => { if (m.userData.spin) m.rotation.y += m.userData.spin * dt; if (m.userData.hand) m.rotation.y += dt * 1.2; });
+    });
+    const s = SCEN[st.scen].steps[st.i];
+    const { e, rev } = edgeFor(s.p[0], s.p[1]);
+    if (st.t < 1) st.t = Math.min(1, st.t + dt / 1.3);
+    else if (st.playing) { st.hold += dt; if (st.hold > 1.1) setStep(st.i + 1); }
+    if (e) {
+      const p = e.curve.getPoint(rev ? 1 - st.t : st.t);
+      packet.position.copy(p); halo.position.copy(p);
+      halo.scale.setScalar(reduced ? 1 : 1 + 0.25 * Math.sin(performance.now() / 160));
+    }
+    renderer.render(scene, camera);
+    const w = stage.clientWidth, h = stage.clientHeight;
+    Object.keys(labels).forEach(id => { const n = NODES[id]; placeLabel(labels[id], n.pos[0], n.h + 0.45, n.pos[1], w, h); });
+    if (camera.aspect < 1.1) placeLabel(plateLbl, PLATE.x1 + 1.2, 0.2, (PLATE.z0 + PLATE.z1) / 2, w, h);
+    else placeLabel(plateLbl, PLATE.x0 + 1.6, 0.2, PLATE.z1 + 0.6, w, h);
+  }
+
+  function start() { if (!ok) return; if (!active) { active = true; clock.getDelta(); frame(); } }
+  function stop() { active = false; cancelAnimationFrame(raf); }
+
+  $('#scenBtns').innerHTML = Object.keys(SCEN).map(k => '<button data-k="' + k + '" aria-pressed="false"><b>' + SCEN[k].name + '</b><span>' + SCEN[k].sub + '</span></button>').join('');
+  $$('#scenBtns button').forEach(b => b.addEventListener('click', () => { setScen(b.dataset.k); setPlaying(true); }));
+  $('#pPlay').addEventListener('click', () => setPlaying(!st.playing));
+  $('#pNext').addEventListener('click', () => { setPlaying(false); setStep(st.i + 1); });
+  $('#pPrev').addEventListener('click', () => { setPlaying(false); setStep(st.i - 1); });
+
+  build();
+  setScen('report'); setPlaying(st.playing);
+  const mo = () => recolor();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', mo);
+  new MutationObserver(mo).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  return { start, stop, play(k) { setScen(SCEN[k] ? k : 'ask'); setPlaying(true); } };
+})();
+
+/* =========================================================
+   Demo engine: เลขาเป็ด (simulated Supabase backend)
+   ========================================================= */
+const DOW = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+const MON = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const pad = n => String(n).padStart(2, '0');
+const hm = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
+const dayStr = d => DOW[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()];
+const when = d => dayStr(d) + ' ' + hm(d) + ' น.';
+const sameDay = (a, b) => a.toDateString() === b.toDateString();
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+function at(d, h, m) { const x = new Date(d); x.setHours(h, m || 0, 0, 0); return x; }
+const rel = (d, now) => sameDay(d, now) ? 'วันนี้ ' + hm(d) : (sameDay(d, addDays(now, 1)) ? 'พรุ่งนี้ ' + hm(d) : dayStr(d) + ' ' + hm(d));
+const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + hm(d) + ':00+07:00';
+const isoShort = d => iso(d).slice(5, 16).replace('T', ' ');
+const sleep = ms => new Promise(r => setTimeout(r, reduced ? 0 : ms));
+const DEPTS = { sales: 'ฝ่ายขาย', finance: 'ฝ่ายการเงิน', mkt: 'ฝ่ายการตลาด' };
+const PERSONAS = ['u_ceo', 'u_nid', 'u_ton'];
+
+let S;
+function seed() {
+  const now = new Date(2026, 10, 11, 8, 50);
+  const d = (dd, h, m) => new Date(2026, 10, dd, h, m || 0);
+  S = {
+    now, busy: false, active: 'u_ceo', unread: {}, stampDay: {}, reportedDay: null,
+    seq: { task: 207, sched: 40, upd: 300, log: 80, mem: 9, meet: 11 },
+    meetings: [],
+    people: [
+      { id: 'u_ceo', name: 'CEO', full: 'คุณประเสริฐ', role: 'ceo', dept: null, title: 'CEO', line: 'U••••ceo', internal: true, friend: true },
+      { id: 'u_nid', name: 'คุณนิด', role: 'head', dept: 'sales', title: 'หัวหน้าฝ่ายขาย', line: 'U3b7…nid', internal: true, friend: true },
+      { id: 'u_ton', name: 'คุณต้น', role: 'staff', dept: 'sales', title: 'ฝ่ายขาย', line: 'U77a…ton', internal: true, friend: true },
+      { id: 'u_prae', name: 'คุณแพร', role: 'staff', dept: 'sales', title: 'ฝ่ายขาย', line: 'U5c1…prae', internal: true, friend: true },
+      { id: 'u_bee', name: 'คุณบี', role: 'head', dept: 'finance', title: 'หัวหน้าฝ่ายการเงิน', line: 'U19d…bee', internal: true, friend: true },
+      { id: 'u_fon', name: 'คุณฝน', role: 'staff', dept: 'finance', title: 'ฝ่ายการเงิน', line: 'U2e8…fon', internal: true, friend: true },
+      { id: 'u_a', name: 'คุณเอ', role: 'head', dept: 'mkt', title: 'หัวหน้าฝ่ายการตลาด', line: 'U5a0…a', internal: true, friend: true },
+      { id: 'u_mint', name: 'คุณมิ้นท์', role: 'staff', dept: 'mkt', title: 'ฝ่ายการตลาด', line: 'U8c3…mint', internal: true, friend: true },
+      { id: 'c_som', name: 'คุณสมชาย', role: 'customer', title: 'ลูกค้า · บ.สยามเทรด', line: 'U8f2…a91', internal: false, friend: true },
+      { id: 'c_wi', name: 'คุณวิชัย', role: 'customer', title: 'ลูกค้า · บ.ไทยโลจิสติกส์', line: null, internal: false, friend: false }
+    ],
+    tasks: [
+      { id: 'tsk_0201', title: 'ใบเสนอราคา บ.สยามเทรด', kw: ['ใบเสนอราคา'], owner: 'u_ton', dept: 'sales', by: 'u_ceo', due: d(12, 17), p: 60, blocked: false, nudges: 1 },
+      { id: 'tsk_0202', title: 'ติดตามลูกค้าใหม่ 5 ราย', kw: ['ลูกค้าใหม่'], owner: 'u_prae', dept: 'sales', by: 'u_nid', due: d(10, 17), p: 40, blocked: false, nudges: 2 },
+      { id: 'tsk_0203', title: 'แผนยอดขายไตรมาส 1', kw: ['แผนยอดขาย', 'ไตรมาส 1'], owner: 'u_nid', dept: 'sales', by: 'u_ceo', due: d(18, 17), p: 30, blocked: false, nudges: 0 },
+      { id: 'tsk_0204', title: 'รายงานยอดขายเดือนตุลาคม', kw: ['รายงานยอดขาย'], owner: 'u_fon', dept: 'finance', by: 'u_bee', due: d(11, 17), p: 80, blocked: false, nudges: 1 },
+      { id: 'tsk_0205', title: 'งบประมาณไตรมาส 4 สำหรับประชุมบอร์ด', kw: ['งบประมาณ', 'ไตรมาส 4'], owner: 'u_bee', dept: 'finance', by: 'u_ceo', due: d(13, 12), p: 50, blocked: false, nudges: 0 },
+      { id: 'tsk_0206', title: 'แผนโปรโมชันปีใหม่', kw: ['โปรโมชัน'], owner: 'u_mint', dept: 'mkt', by: 'u_a', due: d(16, 17), p: 20, blocked: true, nudges: 0 },
+      { id: 'tsk_0207', title: 'คอนเทนต์เปิดสาขาเชียงใหม่', kw: ['คอนเทนต์', 'เชียงใหม่'], owner: 'u_a', dept: 'mkt', by: 'u_ceo', due: d(20, 17), p: 10, blocked: false, nudges: 0 }
+    ],
+    updates: [
+      { id: 297, task: 'tsk_0202', by: 'u_prae', p: 40, note: 'ติดต่อได้ 2 ราย อีก 3 รายยังไม่ตอบ', at: d(9, 16, 5) },
+      { id: 298, task: 'tsk_0206', by: 'u_mint', p: 20, note: 'ติดปัญหา: รออนุมัติงบโฆษณา', at: d(10, 11, 30) },
+      { id: 299, task: 'tsk_0201', by: 'u_ton', p: 60, note: 'รอราคาฮาร์ดแวร์จากซัพพลายเออร์', at: d(10, 16, 20) },
+      { id: 300, task: 'tsk_0204', by: 'u_fon', p: 80, note: 'เหลือตรวจตัวเลขสาขาเชียงราย', at: d(10, 18, 10) }
+    ],
+    sched: [
+      { id: 'msg_039', kind: 'send', owner: 'u_ceo', to: 'c_som', title: 'ขอเลื่อนประชุมไปพุธที่ 18', message: 'เรียนคุณสมชาย ขอเลื่อนการประชุมไปเป็นวันพุธที่ 18 พ.ย. เวลาเดิมครับ', run_at: d(9, 11, 25), status: 'sent' },
+      { id: 'msg_040', kind: 'reminder', owner: 'u_ceo', to: 'u_ceo', title: 'ประชุมบอร์ด 14:00 (วาระ: งบไตรมาส 4)', run_at: d(11, 13, 30), status: 'scheduled' }
+    ],
+    memories: [
+      { id: 'mem_03', owner: 'u_ceo', subject: 'คุณสมชาย', fact: 'ลูกค้า บ.สยามเทรด กำลังพิจารณาใบเสนอราคาระบบ POS 120 สาขา', source: 'แชต 2 พ.ย.' },
+      { id: 'mem_05', owner: 'u_ceo', subject: 'สไตล์ CEO', fact: 'ข้อความถึงลูกค้าขึ้นต้นด้วย "เรียน" และลงท้าย "ครับ"', source: 'แก้ร่าง 5 พ.ย.' },
+      { id: 'mem_06', owner: 'u_ceo', subject: 'ประชุมบอร์ด', fact: 'วาระ 11 พ.ย.: งบไตรมาส 4 และแผนเปิดสาขาเชียงใหม่', source: 'โน้ตที่ CEO ส่ง 6 พ.ย.' }
+    ],
+    log: [
+      { id: 79, to: 'คุณสมชาย', what: 'ข้อความตั้งเวลา msg_039', method: 'push', at: d(9, 11, 25) },
+      { id: 80, to: 'คุณแพร', what: 'ตามงาน tsk_0202', method: 'push', at: d(10, 9, 0) }
+    ],
+    trace: { cmd: '', scen: 'report', steps: [] },
+    sql: '-- ยังไม่มีคำสั่ง ลองพิมพ์ในแชต หรือกด "ข้ามไปงานถัดไป"',
+    flash: new Set(), dbTable: 'tasks'
+  };
+}
+
+const P = id => S.people.find(p => p.id === id);
+const T = id => S.tasks.find(t => t.id === id);
+const headOf = dept => S.people.find(p => p.role === 'head' && p.dept === dept);
+function wstatus(t) { if (t.p >= 100) return 'done'; if (t.due < S.now) return 'overdue'; if (t.blocked) return 'blocked'; return t.p > 0 ? 'in_progress' : 'not_started'; }
+const WS_TH = { done: 'เสร็จ', overdue: 'เลยกำหนด', blocked: 'ติดปัญหา', in_progress: 'กำลังทำ', not_started: 'ยังไม่เริ่ม' };
+const SCH_TH = { draft: 'ร่าง', scheduled: 'รอส่ง', sent: 'ส่งแล้ว', done: 'เตือนแล้ว', cancelled: 'ยกเลิก', failed: 'ส่งไม่สำเร็จ' };
+const pillW = t => { const s = wstatus(t); return '<span class="pill ' + s + '">' + WS_TH[s] + '</span>'; };
+const pillS = s => '<span class="pill ' + s + '">' + SCH_TH[s] + '</span>';
+function dueText(t) {
+  if (t.p >= 100) return 'เสร็จแล้ว';
+  if (t.due < S.now) { const dd = Math.max(1, Math.floor((S.now - t.due) / 864e5) + (sameDay(t.due, S.now) ? 0 : 0)); return sameDay(t.due, S.now) ? 'เลยกำหนดวันนี้ ' + hm(t.due) : 'เลยกำหนด ' + dd + ' วัน'; }
+  return 'ครบ ' + rel(t.due, S.now);
+}
+const lastUpdate = t => S.updates.filter(u => u.task === t.id).sort((a, b) => b.at - a.at)[0];
+function canSee(viewer, t) { const v = P(viewer); return v.role === 'ceo' || (v.role === 'head' && v.dept === t.dept) || t.owner === viewer; }
+function canSeePerson(viewer, p) { const v = P(viewer); return v.role === 'ceo' || (v.role === 'head' && v.dept === p.dept) || v.id === p.id; }
+const visibleTasks = viewer => S.tasks.filter(t => canSee(viewer, t));
+const openTask = t => t.p < 100;
+function sql(q) { S.sql = q; }
+function flash(id) { S.flash.add(id); }
+function logPush(toId, what) { S.log.push({ id: ++S.seq.log, to: P(toId).name, what, method: 'push', at: new Date(S.now) }); flash('log:' + S.seq.log); }
+
+/* ---------- trace ---------- */
+const LANES = { LINE: '--c-line', 'Edge Function': '--c-api', 'เลขาเป็ด': '--c-ai', 'Postgres': '--c-db', 'pg_cron': '--c-queue' };
+function traceStart(cmd, scen) { S.trace = { cmd, scen, at: new Date(S.now), steps: [] }; }
+function tr(lane, title, code) { S.trace.steps.push({ lane, title, code: typeof code === 'string' ? code : JSON.stringify(code, null, 2) }); }
+function preamble(uid, text, tool, input) {
+  const me = P(uid);
+  tr('LINE', 'LINE ส่ง webhook มาที่ Edge Function', WEBHOOK(text, me.line));
+  tr('Edge Function', 'ตรวจลายเซ็นผ่าน · พบ profile: ' + me.name + ' (role ' + me.role + ') · ตอบ 200', "select id, role, department_id from profiles where line_user_id = '" + me.line + "';\n-- → " + me.role + (me.dept ? ', ' + DEPTS[me.dept] : ''));
+  tr('เลขาเป็ด', 'ส่งข้อความ บริบท role และเครื่องมือให้ LLM', { model: 'claude-sonnet-5-5', system: 'คุณคือเลขาเป็ด ผู้ใช้คือ ' + me.name + ' role=' + me.role + ' เวลา ' + iso(S.now), tools: ['get_work_status', 'get_business_metrics', 'update_progress', 'assign_task', 'schedule_meeting', 'nudge_owner', 'get_role_report', 'create_scheduled_message', 'set_reminder', 'draft_message', 'search_memory'], messages: [{ role: 'user', content: text }] });
+  if (tool) tr('เลขาเป็ด', 'LLM เลือกเครื่องมือ ' + tool, { stop_reason: 'tool_use', content: [{ type: 'tool_use', name: tool, input }] });
+  else tr('เลขาเป็ด', 'LLM ตอบเป็นข้อความ', { stop_reason: 'end_turn' });
+}
+function replyTrace(alt) { tr('LINE', 'ตอบด้วย reply (ไม่นับโควตา)', 'POST https://api.line.me/v2/bot/message/reply\n{ "replyToken": "…", "messages": [{ "type": "flex", "altText": "' + alt + '" }] }'); }
+function pushTrace(toId, alt) { tr('LINE', 'push ถึง ' + P(toId).name + ' (นับโควตา 1)', { to: P(toId).line, messages: [{ type: 'flex', altText: alt }] }); }
+
+/* ---------- chats ---------- */
+const chats = {};
+function chatEl(uid) { return chats[uid]; }
+function isPersona(uid) { return PERSONAS.includes(uid); }
+function bump(uid) { if (uid !== S.active) { S.unread[uid] = (S.unread[uid] || 0) + 1; renderWho(); } }
+function scrollChat(uid) { const c = chatEl(uid); if (c) c.scrollTop = c.scrollHeight; }
+function stampIf(uid) {
+  const k = S.now.toDateString();
+  if (S.stampDay[uid] !== k) { S.stampDay[uid] = k; const d = document.createElement('div'); d.className = 'stamp'; d.textContent = dayStr(S.now); chatEl(uid).appendChild(d); }
+}
+function bubble(uid, who, text) {
+  if (!isPersona(uid)) return null;
+  stampIf(uid);
+  const m = document.createElement('div'); m.className = 'm ' + who;
+  const t = '<time>' + hm(S.now) + '</time>', b = '<div class="b">' + esc(text) + '</div>';
+  m.innerHTML = who === 'me' ? t + b : b + t;
+  chatEl(uid).appendChild(m); scrollChat(uid);
+  if (who === 'bot') bump(uid);
+  return m;
+}
+async function typing(uid) {
+  if (uid !== S.active || reduced) return;
+  const ty = document.createElement('div'); ty.className = 'm bot typing'; ty.innerHTML = '<div class="b">เลขาเป็ดกำลังพิมพ์…</div>';
+  chatEl(uid).appendChild(ty); scrollChat(uid); await sleep(450); ty.remove();
+}
+async function say(uid, text) { if (!isPersona(uid)) return; await typing(uid); bubble(uid, 'bot', text); }
+async function card(uid, c, fast) {
+  if (!isPersona(uid)) return;
+  if (!fast) await typing(uid);
+  stampIf(uid);
+  const m = document.createElement('div'); m.className = 'm bot';
+  m.innerHTML = '<div class="fx"><div class="fx-h ' + (c.tone || '') + '">' + esc(c.head) + '</div><div class="fx-b">' + c.body + '</div>' +
+    (c.buttons && c.buttons.length ? '<div class="fx-f">' + c.buttons.map((b, i) => '<button data-i="' + i + '" class="' + (b.cls || '') + '">' + esc(b.label) + '</button>').join('') + '</div>' : '') +
+    '</div><time>' + hm(S.now) + '</time>';
+  chatEl(uid).appendChild(m); scrollChat(uid); bump(uid);
+  $$('.fx-f button', m).forEach(btn => btn.addEventListener('click', async () => {
+    if (S.busy) return;
+    $$('.fx-f button', m).forEach(x => x.disabled = true);
+    const b = c.buttons[+btn.dataset.i];
+    bubble(uid, 'me', btn.textContent);
+    S.busy = true; try { await b.fn(); } finally { S.busy = false; render(); }
+  }));
+  if (c.mount) c.mount(m);
+}
+const kv = (k, v, q) => q ? '<div class="fx-kv" style="grid-template-columns:1fr;gap:3px"><span>' + esc(k) + '</span><div class="fx-q">' + esc(v) + '</div></div>' : '<div class="fx-kv"><span>' + esc(k) + '</span><b>' + esc(v) + '</b></div>';
+const rowx = (dot, main, sub) => '<div class="fx-r"><i class="dot ' + dot + '"></i><span>' + main + (sub ? '<em>' + esc(sub) + '</em>' : '') + '</span></div>';
+function taskBlock(t, showOwner) {
+  const s = wstatus(t), lu = lastUpdate(t);
+  return '<div class="fx-w"><div class="fx-w1"><b>' + esc(t.title) + '</b>' + pillW(t) + '</div>' +
+    '<div class="pb ' + s + '"><i style="width:' + t.p + '%"></i></div>' +
+    '<em>' + (showOwner ? esc(P(t.owner).name) + ' · ' : '') + t.p + '% · ' + esc(dueText(t)) + (lu ? ' · "' + esc(lu.note) + '"' : '') + '</em></div>';
+}
+
+/* ---------- Thai parsing ---------- */
+const DAYMAP = [['อาทิตย์',0],['จันทร์',1],['อังคาร',2],['พุธ',3],['พฤหัส',4],['ศุกร์',5],['เสาร์',6]];
+const WORDNUM = { 'โมง': 1, 'สอง': 2, 'สาม': 3, 'สี่': 4, 'ห้า': 5 };
+function parseWhen(text, now, defH) {
+  let day = null, h = null, m = 0, x;
+  if ((x = text.match(/อีก\s*(\d+)\s*(นาที|ชั่วโมง|ชม)/))) { const d = new Date(now); if (x[2] === 'นาที') d.setMinutes(d.getMinutes() + +x[1]); else d.setHours(d.getHours() + +x[1]); return d; }
+  if (/มะรืน/.test(text)) day = addDays(now, 2);
+  else if (/พรุ่งนี้/.test(text)) day = addDays(now, 1);
+  else if (/วันนี้|เดี๋ยวนี้|ตอนนี้/.test(text)) day = new Date(now);
+  else for (const [nm, dw] of DAYMAP) {
+    const mm = text.match(new RegExp(nm + '(\\s*(หน้า|นี้))?'));
+    if (mm) { let diff = (dw - now.getDay() + 7) % 7; if (mm[2] === 'หน้า') diff += 7; day = addDays(now, diff); break; }
+  }
+  if ((x = text.match(/(\d{1,2})[:.](\d{2})/))) { h = +x[1]; m = +x[2]; }
+  else if ((x = text.match(/บ่าย\s*(\d{1,2}|โมง|สอง|สาม|สี่|ห้า)(\s*โมง)?(\s*ครึ่ง)?/))) { const n = /\d/.test(x[1]) ? +x[1] : WORDNUM[x[1]]; h = n === 12 ? 12 : 12 + n; if (x[3]) m = 30; }
+  else if ((x = text.match(/(\d{1,2})\s*ทุ่ม/))) h = 18 + +x[1];
+  else if ((x = text.match(/(\d{1,2})\s*โมง\s*(เช้า|เย็น|ครึ่ง)?/))) { h = +x[1]; if (x[2] === 'เย็น' && h < 12) h += 12; else if (!x[2] && h >= 1 && h <= 5) h += 12; if (/ครึ่ง/.test(x[0])) m = 30; }
+  else if (/เที่ยง/.test(text)) h = 12;
+  if (day === null && h === null) return null;
+  if (day === null) { day = new Date(now); if (at(day, h, m) <= now) day = addDays(day, 1); }
+  if (h === null) h = defH == null ? 9 : defH;
+  return at(day, h, m);
+}
+function stripTime(s) {
+  return s.replace(/อีก\s*\d+\s*(นาที|ชั่วโมง|ชม\.?)/g, '').replace(/(วันนี้|พรุ่งนี้|มะรืนนี้|มะรืน)/g, '')
+    .replace(/(วัน)?(จันทร์|อังคาร|พุธ|พฤหัสบดี|พฤหัส|ศุกร์|เสาร์|อาทิตย์)\s*(หน้า|นี้)?/g, '')
+    .replace(/\d{1,2}[:.]\d{2}\s*(น\.)?/g, '').replace(/บ่าย\s*(\d{1,2}|โมง|สอง|สาม|สี่|ห้า)(\s*โมง)?(\s*ครึ่ง)?/g, '')
+    .replace(/\d{1,2}\s*(ทุ่ม|โมง\s*(เช้า|เย็น|ครึ่ง)?)/g, '').replace(/ตอน|เวลา|เที่ยง/g, '').replace(/\s+/g, ' ').trim();
+}
+const cleanTopic = s => s.replace(/(ให้หน่อย|หน่อยนะ|หน่อย|ด้วยนะ|ด้วย|นะครับ|นะคะ|ครับ|ค่ะ|นะ)\s*$/g, '').replace(/^(เรื่อง|ว่า)\s*/, '').trim();
+function findPerson(text, internalOnly) { return S.people.filter(p => p.id !== 'u_ceo' && (!internalOnly || p.internal)).find(p => text.includes(p.name)); }
+function unknownName(text) { const s = stripTime(text); const x = s.match(/คุณ([ก-๙A-Za-z]{2,10}?)(?=เรื่อง|ว่า|ให้|ด้วย|หน่อย|ส่ง|ทำ|\s|$)/) || s.match(/คุณ([ก-๙A-Za-z]{2,10})/); return x && !findPerson(text) ? 'คุณ' + x[1] : null; }
+function findDept(uid, text) {
+  const me = P(uid);
+  if (/ฝ่ายขาย/.test(text)) return 'sales';
+  if (/การเงิน/.test(text)) return 'finance';
+  if (/การตลาด/.test(text)) return 'mkt';
+  if (me.dept && /ในฝ่าย|ทีม(ผม|ฉัน|เรา|หนู)?|ฝ่าย(ผม|ฉัน|เรา)|ลูกทีม/.test(text)) return me.dept;
+  return null;
+}
+function findTaskByKw(text, pool) { return pool.find(t => text.includes(t.title) || t.kw.some(k => text.includes(k))); }
+
+/* ---------- reports by role ---------- */
+function reportCard(uid, label) {
+  const me = P(uid);
+  const vis = visibleTasks(uid).filter(openTask);
+  const sev = t => ({ overdue: 0, blocked: 1, in_progress: 2, not_started: 2 })[wstatus(t)] * 10 + (t.due - S.now) / 864e5;
+  if (me.role === 'ceo') {
+    let body = '<div class="fx-t">ภาพรวมแต่ละฝ่าย</div>';
+    Object.keys(DEPTS).forEach(dk => {
+      const ts = vis.filter(t => t.dept === dk);
+      const avg = ts.length ? Math.round(ts.reduce((a, t) => a + t.p, 0) / ts.length) : 100;
+      const od = ts.filter(t => wstatus(t) === 'overdue').length, bl = ts.filter(t => wstatus(t) === 'blocked').length;
+      body += rowx(od ? 'r' : bl ? 'a' : '', '<b>' + DEPTS[dk] + '</b> · หัวหน้า ' + esc(headOf(dk).name), ts.length + ' งานเปิด · เฉลี่ย ' + avg + '%' + (od ? ' · เลยกำหนด ' + od : '') + (bl ? ' · ติดปัญหา ' + bl : ''));
+    });
+    const watch = vis.filter(t => ['overdue', 'blocked'].includes(wstatus(t)) || (t.due - S.now) < 1.6 * 864e5).sort((a, b) => sev(a) - sev(b));
+    body += '<div class="fx-t">ต้องจับตา · ใครรับผิดชอบ</div>' + (watch.length ? watch.map(t => taskBlock(t, true)).join('') : '<div class="fx-r"><i class="dot n"></i><span>ไม่มีงานเสี่ยง</span></div>');
+    const od = vis.filter(t => wstatus(t) === 'overdue');
+    return { head: label || 'รายงาน 09:00 · ทั้งบริษัท', tone: 'duckh', body,
+      buttons: [{ label: 'ดูฝ่ายขาย', fn: () => deptCard(uid, 'sales') }, { label: 'ดูการเงิน', fn: () => deptCard(uid, 'finance') }].concat(od.length ? [{ label: 'ตามคนที่เลยกำหนด', fn: async () => { traceStart('CEO สั่งตามทุกคนที่เลยกำหนด', 'nudge'); for (const t of od) await nudge(t, uid, true); render(); await say(uid, 'ตามแล้ว ' + od.length + ' คนครับ: ' + od.map(t => P(t.owner).name).join(', ')); } }] : []) };
+  }
+  if (me.role === 'head') {
+    const ts = vis.filter(t => t.dept === me.dept).sort((a, b) => sev(a) - sev(b));
+    const lag = ts.filter(t => ['overdue', 'blocked'].includes(wstatus(t)) && t.owner !== uid);
+    return { head: label || 'รายงาน 09:00 · ' + DEPTS[me.dept], tone: 'duckh', body: ts.length ? ts.map(t => taskBlock(t, true)).join('') : 'ไม่มีงานเปิดในฝ่าย',
+      buttons: lag.length ? [{ label: 'ตามคนที่ค้าง', fn: async () => { traceStart(me.name + ' สั่งตามลูกทีมที่ค้าง', 'nudge'); for (const t of lag) await nudge(t, uid, true); render(); await say(uid, 'ตามแล้วครับ: ' + lag.map(t => P(t.owner).name).join(', ')); } }] : [] };
+  }
+  const mine = vis.filter(t => t.owner === uid).sort((a, b) => a.due - b.due);
+  return { head: label || 'งานของคุณ · ' + dayStr(S.now), tone: 'duckh', body: mine.length ? mine.map(t => taskBlock(t, false)).join('') : 'ไม่มีงานค้าง' };
+}
+async function deptCard(uid, dk) {
+  const me = P(uid);
+  traceStart(me.name + ' ดู' + DEPTS[dk], 'ask');
+  if (me.role !== 'ceo' && me.dept !== dk) { tr('Postgres', 'RLS กรองออกหมด: ไม่มีสิทธิ์ดูฝ่ายนี้', "-- policy 'เห็นงานตาม role' → 0 rows"); render(); await say(uid, 'ขอโทษครับ คุณดูได้เฉพาะงานใน' + DEPTS[me.dept] + 'ครับ'); return; }
+  const q = "select title, owner, progress, due_at, status from tasks where department_id = '" + dk + "' and status <> 'done';";
+  sql(q); tr('Postgres', 'ดึงงานของ' + DEPTS[dk] + ' (RLS ผ่าน)', q); replyTrace(DEPTS[dk]); render();
+  const ts = S.tasks.filter(t => t.dept === dk && openTask(t)).sort((a, b) => a.due - b.due);
+  await card(uid, { head: DEPTS[dk] + ' · หัวหน้า ' + headOf(dk).name, body: ts.map(t => taskBlock(t, true)).join('') || 'ไม่มีงานเปิด' });
+}
+
+/* ---------- nudge (auto or on request) ---------- */
+async function nudge(t, byUid, silentReport) {
+  const o = P(t.owner);
+  t.nudges++; flash(t.id);
+  const msg = (byUid ? (P(byUid).name === 'CEO' ? 'CEO' : P(byUid).name) + ' ฝากเลขาเป็ดมาติดตาม' : 'เลขาเป็ดขอติดตามงานครับ') + ' "' + t.title + '" ตอนนี้ ' + t.p + '% · ' + dueText(t);
+  tr('Postgres', 'บันทึกการตามครั้งที่ ' + t.nudges, "update tasks set nudge_count = nudge_count + 1 where id = '" + t.id + "';");
+  pushTrace(t.owner, 'เลขาเป็ดขอติดตามงาน');
+  logPush(t.owner, 'ตามงาน ' + t.id);
+  await card(t.owner, {
+    head: 'เลขาเป็ดขอติดตามงาน', tone: wstatus(t) === 'overdue' ? 'bad' : 'warn',
+    body: '<div>' + esc(msg) + '</div>' + taskBlock(t, false) + '<div class="fx-note">ตอบกลับเป็นข้อความก็ได้ เช่น "ได้ 80% แล้ว รอเอกสาร"</div>',
+    buttons: [
+      { label: 'คืบหน้า +20%', fn: () => applyUpdate(t.owner, t, { p: Math.min(100, t.p + 20), note: 'อัปเดตผ่านปุ่ม +20%' }) },
+      { label: 'เสร็จแล้ว', fn: () => applyUpdate(t.owner, t, { p: 100, note: 'เสร็จแล้ว' }) },
+      { label: 'ติดปัญหา', cls: 'x', fn: () => applyUpdate(t.owner, t, { blocked: true, note: 'แจ้งติดปัญหา (ผ่านปุ่ม)' }) }
+    ]
+  }, true);
+}
+
+async function applyUpdate(uid, t, ch, fromText) {
+  if (!fromText) { traceStart(P(uid).name + ' อัปเดต ' + t.id, 'nudge'); tr('LINE', P(uid).name + ' กดปุ่มบนการ์ด → postback', { type: 'postback', data: 'action=update&task=' + t.id }); }
+  const wasDone = t.p >= 100;
+  if (ch.p != null) t.p = ch.p;
+  if (ch.blocked != null) t.blocked = ch.blocked; else if (ch.p != null) t.blocked = false;
+  flash(t.id);
+  const u = { id: ++S.seq.upd, task: t.id, by: uid, p: t.p, note: ch.note, at: new Date(S.now) };
+  S.updates.push(u); flash('upd:' + u.id);
+  const st = t.p >= 100 ? 'done' : t.blocked ? 'blocked' : 'doing';
+  const q = "update tasks set progress = " + t.p + ", status = '" + st + "' where id = '" + t.id + "';\ninsert into task_updates (task_id, by_id, progress, note)\nvalues ('" + t.id + "', '" + uid + "', " + t.p + ", '" + ch.note + "');";
+  sql(q); tr('Postgres', 'บันทึกความคืบหน้า (RLS: เจ้าของงานแก้ได้)', q);
+  replyTrace('บันทึกแล้ว');
+  const head = headOf(t.dept);
+  const notify = [];
+  if (t.p >= 100 && !wasDone) { if (head.id !== uid) notify.push(head.id); if (t.by !== uid && t.by !== head.id) notify.push(t.by); }
+  else if (t.blocked) { if (head.id !== uid) notify.push(head.id); else notify.push('u_ceo'); }
+  notify.forEach(n => { pushTrace(n, 'แจ้งความคืบหน้า'); logPush(n, (t.p >= 100 ? 'แจ้งงานเสร็จ ' : 'แจ้งติดปัญหา ') + t.id); });
+  render();
+  await say(uid, t.p >= 100 ? 'ปิดงาน "' + t.title + '" แล้วครับ ขอบคุณครับ' + (notify.length ? ' แจ้ง' + notify.map(n => P(n).name).join(' และ ') + ' ให้แล้ว' : '')
+    : t.blocked ? 'บันทึกว่าติดปัญหาแล้วครับ แจ้ง' + notify.map(n => P(n).name).join(', ') + 'ให้ช่วยดูแล้ว'
+    : 'บันทึกแล้วครับ "' + t.title + '" ' + t.p + '%');
+  for (const n of notify) {
+    await say(n, (t.p >= 100 ? 'งานเสร็จแล้วครับ: ' : 'มีงานติดปัญหาครับ: ') + P(uid).name + ' · "' + t.title + '"' + (ch.note && t.p < 100 ? '\nหมายเหตุ: ' + ch.note : ''));
+  }
+}
+
+/* ---------- intents ---------- */
+async function handle(uid, text) {
+  const me = P(uid);
+  bubble(uid, 'me', text);
+  const p = findPerson(text);
+  if (/งานของ(ฉัน|ผม|หนู|เรา)|^ผมมีงาน|^ฉันมีงาน|มีงานอะไรบ้าง/.test(text) && !p) return myTasks(uid, text);
+  const isUpdate = /\d{1,3}\s*%|เสร็จ(แล้ว)?|ส่งงานแล้ว|ติดปัญหา|ติดขัด/.test(text) && !/ถึงไหน|ใคร/.test(text) && !/^ให้/.test(text);
+  if (isUpdate && !p) return updateIntent(uid, text);
+  if (/แนวโน้ม|เทรนด์|ยอดขาย|รายได้|กำไร|ขาดทุน|การเงิน|ค่าใช้จ่าย|เงินสด|ลูกหนี้|ค้างจ่าย|ค้างชำระ|ภาพรวม|สาขา|คาดการณ์/.test(text) && !/นัด|meeting|ใครรับผิดชอบ|ใครทำ|งานของ|ถึงไหน|^ให้|^ร่าง|เตือน|ทัก/i.test(text)) return finance(uid, text);
+  if (/ถึงไหน|คืบหน้า(ยังไง|แค่ไหน|ไปถึง)|ใครรับผิดชอบ|ใครทำ|สถานะ|เป็นยังไงบ้าง/.test(text)) return askStatus(uid, text);
+  if (/นัดหมาย|นัดประชุม|ช่วยนัด|^นัด|meeting|มีประชุม|ประชุมทีม/i.test(text) && !/^เตือน/.test(text)) return meeting(uid, text);
+  if (/^(รายงาน|สรุป)/.test(text)) { traceStart(text, 'ask'); preamble(uid, text, 'get_role_report', { role: me.role }); replyTrace('รายงาน'); render(); await card(uid, reportCard(uid, 'รายงาน ณ ' + hm(S.now))); return; }
+  if (me.role === 'staff') {
+    traceStart(text, 'ask'); preamble(uid, text, null); replyTrace('ช่วยอะไรได้บ้าง'); render();
+    await say(uid, 'ในฐานะพนักงาน คุณใช้เลขาเป็ดได้เรื่อง ดูงานของตัวเอง อัปเดตความคืบหน้า และแจ้งติดปัญหาครับ\nการมอบงานหรือสั่งงานคนอื่นทำได้เฉพาะหัวหน้าและ CEO');
+    return;
+  }
+  if (/สั่งอะไร|จำอะไร|ครั้งก่อน|เคย(สั่ง|คุย|ส่ง)/.test(text)) return recall(uid, text, p);
+  const unk = unknownName(text);
+  if (unk) { traceStart(text, 'inbound'); preamble(uid, text, null); replyTrace('ไม่พบชื่อ'); render(); await say(uid, 'ไม่พบ ' + unk + ' ในระบบครับ\nคนที่ต้องการติดต่อต้องเพิ่มเลขาเป็ดเป็นเพื่อนใน LINE และลงทะเบียนก่อน'); return; }
+  if (/^(ร่าง|เขียนข้อความ|ช่วยเขียน)/.test(text)) return draft(uid, text, p);
+  if (/^ให้/.test(text) && p) return assign(uid, text, p);
+  if (/เตือน(ผม|ฉัน|หนู|ด้วย)|^เตือน/.test(text) && !p) return reminder(uid, text);
+  if (p && /(ทัก|ส่ง|แจ้ง|บอก|ถาม|ติดตาม)/.test(text)) return schedule(uid, text, p);
+  traceStart(text, 'inbound'); preamble(uid, text, null); replyTrace('ช่วยอะไรได้บ้าง'); render();
+  await say(uid, 'ยังไม่แน่ใจว่าต้องการให้ทำอะไรครับ เลขาเป็ดช่วยได้เรื่อง ถามว่างานของใครถึงไหน มอบงาน รายงาน ตั้งเวลาส่งข้อความ เตือนนัด และร่างข้อความ ลองแตะคำสั่งตัวอย่างด้านล่างได้เลยครับ');
+}
+
+async function myTasks(uid, text) {
+  traceStart(text, 'ask'); preamble(uid, text, 'get_work_status', { person: 'self' });
+  const q = "select * from tasks where owner_id = auth.uid() and status <> 'done' order by due_at;";
+  sql(q); tr('Postgres', 'ดึงงานของตัวเอง', q); replyTrace('งานของคุณ'); render();
+  await card(uid, reportCard(uid, 'งานของคุณ'));
+}
+
+async function updateIntent(uid, text) {
+  traceStart(text, 'nudge');
+  const mine = S.tasks.filter(t => t.owner === uid && openTask(t)).sort((a, b) => a.due - b.due);
+  let t = findTaskByKw(text, mine) || (mine.length === 1 ? mine[0] : null);
+  const pct = (text.match(/(\d{1,3})\s*%/) || [])[1];
+  const done = /เสร็จ(แล้ว)?|ส่งงานแล้ว|เรียบร้อย/.test(text) && !pct;
+  const blocked = /ติดปัญหา|ติดขัด/.test(text);
+  if (!t) {
+    preamble(uid, text, null); replyTrace('ถามว่างานไหน'); render();
+    if (!mine.length) { await say(uid, 'คุณไม่มีงานที่เปิดอยู่ครับ'); return; }
+    await say(uid, 'หมายถึงงานไหนครับ');
+    setChips(uid, mine.map(x => ({ label: x.title, text: x.title + ' ' + text })));
+    return;
+  }
+  const note = text.length > 6 ? text : (done ? 'เสร็จแล้ว' : 'อัปเดต ' + pct + '%');
+  preamble(uid, text, 'update_progress', { task: t.title, progress: done ? 100 : pct ? +pct : t.p, blocked, note });
+  await applyUpdate(uid, t, { p: done ? 100 : pct ? Math.min(100, +pct) : null, blocked: blocked ? true : null, note }, true);
+}
+
+async function askStatus(uid, text) {
+  const me = P(uid);
+  traceStart(text, 'ask');
+  const p = findPerson(text);
+  const dk = findDept(uid, text);
+  const task = !p && !dk ? findTaskByKw(text, S.tasks) : null;
+  preamble(uid, text, 'get_work_status', p ? { person: p.name } : dk ? { department: DEPTS[dk] } : task ? { task: task.title } : {});
+  if (p && !p.internal) { replyTrace('ไม่ใช่คนในบริษัท'); render(); await say(uid, p.name + ' เป็น' + p.title + ' ไม่มีงานในระบบครับ ถ้าอยากรู้ว่าเคยสั่งอะไรไว้ ลองถาม "ผมสั่งอะไร' + p.name + 'ไว้บ้าง"'); return; }
+  if (p) {
+    const q = "select t.title, t.progress, t.due_at, t.status, u.note\n  from tasks t left join lateral (select note from task_updates where task_id = t.id order by created_at desc limit 1) u on true\n where t.owner_id = '" + p.id + "';  -- รันในนามของ " + me.name;
+    sql(q);
+    if (!canSeePerson(uid, p)) { tr('Postgres', 'RLS กรองออกหมด: ' + me.name + ' ไม่มีสิทธิ์เห็นงานของ' + p.name, q + '\n-- → 0 rows'); replyTrace('ไม่มีสิทธิ์'); render(); await say(uid, 'ขอโทษครับ ' + me.name + ' ดูได้เฉพาะ' + (me.role === 'head' ? 'งานใน' + DEPTS[me.dept] : 'งานของตัวเอง') + ' ส่วน' + p.name + 'อยู่' + DEPTS[p.dept] + 'ครับ'); return; }
+    const ts = S.tasks.filter(t => t.owner === p.id).sort((a, b) => (a.p >= 100) - (b.p >= 100) || a.due - b.due);
+    tr('Postgres', 'ได้งานของ' + p.name + ' ' + ts.length + ' รายการ (RLS ผ่าน)', ts.map(t => ({ id: t.id, progress: t.p, status: wstatus(t) })));
+    tr('เลขาเป็ด', 'ส่ง tool_result ให้ LLM เรียบเรียง', { type: 'tool_result', content: ts.length + ' rows' });
+    replyTrace('งานของ' + p.name); render();
+    const open = ts.filter(openTask);
+    await card(uid, { head: 'งานของ' + p.name + ' · ' + p.title, body: ts.length ? ts.map(t => taskBlock(t, false)).join('') : 'ไม่มีงานในระบบ',
+      buttons: open.length && p.id !== uid ? [{ label: 'ตาม' + p.name + 'ตอนนี้', fn: async () => { traceStart(me.name + ' สั่งตาม' + p.name, 'nudge'); for (const t of open) await nudge(t, uid); render(); await say(uid, 'ตาม' + p.name + 'แล้วครับ จะแจ้งทันทีที่ตอบกลับ'); } }, { label: 'ดูทั้งฝ่าย', fn: () => deptCard(uid, p.dept) }] : [] });
+    return;
+  }
+  if (dk) { replyTrace(DEPTS[dk]); render(); S.trace.steps.pop(); return deptCard(uid, dk); }
+  if (task) {
+    const q = "select t.*, p.display_name from tasks t join profiles p on p.id = t.owner_id where t.title ilike '%" + task.kw[0] + "%';";
+    sql(q);
+    if (!canSee(uid, task)) { tr('Postgres', 'RLS กรองออก', q + '\n-- → 0 rows'); replyTrace('ไม่พบ'); render(); await say(uid, 'ไม่พบงานนี้ในขอบเขตที่คุณดูได้ครับ'); return; }
+    tr('Postgres', 'พบงานและผู้รับผิดชอบ', q); replyTrace('สถานะงาน'); render();
+    await card(uid, { head: 'ผู้รับผิดชอบ: ' + P(task.owner).name + ' · ' + DEPTS[task.dept], body: taskBlock(task, true) + kv('สั่งโดย', P(task.by).name),
+      buttons: openTask(task) && task.owner !== uid ? [{ label: 'ตาม' + P(task.owner).name, fn: async () => { traceStart('ตามงาน ' + task.id, 'nudge'); await nudge(task, uid); render(); await say(uid, 'ตามแล้วครับ'); } }] : [] });
+    return;
+  }
+  replyTrace('ถามว่าใคร'); render();
+  await say(uid, 'อยากรู้งานของใคร หรือฝ่ายไหนครับ');
+  const pool = me.role === 'ceo' ? ['คุณต้น', 'คุณแพร', 'คุณฝน', 'ฝ่ายขาย', 'ฝ่ายการตลาด'] : S.people.filter(x => x.dept === me.dept && x.id !== uid).map(x => x.name);
+  setChips(uid, pool.map(n => ({ label: n, text: 'งานของ' + n + 'ถึงไหน' })));
+}
+
+async function assign(uid, text, p) {
+  const me = P(uid);
+  traceStart(text, 'inbound');
+  if (!p.internal) { preamble(uid, text, null); replyTrace('มอบงานไม่ได้'); render(); await say(uid, 'มอบงานได้เฉพาะคนในบริษัทครับ ' + p.name + ' เป็น' + p.title + ' ถ้าต้องการติดต่อ ลองสั่งให้ทักแทนได้ครับ'); return; }
+  if (me.role === 'head' && p.dept !== me.dept) { preamble(uid, text, 'assign_task', { owner: p.name }); tr('เลขาเป็ด', 'ตรวจสิทธิ์: หัวหน้ามอบงานได้เฉพาะลูกทีม → ปฏิเสธ', { allowed: false }); replyTrace('ไม่มีสิทธิ์'); render(); await say(uid, p.name + ' อยู่' + DEPTS[p.dept] + 'ครับ หัวหน้ามอบงานได้เฉพาะคนใน' + DEPTS[me.dept] + ' ถ้าจำเป็นให้ขอผ่าน' + headOf(p.dept).name + 'หรือ CEO'); return; }
+  const parts = text.split(/ภายใน|ก่อน(?=วัน|พรุ่ง|\s*\d)/);
+  const title = cleanTopic(stripTime(parts[0].replace(/^ให้/, '').replace(p.name, ''))) || 'งานที่มอบหมาย';
+  let due = parts[1] ? parseWhen(parts[1], S.now, 17) : parseWhen(text, S.now, 17);
+  if (!due || due <= S.now) due = at(addDays(S.now, 1), 17, 0);
+  const id = 'tsk_0' + (++S.seq.task);
+  preamble(uid, text, 'assign_task', { owner: p.name, title, due_at: iso(due) });
+  replyTrace('ยืนยันมอบหมายงาน'); render();
+  const msg = 'งานใหม่จาก ' + me.name + ': ' + title + ' กำหนดส่ง ' + when(due);
+  await card(uid, {
+    head: 'ยืนยันมอบหมายงาน',
+    body: kv('ผู้รับงาน', p.name + ' · ' + p.title) + kv('งาน', title) + kv('กำหนดส่ง', when(due)) + kv('หัวหน้าฝ่าย', headOf(p.dept).name) + '<div class="fx-t">เลขาเป็ดจะดูแลต่อให้</div>' +
+      rowx('a', 'รอบ 09:00 ก่อนครบกำหนด 1 วัน', 'ตาม' + p.name + 'เอง') + rowx('r', 'ถ้าเลยกำหนด', 'แจ้ง' + p.name + ' และหัวหน้าฝ่ายทันที'),
+    buttons: [
+      { label: 'ยืนยัน', fn: async () => {
+        traceStart('ยืนยันมอบหมาย ' + id, 'inbound');
+        tr('LINE', me.name + ' กดยืนยัน → postback', { type: 'postback', data: 'action=confirm&task=' + id });
+        const t = { id, title, kw: [title.slice(0, Math.min(10, title.length))], owner: p.id, dept: p.dept, by: uid, due, p: 0, blocked: false, nudges: 0 };
+        S.tasks.push(t); flash(id);
+        const q = "insert into tasks (id, title, owner_id, department_id, created_by, due_at, progress, status)\nvalues ('" + id + "', '" + title + "', '" + p.id + "', '" + p.dept + "', '" + uid + "', '" + iso(due) + "', 0, 'todo');";
+        sql(q); tr('Postgres', 'บันทึกงานใหม่', q);
+        pushTrace(p.id, 'งานใหม่'); logPush(p.id, 'แจ้งงานใหม่ ' + id);
+        render();
+        await say(uid, 'มอบงานให้' + p.name + 'แล้วครับ ครบ ' + rel(due, S.now) + ' เลขาเป็ดจะตามให้เองและรายงานในรอบ 09:00');
+        await card(p.id, { head: 'งานใหม่จาก ' + me.name, tone: 'duckh', body: taskBlock(t, false) + '<div class="fx-note">ตอบความคืบหน้ากลับมาที่แชตนี้ได้ตลอด</div>',
+          buttons: [{ label: 'รับทราบ', fn: async () => { traceStart(p.name + ' รับทราบงาน', 'nudge'); const u = { id: ++S.seq.upd, task: id, by: p.id, p: 0, note: 'รับทราบงานแล้ว', at: new Date(S.now) }; S.updates.push(u); flash('upd:' + u.id); sql("insert into task_updates (task_id, by_id, progress, note) values ('" + id + "', '" + p.id + "', 0, 'รับทราบงานแล้ว');"); tr('Postgres', 'บันทึกว่ารับทราบ', S.sql); render(); await say(p.id, 'บันทึกแล้วครับ'); } }] }, true);
+      }},
+      { label: 'ยกเลิก', cls: 'x', fn: async () => say(uid, 'ไม่ได้มอบหมายครับ') }
+    ]
+  });
+}
+
+/* ---------- business & finance Q&A (numbers computed in SQL, AI only words them) ---------- */
+const FIN = {
+  asOf: 'ปิดบัญชี ต.ค. เมื่อ 10 พ.ย. 2026',
+  months: [
+    { m: 'พ.ค.', rev: 12.4, exp: 10.1 }, { m: 'มิ.ย.', rev: 13.1, exp: 10.6 }, { m: 'ก.ค.', rev: 12.8, exp: 10.9 },
+    { m: 'ส.ค.', rev: 14.2, exp: 11.3 }, { m: 'ก.ย.', rev: 14.9, exp: 11.8 }, { m: 'ต.ค.', rev: 15.6, exp: 12.9 }
+  ],
+  revLastYearOct: 13.0, cash: 18.4, cashPrev: 17.6,
+  mtd: { rev: 5.1, prevSame: 4.8, day: 10 },
+  branches: [{ n: 'กรุงเทพ', v: 8.9, p: 8.3 }, { n: 'ชลบุรี', v: 3.4, p: 3.3 }, { n: 'ขอนแก่น', v: 2.1, p: 2.0 }, { n: 'เชียงราย', v: 1.2, p: 1.3 }],
+  ar: [{ c: 'บ.สยามเทรด', amt: 0.9, days: 75 }, { c: 'บ.ไทยโลจิสติกส์', amt: 0.7, days: 68 }, { c: 'หจก.รุ่งเรืองค้าส่ง', amt: 0.5, days: 92 }],
+  expNote: 'ค่าการตลาดเปิดสาขาเชียงใหม่ +0.8 ล้าน'
+};
+const mb = x => x.toFixed(1);
+const pct = (a, b) => ((a - b) / b * 100);
+const pctTxt = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+const cls = v => v >= 0 ? 'up' : 'down';
+function revBars(rows, hlLast) {
+  const max = Math.max(...rows.map(r => r.rev));
+  return '<div class="lgd"><span><i style="background:var(--accent-fill)"></i>รายได้</span><span><i style="background:var(--c-ext)"></i>ค่าใช้จ่าย</span><span>หน่วย: ล้านบาท</span></div><div class="bars">' +
+    rows.map((r, i) => '<div class="bar' + (hlLast && i === rows.length - 1 ? ' hl' : '') + '"><span>' + r.m + '</span><span class="tr"><i style="width:' + (r.rev / max * 100).toFixed(0) + '%"></i><i class="ex" style="width:' + (r.exp / max * 100).toFixed(0) + '%"></i></span><span>' + mb(r.rev) + '</span></div>').join('') + '</div>';
+}
+function canFinance(uid) { const me = P(uid); return me.role === 'ceo' || (me.role === 'head' && me.dept === 'finance'); }
+async function finance(uid, text) {
+  const me = P(uid);
+  const kind = /ภาพรวม/.test(text) ? 'overview' : /สาขา/.test(text) ? 'branch' : /ลูกหนี้|ค้างจ่าย|ค้างชำระ/.test(text) ? 'ar'
+    : /แนวโน้ม|เทรนด์|ย้อนหลัง|\d+\s*เดือน|คาดการณ์/.test(text) ? 'trend' : /ยอดขาย|รายได้/.test(text) ? 'trend' : 'snapshot';
+  traceStart(text, 'ask');
+  preamble(uid, text, 'get_business_metrics', { metric: kind, period: kind === 'trend' ? '6 months' : 'last closed month' });
+  const VIEW = { overview: 'finance.v_monthly_summary + duck.tasks', branch: 'finance.v_sales_by_branch', ar: 'finance.v_ar_aging', trend: 'finance.v_monthly_summary', snapshot: 'finance.v_monthly_summary' }[kind];
+  const q = { overview: "select * from finance.v_monthly_summary order by month desc limit 3;\nselect count(*) filter (where status <> 'done') as open,\n       count(*) filter (where due_at < now() and status <> 'done') as overdue from duck.tasks;",
+    branch: "select branch, revenue, revenue_prev_month from finance.v_sales_by_branch\n where month = '2026-10-01' order by revenue desc;",
+    ar: "select customer, amount, days_overdue from finance.v_ar_aging\n where days_overdue > 60 order by amount desc;",
+    trend: "select month, revenue, expense, revenue - expense as net_profit\n  from finance.v_monthly_summary\n where month >= '2026-05-01' order by month;",
+    snapshot: "select * from finance.v_monthly_summary where month in ('2026-09-01','2026-10-01');\nselect balance from finance.v_cash where as_of = '2026-10-31';" }[kind];
+  sql(q + '  -- รันในนามของ ' + me.name);
+  if (!canFinance(uid)) {
+    tr('Postgres', 'RLS กรองออกหมด: ข้อมูลการเงินเปิดให้เฉพาะ CEO และฝ่ายการเงิน', q + '\n-- → 0 rows (role ' + me.role + ', ' + (me.dept ? DEPTS[me.dept] : '') + ')');
+    replyTrace('ไม่มีสิทธิ์'); render();
+    await say(uid, 'ขอโทษครับ ข้อมูลการเงินและแนวโน้มบริษัทเปิดให้เฉพาะ CEO และฝ่ายการเงินครับ\nถ้าต้องการตัวเลขของ' + (me.dept ? DEPTS[me.dept] : 'ฝ่าย') + ' ให้ขอผ่านคุณบีหรือ CEO');
+    return;
+  }
+  const M = FIN.months, last = M[M.length - 1], prev = M[M.length - 2];
+  const prof = r => r.rev - r.exp;
+  tr('Postgres', 'ดึงตัวเลขจาก view ที่ฝ่ายการเงินกำหนด (' + VIEW + ')', q);
+  tr('Postgres', 'คำนวณ % เปลี่ยนแปลงใน SQL ไม่ให้ AI คิดเลขเอง', { revenue_mom: pctTxt(pct(last.rev, prev.rev)), expense_mom: pctTxt(pct(last.exp, prev.exp)), profit_mom: pctTxt(pct(prof(last), prof(prev))), revenue_yoy: pctTxt(pct(last.rev, FIN.revLastYearOct)) });
+  tr('เลขาเป็ด', 'ส่งตัวเลขให้ LLM เขียนสรุปภาษาไทย (ห้ามเพิ่มตัวเลขที่ไม่มีในข้อมูล)', { type: 'tool_result', content: 'rows + computed deltas', instruction: 'ใช้เฉพาะตัวเลขที่ให้ บอกแหล่งข้อมูลและวันที่' });
+  replyTrace('ข้อมูลธุรกิจ'); render();
+  const src = '<div class="src">ที่มา: ' + VIEW + ' · ' + FIN.asOf + '</div>';
+  if (kind === 'trend') {
+    const avg3 = (pct(M[5].rev, M[4].rev) + pct(M[4].rev, M[3].rev) + pct(M[3].rev, M[2].rev)) / 3;
+    const est = last.rev * (1 + avg3 / 100);
+    await card(uid, { head: 'แนวโน้มรายได้ 6 เดือน', body: revBars(M, true) +
+      '<div>รายได้โตต่อเนื่อง 3 เดือน ต.ค. ' + mb(last.rev) + ' ล้าน <b class="' + cls(pct(last.rev, prev.rev)) + '">' + pctTxt(pct(last.rev, prev.rev)) + '</b> จากเดือนก่อน และ <b class="up">' + pctTxt(pct(last.rev, FIN.revLastYearOct)) + '</b> จาก ต.ค. ปีที่แล้ว แต่ค่าใช้จ่ายโตเร็วกว่า (' + pctTxt(pct(last.exp, prev.exp)) + ') กำไรจึงลดลงเหลือ ' + mb(prof(last)) + ' ล้าน</div>' +
+      '<div class="fx-note">ประมาณการคร่าวๆ: ถ้าโตเท่าค่าเฉลี่ย 3 เดือน (' + pctTxt(avg3) + ') พ.ย. จะอยู่ราว ' + mb(est) + ' ล้าน · ตอนนี้ถึงวันที่ ' + FIN.mtd.day + ' ได้ ' + mb(FIN.mtd.rev) + ' ล้าน (' + pctTxt(pct(FIN.mtd.rev, FIN.mtd.prevSame)) + ' เทียบช่วงเดียวกันเดือนก่อน)</div>' + src,
+      buttons: [{ label: 'ทำไมกำไรลด', fn: () => finance(uid, 'การเงินเดือนนี้') }, { label: 'แยกตามสาขา', fn: () => finance(uid, 'ยอดขายแยกสาขา') }] });
+  } else if (kind === 'snapshot') {
+    await card(uid, { head: 'การเงินเดือน ต.ค. 2026', body: '<div class="kpi2">' +
+      '<div><span>รายได้</span><b>' + mb(last.rev) + '</b> <em class="' + cls(pct(last.rev, prev.rev)) + '">' + pctTxt(pct(last.rev, prev.rev)) + '</em></div>' +
+      '<div><span>ค่าใช้จ่าย</span><b>' + mb(last.exp) + '</b> <em class="' + cls(-pct(last.exp, prev.exp)) + '">' + pctTxt(pct(last.exp, prev.exp)) + '</em></div>' +
+      '<div><span>กำไรสุทธิ</span><b>' + mb(prof(last)) + '</b> <em class="' + cls(pct(prof(last), prof(prev))) + '">' + pctTxt(pct(prof(last), prof(prev))) + '</em></div>' +
+      '<div><span>เงินสดปลายเดือน</span><b>' + mb(FIN.cash) + '</b> <em class="' + cls(pct(FIN.cash, FIN.cashPrev)) + '">' + pctTxt(pct(FIN.cash, FIN.cashPrev)) + '</em></div></div>' +
+      '<div>หน่วยล้านบาท เทียบ ก.ย. กำไรลดเพราะค่าใช้จ่ายเพิ่ม ส่วนใหญ่มาจาก' + FIN.expNote + ' ลูกหนี้ค้างเกิน 60 วันรวม ' + mb(FIN.ar.reduce((a, r) => a + r.amt, 0)) + ' ล้าน</div>' + src,
+      buttons: [{ label: 'ดูลูกหนี้ค้าง', fn: () => finance(uid, 'ลูกหนี้ค้างจ่าย') }, { label: 'แนวโน้ม 6 เดือน', fn: () => finance(uid, 'แนวโน้มยอดขาย') }] });
+  } else if (kind === 'branch') {
+    const max = Math.max(...FIN.branches.map(b => b.v));
+    await card(uid, { head: 'ยอดขายแยกสาขา · ต.ค.', body: '<div class="lgd"><span>ยอด ต.ค. · ตัวเลขขวา = % เทียบ ก.ย.</span></div><div class="bars wide">' +
+      FIN.branches.map(b => '<div class="bar' + (b.v < b.p ? ' hl' : '') + '"><span>' + b.n + '</span><span class="tr"><i style="width:' + (b.v / max * 100).toFixed(0) + '%"></i><small style="font-size:11px">' + mb(b.v) + ' ล้าน</small></span><span class="' + cls(pct(b.v, b.p)) + '">' + pctTxt(pct(b.v, b.p)) + '</span></div>').join('') + '</div>' +
+      '<div>กรุงเทพทำยอดหลักและโตมากสุด เชียงรายเป็นสาขาเดียวที่ยอดลดลง</div>' + src });
+  } else if (kind === 'ar') {
+    await card(uid, { head: 'ลูกหนี้ค้างชำระเกิน 60 วัน', tone: 'warn', body: FIN.ar.map(r => rowx(r.days > 90 ? 'r' : 'a', '<b>' + esc(r.c) + '</b> ' + mb(r.amt) + ' ล้าน', 'ค้าง ' + r.days + ' วัน')).join('') +
+      '<div>รวม ' + mb(FIN.ar.reduce((a, r) => a + r.amt, 0)) + ' ล้าน หรือราว ' + (FIN.ar.reduce((a, r) => a + r.amt, 0) / FIN.cash * 100).toFixed(0) + '% ของเงินสดในมือ</div>' + src,
+      buttons: [{ label: 'ให้คุณบีติดตาม', fn: () => handle(uid, 'ให้คุณบีติดตามลูกหนี้ค้างเกิน 60 วันภายในศุกร์นี้') }] });
+  } else {
+    const open = S.tasks.filter(openTask), od = open.filter(t => wstatus(t) === 'overdue'), bl = open.filter(t => wstatus(t) === 'blocked');
+    await card(uid, { head: 'ภาพรวมบริษัท · ' + dayStr(S.now), tone: 'duckh', body:
+      '<div class="fx-t">การเงิน (ต.ค.)</div><div class="kpi2"><div><span>รายได้</span><b>' + mb(last.rev) + '</b> <em class="' + cls(pct(last.rev, prev.rev)) + '">' + pctTxt(pct(last.rev, prev.rev)) + '</em></div><div><span>กำไรสุทธิ</span><b>' + mb(prof(last)) + '</b> <em class="' + cls(pct(prof(last), prof(prev))) + '">' + pctTxt(pct(prof(last), prof(prev))) + '</em></div></div>' +
+      revBars(M.slice(-3), true) +
+      '<div class="fx-t">งาน</div>' + rowx(od.length ? 'r' : '', open.length + ' งานเปิดอยู่', 'เลยกำหนด ' + od.length + ' · ติดปัญหา ' + bl.length) +
+      od.concat(bl).slice(0, 3).map(t => rowx(wstatus(t) === 'overdue' ? 'r' : 'a', esc(P(t.owner).name + ' · ' + t.title), t.p + '% · ' + dueText(t))).join('') +
+      '<div class="fx-t">ต้องจับตา</div>' + rowx('a', 'ค่าใช้จ่ายโต ' + pctTxt(pct(last.exp, prev.exp)) + ' เร็วกว่ารายได้', FIN.expNote) +
+      rowx('a', 'ลูกหนี้ค้างเกิน 60 วัน ' + mb(FIN.ar.reduce((a, r) => a + r.amt, 0)) + ' ล้าน', FIN.ar.length + ' ราย') + src.replace(VIEW, 'finance.v_monthly_summary, finance.v_ar_aging, duck.tasks'),
+      buttons: [{ label: 'แนวโน้ม 6 เดือน', fn: () => finance(uid, 'แนวโน้มยอดขาย') }, { label: 'งานที่ค้าง', fn: async () => card(uid, reportCard(uid, 'งาน ณ ' + hm(S.now))) }] });
+  }
+}
+
+/* ---------- meetings: picker → confirm → invite → reply → remind ---------- */
+const ATT_TH = { pending: 'รอตอบ', accepted: 'ตอบรับ', declined: 'ไม่สะดวก' };
+function initials(p) { if (p.id === 'u_ceo') return 'C'; const n = p.name.replace('คุณ', ''); return /^[เแโใไ]/.test(n) ? n.slice(0, 2) : n.slice(0, 1); }
+function meetingTitle(text) {
+  const x = text.match(/เรื่อง\s*(.+)$/);
+  if (x) return cleanTopic(stripTime(x[1])) || 'ประชุม';
+  if (/ประชุมทีม/.test(text)) return 'ประชุมทีม';
+  return /meeting/i.test(text) ? 'Meeting' : 'ประชุม';
+}
+async function meeting(uid, text) {
+  traceStart(text, 'meeting');
+  const start = parseWhen(text, S.now);
+  const title = meetingTitle(text);
+  const pre = new Set();
+  S.people.filter(p => p.id !== uid && text.includes(p.name)).forEach(p => pre.add(p.id));
+  const dk = findDept(uid, text);
+  if (dk) S.people.filter(p => p.dept === dk && p.id !== uid).forEach(p => pre.add(p.id));
+  preamble(uid, text, 'schedule_meeting', { title, start_at: start ? iso(start) : null, attendees: [...pre].map(id => P(id).name) });
+  if (!start) { replyTrace('ถามเวลา'); render(); await say(uid, 'นัดเวลาไหนดีครับ'); setChips(uid, ['วันนี้ 11 โมง', 'วันนี้บ่าย 2', 'พรุ่งนี้ 10 โมง'].map(t => ({ label: t, text: text + ' ' + t }))); return; }
+  if (start <= S.now) { replyTrace('เวลาผ่านไปแล้ว'); render(); await say(uid, 'เวลา ' + when(start) + ' ผ่านไปแล้วครับ ต้องการนัดเวลาไหนแทน'); return; }
+  sql("select id, display_name, role, department_id, line_user_id\n  from profiles where line_user_id is not null order by department_id;  -- รายชื่อ LINE ที่เพิ่มเลขาเป็ดแล้ว");
+  tr('Postgres', 'ดึงรายชื่อ LINE ให้เลือก', S.sql);
+  replyTrace('เลือกผู้เข้าร่วม'); render();
+  await meetingPicker(uid, { title, start, selected: pre });
+}
+async function meetingPicker(uid, mt) {
+  const list = S.people.filter(p => p.id !== uid);
+  const groups = [{ n: 'ผู้บริหาร', ps: list.filter(p => p.role === 'ceo') }]
+    .concat(Object.keys(DEPTS).map(dk => ({ n: DEPTS[dk], ps: list.filter(p => p.dept === dk) })))
+    .concat([{ n: 'ลูกค้า', ps: list.filter(p => !p.internal) }]).filter(g => g.ps.length);
+  const body = kv('หัวข้อ', mt.title) + kv('เวลา', when(mt.start)) + '<div class="fx-t">เลือกผู้เข้าร่วมจากรายชื่อ LINE</div><div class="pick">' +
+    groups.map(g => '<div class="pick-g">' + esc(g.n) + '</div>' + g.ps.map(p => '<button type="button" class="pick-i" data-id="' + p.id + '" aria-pressed="' + mt.selected.has(p.id) + '"' + (p.friend ? '' : ' disabled') + '><span class="av">' + esc(initials(p)) + '</span><span><b>' + esc(p.name) + '</b><em>' + esc(p.friend ? p.title : 'ยังไม่ได้เพิ่มเลขาเป็ดเป็นเพื่อน') + '</em></span><i class="ck"></i></button>').join('')).join('') + '</div>';
+  await card(uid, {
+    head: 'นัดหมาย · เลือกผู้เข้าร่วม', body,
+    buttons: [
+      { label: 'ต่อไป (' + mt.selected.size + ' คน)', fn: async () => {
+        if (!mt.selected.size) { await say(uid, 'ยังไม่ได้เลือกใครครับ เลือกอย่างน้อย 1 คน'); return meetingPicker(uid, mt); }
+        traceStart('เลือกผู้เข้าร่วม ' + mt.selected.size + ' คน', 'meeting');
+        tr('LINE', 'กด "ต่อไป" → postback พร้อมรายชื่อที่เลือก', { type: 'postback', data: 'action=meeting_pick&ids=' + [...mt.selected].join(',') });
+        replyTrace('ยืนยันนัดหมาย'); render();
+        await meetingConfirm(uid, mt);
+      }},
+      { label: 'ยกเลิก', cls: 'x', fn: async () => say(uid, 'ไม่ได้นัดครับ') }
+    ],
+    mount: m => {
+      const next = $('.fx-f button', m);
+      $$('.pick-i', m).forEach(b => b.addEventListener('click', () => {
+        if (next.disabled) return;
+        const on = b.getAttribute('aria-pressed') !== 'true';
+        b.setAttribute('aria-pressed', on);
+        if (on) mt.selected.add(b.dataset.id); else mt.selected.delete(b.dataset.id);
+        next.textContent = 'ต่อไป (' + mt.selected.size + ' คน)';
+      }));
+    }
+  });
+}
+function clashes(id, start) { return S.meetings.filter(x => x.status !== 'cancelled' && Math.abs(x.start - start) < 3600e3 && (x.org === id || x.att.some(a => a.id === id && a.status !== 'declined'))); }
+async function meetingConfirm(uid, mt) {
+  const me = P(uid), names = [...mt.selected].map(id => P(id).name);
+  const msg = me.name + ' นัด "' + mt.title + '" ' + when(mt.start) + ' ผู้เข้าร่วม: ' + names.join(', ');
+  const busy = [...mt.selected].filter(id => clashes(id, mt.start).length).map(id => P(id).name);
+  await card(uid, {
+    head: 'ยืนยันนัดหมาย',
+    body: kv('หัวข้อ', mt.title) + kv('เวลา', when(mt.start)) + kv('ผู้จัด', me.name) + kv('ผู้เข้าร่วม', names.join(', ')) + kv('ข้อความที่จะแจ้ง', msg, true) +
+      rowx('a', 'เตือนทุกคนก่อนเริ่ม 15 นาที', hm(new Date(mt.start - 15 * 60000))) + (busy.length ? '<div class="fx-note">' + esc(busy.join(', ')) + ' มีนัดอื่นใกล้เวลานี้</div>' : ''),
+    buttons: [
+      { label: 'ยืนยันและแจ้ง', fn: () => meetingSave(uid, mt, msg) },
+      { label: 'แก้รายชื่อ', fn: () => meetingPicker(uid, mt) },
+      { label: 'ยกเลิก', cls: 'x', fn: async () => say(uid, 'ไม่ได้นัดครับ') }
+    ]
+  });
+}
+async function meetingSave(uid, mt, msg) {
+  const id = 'mtg_0' + (++S.seq.meet);
+  traceStart('ยืนยันนัด ' + id, 'meeting');
+  tr('LINE', 'กดยืนยัน → postback', { type: 'postback', data: 'action=meeting_confirm&id=' + id });
+  const m = { id, title: mt.title, org: uid, start: mt.start, status: 'scheduled', reminded: false, att: [...mt.selected].map(a => ({ id: a, status: 'pending' })) };
+  S.meetings.push(m); flash(id); m.att.forEach(a => flash('att:' + id + a.id));
+  sql("insert into meetings (id, title, organizer_id, start_at, remind_at)\nvalues ('" + id + "', '" + mt.title + "', '" + uid + "', '" + iso(mt.start) + "', '" + iso(new Date(mt.start - 15 * 60000)) + "');\ninsert into meeting_attendees (meeting_id, profile_id, status) values\n" + m.att.map(a => "  ('" + id + "', '" + a.id + "', 'pending')").join(',\n') + ';');
+  tr('Postgres', 'บันทึกนัดและผู้เข้าร่วม · pg_cron scheduler จะเตือนเองก่อน 15 นาที', S.sql);
+  m.att.forEach(a => { pushTrace(a.id, 'นัดหมายใหม่'); logPush(a.id, 'แจ้งนัด ' + id); });
+  replyTrace('บันทึกนัดแล้ว'); render();
+  await say(uid, 'บันทึกนัดแล้วครับ "' + m.title + '" ' + rel(m.start, S.now) + '\nแจ้ง ' + m.att.map(a => P(a.id).name).join(', ') + ' แล้ว จะบอกเมื่อมีคนตอบกลับ และเตือนทุกคนตอน ' + hm(new Date(m.start - 15 * 60000)));
+  for (const a of m.att) {
+    if (!isPersona(a.id)) continue;
+    await card(a.id, { head: 'นัดหมายใหม่จาก ' + P(uid).name, tone: 'duckh',
+      body: kv('หัวข้อ', m.title) + kv('เวลา', when(m.start)) + kv('ผู้จัด', P(uid).name) + kv('ผู้เข้าร่วม', m.att.map(x => P(x.id).name).join(', ')),
+      buttons: [{ label: 'รับทราบ', fn: () => meetingReply(m, a.id, 'accepted') }, { label: 'ไม่สะดวก', cls: 'x', fn: () => meetingReply(m, a.id, 'declined') }] }, true);
+  }
+}
+async function meetingReply(m, who, status) {
+  const a = m.att.find(x => x.id === who); a.status = status; flash('att:' + m.id + who); flash(m.id);
+  traceStart(P(who).name + ' ตอบนัด ' + m.id, 'meeting');
+  tr('LINE', P(who).name + ' กด "' + (status === 'accepted' ? 'รับทราบ' : 'ไม่สะดวก') + '" → postback', { type: 'postback', data: 'action=meeting_reply&id=' + m.id + '&status=' + status });
+  sql("update meeting_attendees set status = '" + status + "', replied_at = now()\n where meeting_id = '" + m.id + "' and profile_id = '" + who + "';");
+  tr('Postgres', 'บันทึกการตอบรับ', S.sql);
+  pushTrace(m.org, 'ผู้เข้าร่วมตอบกลับ'); logPush(m.org, 'แจ้งผลตอบนัด ' + m.id); render();
+  await say(who, status === 'accepted' ? 'บันทึกแล้วครับ จะเตือนก่อนเริ่ม 15 นาที' : 'แจ้ง' + P(m.org).name + 'ให้แล้วครับ');
+  const left = m.att.filter(x => x.status === 'pending').length;
+  await say(m.org, P(who).name + (status === 'accepted' ? ' ตอบรับ' : ' ไม่สะดวกเข้า') + 'นัด "' + m.title + '" ' + hm(m.start) + (left ? ' (รอตอบอีก ' + left + ' คน)' : ' · ตอบครบทุกคนแล้ว'));
+}
+async function fireMeeting(m) {
+  m.reminded = true; flash(m.id);
+  traceStart('เตือนนัด ' + m.id, 'meeting');
+  tr('pg_cron', 'scheduler ทุกนาทีพบนัดที่ถึงเวลาเตือน', "select * from meetings where remind_at <= now() and reminded = false;");
+  const to = [m.org].concat(m.att.filter(a => a.status !== 'declined').map(a => a.id));
+  sql("update meetings set reminded = true where id = '" + m.id + "';"); tr('Postgres', 'ทำเครื่องหมายว่าเตือนแล้ว', S.sql);
+  to.forEach(id => { pushTrace(id, 'อีก 15 นาทีมีประชุม'); logPush(id, 'เตือนนัด ' + m.id); });
+  render();
+  for (const id of to) await card(id, { head: 'อีก 15 นาทีมีประชุม', tone: 'warn', body: '<div><b>' + esc(m.title) + '</b> ' + hm(m.start) + '</div>' + kv('ผู้จัด', P(m.org).name) + '<div class="att">' + m.att.map(a => '<span class="' + a.status + '">' + esc(P(a.id).name + ' · ' + ATT_TH[a.status]) + '</span>').join('') + '</div>' }, true);
+}
+
+function compose(p, topic) { return p.internal ? p.name + 'ครับ รบกวนเรื่อง' + topic + 'ด้วยนะครับ' : 'เรียน' + p.name + ' ขอติดตามเรื่อง' + topic + 'ครับ หากมีข้อสงสัยแจ้งได้เลยครับ'; }
+async function schedule(uid, text, p) {
+  traceStart(text, 'inbound');
+  const runAt = parseWhen(text, S.now);
+  const topic = cleanTopic(stripTime(text.split(p.name).slice(1).join(' '))) || 'งานที่คุยกันไว้';
+  if (!runAt) { preamble(uid, text, null); replyTrace('ถามเวลา'); render(); await say(uid, 'จะให้ทัก' + p.name + 'เวลาไหนครับ'); setChips(uid, ['พรุ่งนี้ 9 โมง', 'วันนี้บ่าย 4', 'อีก 1 ชั่วโมง'].map(t => ({ label: t, text: t + ' ' + text }))); return; }
+  if (runAt <= S.now) { preamble(uid, text, null); replyTrace('เวลาผ่านไปแล้ว'); render(); await say(uid, 'เวลา ' + when(runAt) + ' ผ่านไปแล้วครับ'); return; }
+  const msg = compose(p, topic), id = 'msg_0' + (++S.seq.sched);
+  preamble(uid, text, 'create_scheduled_message', { to: p.name, run_at: iso(runAt), message: msg });
+  const s = { id, kind: 'send', owner: uid, to: p.id, title: topic, message: msg, run_at: runAt, status: 'draft' };
+  S.sched.push(s); flash(id);
+  sql("insert into scheduled_messages (id, owner_id, to_line_id, kind, message, run_at, status)\nvalues ('" + id + "', '" + uid + "', '" + (p.line || 'NULL') + "', 'send', '" + msg + "', '" + iso(runAt) + "', 'draft');");
+  tr('Postgres', 'บันทึกเป็น draft (ยังไม่ส่ง)', S.sql); replyTrace('ตรวจก่อนส่ง'); render();
+  await card(uid, { head: 'ตรวจก่อนส่ง', body: kv('ถึง', p.name) + kv('เวลา', when(runAt)) + kv('ข้อความ', msg, true) + (!p.friend ? '<div class="fx-note">' + esc(p.name) + ' ยังไม่ได้เพิ่มเลขาเป็ดเป็นเพื่อน ข้อความจะส่งไม่ถึง</div>' : ''),
+    buttons: [
+      { label: 'ยืนยัน', fn: async () => {
+        traceStart('ยืนยัน ' + id, 'inbound');
+        tr('LINE', 'กดยืนยัน → postback', { data: 'action=confirm&msg=' + id });
+        s.status = 'scheduled'; flash(id);
+        sql("update scheduled_messages set status = 'scheduled' where id = '" + id + "' and status = 'draft';"); tr('Postgres', 'เปลี่ยนเป็น scheduled · pg_cron scheduler ทุกนาทีจะหยิบเองเมื่อถึงเวลา', S.sql);
+        replyTrace('บันทึกแล้ว'); render();
+        await say(uid, 'บันทึกแล้วครับ ' + rel(runAt, S.now) + ' จะส่งถึง' + p.name + ' แล้วแจ้งผลที่นี่');
+      }},
+      { label: 'ยกเลิก', cls: 'x', fn: async () => { s.status = 'cancelled'; flash(id); render(); await say(uid, 'ยกเลิกแล้วครับ'); } }
+    ] });
+}
+
+async function reminder(uid, text) {
+  traceStart(text, 'inbound');
+  let runAt = parseWhen(text, S.now);
+  const x = text.match(/ก่อน.*?(\d+)\s*นาที/);
+  const title = cleanTopic(stripTime(text.replace(/^(ช่วย)?เตือน(ผม|ฉัน|หนู|ด้วย)?/, '').replace(/ก่อน.*?\d+\s*นาที/, ''))) || 'เรื่องที่สั่งไว้';
+  if (!runAt) { preamble(uid, text, null); replyTrace('ถามเวลา'); render(); await say(uid, 'จะให้เตือนเวลาไหนครับ'); setChips(uid, ['บ่าย 3', 'พรุ่งนี้ 9 โมง', 'อีก 30 นาที'].map(t => ({ label: t, text: 'เตือนผม' + t + ' ' + title }))); return; }
+  if (x) runAt = new Date(runAt.getTime() - (+x[1]) * 60000);
+  if (runAt <= S.now) { preamble(uid, text, null); replyTrace('เวลาผ่านไปแล้ว'); render(); await say(uid, 'เวลา ' + when(runAt) + ' ผ่านไปแล้วครับ'); return; }
+  const id = 'msg_0' + (++S.seq.sched);
+  preamble(uid, text, 'set_reminder', { title, run_at: iso(runAt) });
+  S.sched.push({ id, kind: 'reminder', owner: uid, to: uid, title, run_at: runAt, status: 'scheduled' }); flash(id);
+  sql("insert into scheduled_messages (id, owner_id, kind, message, run_at, status)\nvalues ('" + id + "', '" + uid + "', 'reminder', '" + title + "', '" + iso(runAt) + "', 'scheduled');");
+  tr('Postgres', 'บันทึกเตือนความจำ (ส่งหาตัวเอง ไม่ต้องยืนยัน)', S.sql); replyTrace('ตั้งเตือนแล้ว'); render();
+  await say(uid, 'ตั้งเตือนแล้วครับ ' + rel(runAt, S.now) + '\nเรื่อง: ' + title);
+}
+
+function politeRewrite(p, body) {
+  let core = cleanTopic(body.replace(/ขอแบบ?สุภาพ(หน่อย)?|แบบสุภาพ|สุภาพๆ?/g, '').replace(/^ว่า/, '').trim());
+  const d = parseWhen(core, S.now);
+  if (/เลื่อน/.test(core) && d) return 'เรียน' + p.name + '\nขออภัยที่ต้องขอเลื่อนการประชุมครั้งนี้ไปเป็นวัน' + dayStr(d) + ' หากสะดวก ขอเรียนเชิญตามเวลาเดิมครับ ขอบคุณสำหรับความเข้าใจครับ';
+  return 'เรียน' + p.name + '\n' + core + ' จึงเรียนมาเพื่อโปรดทราบ ขอบคุณครับ';
+}
+async function draft(uid, text, p) {
+  traceStart(text, 'inbound');
+  if (!p) { preamble(uid, text, null); replyTrace('ถามผู้รับ'); render(); await say(uid, 'จะร่างถึงใครครับ เช่น "ร่างข้อความถึงคุณสมชาย ขอเลื่อนประชุมไปพุธหน้า"'); return; }
+  const body = text.split(p.name)[1] || '';
+  const out = politeRewrite(p, body);
+  preamble(uid, text, 'draft_message', { to: p.name, intent: cleanTopic(body) });
+  tr('เลขาเป็ด', 'อ่านความจำเรื่องสไตล์ก่อนร่าง', 'select fact from memories where owner_id = auth.uid() and subject = \'สไตล์ CEO\';');
+  replyTrace('ร่างข้อความ'); render();
+  await draftCard(uid, p, out);
+}
+async function shareFromMine(uid, p, out) {
+  traceStart('ส่งจาก LINE ของ ' + P(uid).name, 'inbound');
+  tr('LINE', 'เปิดหน้า LIFF แล้วเรียก Share Target Picker', "await liff.shareTargetPicker([{ type: 'text', text: '" + out.replace(/\n/g, ' ').slice(0, 60) + "…' }]);\n// LINE เปิดหน้าเลือกเพื่อน/กลุ่มของผู้ใช้เอง ระบบไม่เห็นรายชื่อเพื่อน");
+  tr('LINE', 'ผู้ใช้เลือก ' + p.name + ' แล้วกดส่ง', '{ "status": "success" }  // ข้อความออกจาก LINE ส่วนตัว ไม่นับโควตาของ OA');
+  sql("insert into message_log (method, result, note) values ('share_target_picker', 'success', 'ส่งจาก LINE ส่วนตัว');");
+  tr('Postgres', 'บันทึกว่าส่งผ่าน LINE ส่วนตัว (ไม่รู้ว่าเลือกส่งถึงใคร)', S.sql);
+  render();
+  await say(uid, 'เปิดหน้าเลือกเพื่อนจาก LINE ของคุณแล้วครับ (จำลอง)\nเลือก ' + p.name + ' แล้วกดส่ง ข้อความจะออกจาก LINE ส่วนตัวของคุณ ไม่ใช่จากเลขาเป็ด');
+}
+async function draftCard(uid, p, out, mineOnly) {
+  await card(uid, { head: 'ร่างข้อความ', body: kv('ถึง', p.name) + kv('เนื้อความ', out, true),
+    buttons: mineOnly ? [{ label: 'ส่งจาก LINE ของฉัน', fn: () => shareFromMine(uid, p, out) }, { label: 'ยกเลิก', cls: 'x', fn: async () => say(uid, 'ไม่ได้ส่งครับ') }] : [
+      { label: 'ส่งเลย', fn: async () => {
+        traceStart('ส่งร่างถึง ' + p.name, 'inbound');
+        if (!p.friend) { tr('LINE', 'push ไม่สำเร็จ', 'HTTP 400 · ผู้รับยังไม่ได้เพิ่มเพื่อน'); render(); await say(uid, 'ส่งจากเลขาเป็ดไม่ได้ครับ ' + p.name + ' ยังไม่ได้แอดเลขาเป็ด\nกด "ส่งจาก LINE ของฉัน" ที่การ์ดร่างใหม่ด้านล่างแทนได้ ข้อความจะออกจาก LINE ของคุณเอง'); return draftCard(uid, p, out, true); }
+        pushTrace(p.id, 'ข้อความจาก ' + P(uid).name); logPush(p.id, 'ข้อความร่าง'); render();
+        await say(uid, 'ส่งถึง' + p.name + 'แล้วครับ ' + hm(S.now));
+        if (isPersona(p.id)) await say(p.id, 'ข้อความจาก ' + P(uid).name + ':\n' + out);
+      }},
+      { label: 'ส่งจาก LINE ของฉัน', fn: () => shareFromMine(uid, p, out) },
+      { label: 'ยกเลิก', cls: 'x', fn: async () => say(uid, 'ไม่ได้ส่งครับ') }
+    ] });
+}
+
+async function recall(uid, text, p) {
+  traceStart(text, 'ask');
+  const bySubj = S.memories.filter(m => m.owner === uid && text.includes(m.subject));
+  preamble(uid, text, 'search_memory', p ? { person: p.name } : { query: bySubj[0] ? bySubj[0].subject : text });
+  const ss = p ? S.sched.filter(s => s.owner === uid && s.to === p.id && s.status !== 'cancelled') : [];
+  const ts = p && p.internal ? S.tasks.filter(t => t.owner === p.id && t.by === uid) : [];
+  const ms = p ? S.memories.filter(m => m.owner === uid && m.subject === p.name) : bySubj;
+  sql("select * from scheduled_messages where owner_id = auth.uid()" + (p ? " and to_id = '" + p.id + "'" : '') + ";\nselect fact, source from memories where owner_id = auth.uid() order by embedding <=> embed($1) limit 5;");
+  tr('Postgres', 'ค้นข้อมูลจริงก่อนตอบ', S.sql); replyTrace('ผลการค้น'); render();
+  if (!ss.length && !ts.length && !ms.length) { await say(uid, 'ยังไม่พบข้อมูลเรื่องนี้ในระบบครับ'); return; }
+  let body = '';
+  if (ts.length) body += '<div class="fx-t">งานที่มอบหมาย</div>' + ts.map(t => taskBlock(t, false)).join('');
+  if (ss.length) body += '<div class="fx-t">ข้อความที่ตั้งไว้</div>' + ss.map(s => rowx(s.status === 'sent' ? '' : 'a', '<b>' + esc(dayStr(s.run_at) + ' ' + hm(s.run_at)) + '</b> ' + esc(s.title), SCH_TH[s.status])).join('');
+  if (ms.length) body += '<div class="fx-t">สิ่งที่จำไว้</div>' + ms.map(m => rowx('n', esc(m.fact), 'ที่มา: ' + m.source)).join('');
+  await card(uid, { head: p ? 'ที่สั่ง' + p.name + 'ไว้' : 'ผลการค้น', body });
+}
+
+/* ---------- scheduler: 09:00 report, sends, due checks ---------- */
+function next0900() { let c = at(S.now, 9, 0); if (c < S.now || S.reportedDay === c.toDateString()) c = at(addDays(S.now, 1), 9, 0); return c; }
+function events() {
+  const ev = [{ at: next0900(), kind: 'report' }];
+  S.sched.filter(s => s.status === 'scheduled').forEach(s => ev.push({ at: s.run_at, kind: s.kind, id: s.id }));
+  S.tasks.filter(t => openTask(t) && t.due >= S.now && !t.dueFired).forEach(t => ev.push({ at: t.due, kind: 'due', id: t.id }));
+  S.meetings.filter(m => !m.reminded && m.status !== 'cancelled').forEach(m => ev.push({ at: new Date(Math.max(S.now, m.start - 15 * 60000)), kind: 'meeting', id: m.id }));
+  return ev.sort((a, b) => a.at - b.at);
+}
+function evLabel(e) {
+  if (e.kind === 'report') return 'รายงาน 09:00 ตาม role + ตามงานที่ใกล้ครบ';
+  if (e.kind === 'meeting') { const m = S.meetings.find(x => x.id === e.id); return 'เตือนนัด "' + m.title + '" ' + hm(m.start) + ' ถึงผู้จัดและผู้เข้าร่วม'; }
+  if (e.kind === 'due') { const t = T(e.id); return 'ครบกำหนด: ' + P(t.owner).name + ' · ' + t.title; }
+  const s = S.sched.find(x => x.id === e.id);
+  return e.kind === 'send' ? 'ส่งข้อความถึง' + P(s.to).name : 'เตือน ' + P(s.owner).name + ': ' + s.title;
+}
+
+async function fireReport() {
+  S.reportedDay = S.now.toDateString();
+  traceStart('รายงาน 09:00 ตาม role', 'report');
+  tr('pg_cron', "cron '0 2 * * *' (09:00 เวลาไทย) เรียก daily-report", "select net.http_post(url := '.../functions/v1/daily-report');");
+  sql("select id, role, department_id, line_user_id from profiles;\n-- แล้วต่อคน:\nselect t.title, p.display_name, t.progress, t.due_at from tasks t join profiles p on p.id = t.owner_id\n where t.status <> 'done' and (scope = 'company' or t.department_id = $dept or t.owner_id = $me);");
+  tr('Postgres', 'ดึงคนทั้งหมดและงานตามขอบเขต role ของแต่ละคน', S.sql);
+  tr('เลขาเป็ด', 'ให้ LLM เขียนรายงานแยกตาม role', { tool: 'get_role_report', for: S.people.filter(p => p.internal).map(p => p.name + ' (' + p.role + ')') });
+  for (const p of S.people.filter(x => x.internal && x.role !== 'staff')) {
+    pushTrace(p.id, p.role === 'ceo' ? 'รายงาน 09:00 · ทั้งบริษัท' : 'รายงาน 09:00 · ' + DEPTS[p.dept]);
+    logPush(p.id, 'รายงาน 09:00');
+    if (isPersona(p.id)) { bubble(p.id, 'bot', 'สวัสดีตอนเช้าครับ ' + (p.role === 'ceo' ? 'นี่คือภาพรวมทั้งบริษัท' : 'นี่คือสถานะ' + DEPTS[p.dept])); await card(p.id, reportCard(p.id), true); }
+  }
+  const due = S.tasks.filter(t => openTask(t) && t.due < at(addDays(S.now, 2), 0, 0)).sort((a, b) => a.due - b.due);
+  tr('Postgres', 'หางานที่ครบภายในพรุ่งนี้ หรือเลยกำหนด: ' + due.length + ' งาน', "select * from tasks where status <> 'done' and due_at < current_date + 2;\n-- " + due.map(t => P(t.owner).name + ': ' + t.title).join(' | '));
+  for (const t of due) await nudge(t, null);
+  render();
+}
+async function fireDue(t) {
+  t.dueFired = true;
+  if (!openTask(t)) return;
+  const o = P(t.owner), h = headOf(t.dept), esc2 = h.id === o.id ? 'u_ceo' : h.id;
+  traceStart('ครบกำหนด ' + t.id, 'nudge');
+  tr('pg_cron', 'scheduler ทุกนาทีพบงานที่เพิ่งเลยกำหนด', "select * from tasks where status <> 'done' and due_at <= now() and overdue_notified = false;");
+  sql("update tasks set overdue_notified = true where id = '" + t.id + "';"); tr('Postgres', 'ทำเครื่องหมายว่าแจ้งแล้ว', S.sql);
+  pushTrace(o.id, 'งานเลยกำหนด'); pushTrace(esc2, 'ลูกทีมมีงานเลยกำหนด');
+  logPush(o.id, 'แจ้งเลยกำหนด ' + t.id); logPush(esc2, 'แจ้งหัวหน้า: เลยกำหนด ' + t.id);
+  flash(t.id); render();
+  await card(o.id, { head: 'งานเลยกำหนดแล้ว', tone: 'bad', body: taskBlock(t, false) + '<div class="fx-note">แจ้ง' + esc(P(esc2).name) + 'แล้ว ช่วยอัปเดตสถานะด้วยครับ</div>',
+    buttons: [{ label: 'เสร็จแล้ว', fn: () => applyUpdate(o.id, t, { p: 100, note: 'เสร็จแล้ว' }) }, { label: 'ติดปัญหา', cls: 'x', fn: () => applyUpdate(o.id, t, { blocked: true, note: 'แจ้งติดปัญหา (ผ่านปุ่ม)' }) }] }, true);
+  await card(esc2, { head: 'งานเลยกำหนด · ' + o.name, tone: 'warn', body: taskBlock(t, true),
+    buttons: [{ label: 'ตาม' + o.name + 'อีกครั้ง', fn: async () => { traceStart('ตามอีกครั้ง ' + t.id, 'nudge'); await nudge(t, esc2); render(); await say(esc2, 'ตามแล้วครับ'); } },
+      { label: 'ขยาย 1 วัน', fn: async () => { t.due = addDays(t.due, 1); t.dueFired = false; flash(t.id); traceStart('ขยายเวลา ' + t.id, 'inbound'); sql("update tasks set due_at = '" + iso(t.due) + "' where id = '" + t.id + "';"); tr('Postgres', 'ขยายกำหนดส่ง', S.sql); pushTrace(o.id, 'ขยายกำหนดส่ง'); render(); await say(esc2, 'ขยายเป็น ' + when(t.due) + ' และแจ้ง' + o.name + 'แล้วครับ'); await say(o.id, P(esc2).name + 'ขยายกำหนดส่ง "' + t.title + '" เป็น ' + when(t.due) + ' ครับ'); } }] }, true);
+}
+async function fireSched(s) {
+  const to = P(s.to);
+  traceStart((s.kind === 'send' ? 'ส่งข้อความ ' : 'เตือน ') + s.id, 'inbound');
+  tr('pg_cron', 'scheduler ทุกนาทีหยิบรายการที่ถึงเวลา', "select * from scheduled_messages where status = 'scheduled' and run_at <= now() for update skip locked;");
+  if (s.kind === 'send' && !to.friend) {
+    s.status = 'failed'; flash(s.id); sql("update scheduled_messages set status = 'failed' where id = '" + s.id + "';"); tr('LINE', 'push ล้มเหลว 3 รอบ', 'HTTP 400 · ผู้รับยังไม่ได้เพิ่มเพื่อน'); render();
+    await card(s.owner, { head: 'ส่งไม่สำเร็จ', tone: 'bad', body: kv('ถึง', to.name) + kv('สาเหตุ', 'ผู้รับยังไม่ได้เพิ่มเลขาเป็ดเป็นเพื่อน') + kv('ลองแล้ว', '3 ครั้ง') }, true);
+    return;
+  }
+  s.status = s.kind === 'send' ? 'sent' : 'done'; flash(s.id);
+  pushTrace(s.to, s.kind === 'send' ? 'ข้อความ' : 'เตือนความจำ'); logPush(s.to, s.kind === 'send' ? 'ข้อความตั้งเวลา ' + s.id : 'เตือน ' + s.id);
+  sql("update scheduled_messages set status = '" + s.status + "' where id = '" + s.id + "';\ninsert into message_log (ref_id, method, result) values ('" + s.id + "', 'push', '200');");
+  tr('Postgres', 'บันทึกผล', S.sql); render();
+  if (s.kind === 'send') {
+    await say(s.owner, 'ส่งถึง' + to.name + 'แล้วครับ ' + hm(S.now) + '\n"' + s.message + '"');
+    if (isPersona(to.id)) await say(to.id, 'ข้อความจาก ' + P(s.owner).name + ':\n' + s.message);
+  } else {
+    const mem = /ประชุมบอร์ด/.test(s.title) ? S.memories.find(m => m.subject === 'ประชุมบอร์ด') : null;
+    await card(s.owner, { head: 'เตือนความจำ', tone: 'warn', body: '<div><b>' + esc(s.title) + '</b></div>' + (mem ? rowx('n', esc(mem.fact), 'จากความจำ: ' + mem.source) : '') }, true);
+  }
+}
+async function advanceTo(target) {
+  if (S.busy) return; S.busy = true;
+  try {
+    for (;;) {
+      const e = events().find(x => x.at <= target);
+      if (!e) break;
+      if (e.at > S.now) S.now = new Date(e.at);
+      if (e.kind === 'report') await fireReport();
+      else if (e.kind === 'due') await fireDue(T(e.id));
+      else if (e.kind === 'meeting') await fireMeeting(S.meetings.find(x => x.id === e.id));
+      else await fireSched(S.sched.find(x => x.id === e.id));
+      render(); await sleep(200);
+    }
+    S.now = new Date(target);
+  } finally { S.busy = false; render(); }
+}
+
+/* ---------- chips & personas ---------- */
+const CHIPS = {
+  u_ceo: ['ภาพรวมบริษัทตอนนี้เป็นยังไง', 'แนวโน้มยอดขาย 6 เดือน', 'การเงินเดือนนี้เป็นยังไง', 'ยอดขายแยกสาขา', 'ลูกหนี้ค้างจ่ายมีใครบ้าง', 'ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง', 'งานของคุณต้นไปถึงไหน', 'ฝ่ายการตลาดถึงไหนแล้ว', 'ใครรับผิดชอบงบประมาณ', 'ให้คุณแพรส่งรายชื่อลูกค้า POS ภายในพรุ่งนี้', 'รายงานตอนนี้', 'พรุ่งนี้ 9 โมง ทักคุณสมชายเรื่องใบเสนอราคา', 'เตือนผมบ่าย 3 โทรหาธนาคาร', 'ร่างข้อความถึงคุณสมชาย ขอเลื่อนประชุมไปพุธหน้า', 'ร่างข้อความถึงคุณวิชัย ขอนัดคุยเรื่องสัญญาขนส่งปีหน้า'],
+  u_nid: ['นัดประชุมทีมฝ่ายขายพรุ่งนี้บ่าย 2 เรื่องยอดขายไตรมาส 4', 'งานในฝ่ายถึงไหนแล้ว', 'การเงินบริษัทเดือนนี้เป็นยังไง', 'งานของคุณแพรถึงไหน', 'ให้คุณต้นสรุปลูกค้าเก่าภายในศุกร์นี้', 'งานของคุณฝนถึงไหน', 'แผนยอดขายไตรมาส 1 คืบหน้า 50%', 'ให้คุณมิ้นท์ทำโปสเตอร์ภายในพรุ่งนี้'],
+  u_ton: ['งานของผมมีอะไรบ้าง', 'ใบเสนอราคาได้ 80% แล้ว รอราคาจากซัพพลายเออร์', 'ใบเสนอราคาเสร็จแล้ว', 'ติดปัญหาเรื่องใบเสนอราคา ลูกค้ายังไม่ส่งสเปก', 'งานของคุณแพรถึงไหน', 'ให้คุณแพรช่วยโทรหาลูกค้า']
+};
+function setChips(uid, list) {
+  S.chips = S.chips || {};
+  S.chips[uid] = list || null;
+  if (uid === S.active) drawChips();
+}
+function drawChips() {
+  const list = (S.chips && S.chips[S.active]) || CHIPS[S.active].map(t => ({ label: t, text: t }));
+  const q = $('#qrow'); q.innerHTML = '';
+  list.forEach(it => { const b = document.createElement('button'); b.type = 'button'; b.textContent = it.label; b.addEventListener('click', () => submit(it.text)); q.appendChild(b); });
+}
+function renderWho() {
+  $('#who').innerHTML = PERSONAS.map(id => { const p = P(id); const u = S.unread[id] || 0;
+    return '<button data-u="' + id + '" aria-pressed="' + (S.active === id) + '"><b>' + esc(p.name) + '</b><span>' + esc(p.title) + '</span>' + (u ? '<i class="badge">' + u + '</i>' : '') + '</button>'; }).join('');
+  $$('#who button').forEach(b => b.addEventListener('click', () => switchTo(b.dataset.u)));
+}
+function switchTo(uid) {
+  S.active = uid; S.unread[uid] = 0;
+  PERSONAS.forEach(id => chats[id].hidden = id !== uid);
+  const p = P(uid);
+  $('#phWho').textContent = 'แชตของ ' + p.name + ' · ' + p.title;
+  $('#cmd').placeholder = { ceo: 'เช่น งานของคุณต้นไปถึงไหน', head: 'เช่น งานในฝ่ายถึงไหนแล้ว', staff: 'เช่น ได้ 80% แล้ว รอเอกสาร' }[p.role];
+  renderWho(); drawChips(); scrollChat(uid); render();
+}
+async function submit(text) {
+  text = text.trim(); if (!text || S.busy) return;
+  const uid = S.active;
+  setChips(uid, null);
+  S.busy = true;
+  try { await handle(uid, text); } finally { S.busy = false; render(); }
+}
+
+/* ---------- render panels ---------- */
+function render() {
+  $('#simNow').textContent = dayStr(S.now) + ' · ' + hm(S.now);
+  const nx = events()[0];
+  $('#simNext').innerHTML = nx ? 'ถัดไป <b>' + esc(rel(nx.at, S.now)) + '</b> · ' + esc(evLabel(nx)) : '';
+  $('#goNext').disabled = S.busy; $('#goHour').disabled = S.busy;
+  const F = id => S.flash.has(id) ? ' flash' : '';
+  const me = P(S.active);
+
+  // Dashboard by role (what RLS lets this person see)
+  const vis = visibleTasks(S.active);
+  const open = vis.filter(openTask);
+  const cnt = s => open.filter(t => wstatus(t) === s).length;
+  const soon = open.filter(t => t.due >= S.now && t.due - S.now < 2 * 864e5).length;
+  const scopeTxt = me.role === 'ceo' ? 'ทุกฝ่ายในบริษัท' : me.role === 'head' ? 'เฉพาะ' + DEPTS[me.dept] : 'เฉพาะงานของตัวเอง';
+  const depts = me.role === 'ceo' ? Object.keys(DEPTS) : [me.dept];
+  const rowsFor = ts => ts.length ? ts.map(t => {
+    const s = wstatus(t), lu = lastUpdate(t);
+    return '<div class="row' + F(t.id) + '"><div class="t">' + esc(t.title) + '<small>' + esc(P(t.owner).name) + (lu ? ' · "' + lu.note + '"' : '') + '</small></div>' +
+      '<div class="pg"><div class="pb ' + s + '"><i style="width:' + t.p + '%"></i></div>' + t.p + '% · ตามแล้ว ' + t.nudges + '</div>' +
+      '<time>' + esc(dueText(t)) + '</time><div class="acts">' + pillW(t) + (openTask(t) && !isPersona(t.owner) ? '<button class="btn sm" data-sim="' + t.id + '" title="จำลองว่า' + esc(P(t.owner).name) + 'ตอบกลับ">จำลอง +20%</button>' : '') + '</div></div>';
+  }).join('') : '<div class="empty">ไม่มีงาน</div>';
+  let dash = '<div class="scope">กำลังดูในฐานะ <b>' + esc(me.name + ' · ' + me.title) + '</b> · RLS ให้เห็น ' + scopeTxt + ' สลับคนที่ปุ่มเหนือโทรศัพท์</div>' +
+    '<div class="kpis"><div class="kpi"><b>' + open.length + '</b><span>งานเปิดอยู่</span></div>' +
+    '<div class="kpi' + (cnt('overdue') ? ' bad' : '') + '"><b>' + cnt('overdue') + '</b><span>เลยกำหนด</span></div>' +
+    '<div class="kpi' + (cnt('blocked') ? ' warn' : '') + '"><b>' + cnt('blocked') + '</b><span>ติดปัญหา</span></div>' +
+    '<div class="kpi"><b>' + soon + '</b><span>ครบใน 2 วัน</span></div></div>';
+  if (me.role === 'staff') dash += '<div class="blk"><h4>งานของฉัน</h4><div class="rows">' + rowsFor(vis.sort((a, b) => a.due - b.due)) + '</div></div>';
+  else depts.forEach(dk => { const ts = vis.filter(t => t.dept === dk).sort((a, b) => (a.p >= 100) - (b.p >= 100) || a.due - b.due); dash += '<div class="blk"><h4>' + DEPTS[dk] + ' <small>หัวหน้า ' + esc(headOf(dk).name) + ' · ' + ts.filter(openTask).length + ' งานเปิด</small></h4><div class="rows">' + rowsFor(ts) + '</div></div>'; });
+  const mySched = S.sched.filter(s => s.owner === S.active && s.status !== 'cancelled').sort((a, b) => b.run_at - a.run_at);
+  if (me.role !== 'staff') dash += '<div class="blk"><h4>ข้อความและเตือนที่ตั้งไว้ <small>scheduled_messages ของ ' + esc(me.name) + '</small></h4><div class="rows">' + (mySched.length ? mySched.map(s => '<div class="row simple' + F(s.id) + '"><time>' + esc(rel(s.run_at, S.now)) + '</time><div class="t">' + esc(s.kind === 'send' ? 'ส่งถึง' + P(s.to).name + ': ' + s.title : 'เตือน: ' + s.title) + '</div>' + pillS(s.status) + '</div>').join('') : '<div class="empty">ยังไม่มี</div>') + '</div></div>';
+  const myMeet = S.meetings.filter(m => m.org === S.active || m.att.some(a => a.id === S.active)).sort((a, b) => a.start - b.start);
+  dash = dash.replace('<div class="kpis">', '<div class="blk"><h4>นัดหมาย <small>meetings ที่ ' + esc(me.name) + ' เป็นผู้จัดหรือผู้เข้าร่วม</small></h4><div class="rows">' +
+    (myMeet.length ? myMeet.map(m => '<div class="row simple' + F(m.id) + '"><time>' + esc(rel(m.start, S.now)) + '</time><div class="t">' + esc(m.title) + ' · ผู้จัด ' + esc(P(m.org).name) +
+      '<div class="att">' + m.att.map(a => '<span class="' + a.status + '">' + esc(P(a.id).name + ' · ' + ATT_TH[a.status]) + '</span>').join('') + '</div></div>' +
+      '<span class="pill ' + (m.reminded ? 'sent' : 'scheduled') + '">' + (m.reminded ? 'เตือนแล้ว' : 'รอประชุม') + '</span></div>').join('') : '<div class="empty">ยังไม่มีนัด ลองพิมพ์ "ช่วยนัดหมายคุณนิดให้หน่อย มี meeting 11 โมง"</div>') +
+    '</div></div><div class="kpis">');
+  $('#p-dash').innerHTML = dash;
+  $$('[data-sim]').forEach(b => b.addEventListener('click', async () => {
+    if (S.busy) return; const t = T(b.dataset.sim); S.busy = true;
+    try { traceStart(P(t.owner).name + ' ตอบความคืบหน้า (จำลอง)', 'nudge'); tr('LINE', 'webhook จาก ' + P(t.owner).name, WEBHOOK('คืบหน้าเพิ่มแล้ว', P(t.owner).line)); await applyUpdate(t.owner, t, { p: Math.min(100, t.p + 20), note: 'คืบหน้าเพิ่ม (จำลอง)' }, true); } finally { S.busy = false; render(); }
+  }));
+
+  // DB
+  const TB = S.dbTable;
+  const hl = s => esc(s).replace(/\b(select|insert into|update|delete|values|where|set|from|order by|and|or|limit|join|left join|on|for update|skip locked|returning|null|status)\b/gi, m => '<span class="k">' + m + '</span>');
+  let tbl = '';
+  if (TB === 'tasks') tbl = '<table><thead><tr><th>id</th><th>title</th><th>owner_id</th><th>department</th><th>due_at</th><th>progress</th><th>nudge_count</th><th>status</th></tr></thead><tbody>' +
+    S.tasks.slice().reverse().map(t => '<tr class="' + F(t.id) + '"><td class="mono">' + t.id + '</td><td>' + esc(t.title) + '</td><td>' + esc(P(t.owner).name) + '</td><td>' + DEPTS[t.dept] + '</td><td class="mono">' + isoShort(t.due) + '</td><td class="mono">' + t.p + '</td><td class="mono">' + t.nudges + '</td><td>' + pillW(t) + '</td></tr>').join('') + '</tbody></table>';
+  if (TB === 'task_updates') tbl = '<table><thead><tr><th>id</th><th>task_id</th><th>by</th><th>progress</th><th>note</th><th>created_at</th></tr></thead><tbody>' +
+    S.updates.slice().reverse().map(u => '<tr class="' + F('upd:' + u.id) + '"><td class="mono">' + u.id + '</td><td class="mono">' + u.task + '</td><td>' + esc(P(u.by).name) + '</td><td class="mono">' + u.p + '</td><td>' + esc(u.note) + '</td><td class="mono">' + isoShort(u.at) + '</td></tr>').join('') + '</tbody></table>';
+  if (TB === 'profiles') tbl = '<table><thead><tr><th>id</th><th>display_name</th><th>role</th><th>department</th><th>line_user_id</th></tr></thead><tbody>' +
+    S.people.map(p => '<tr><td class="mono">' + p.id + '</td><td>' + esc(p.name) + '</td><td class="mono">' + p.role + '</td><td>' + (p.dept ? DEPTS[p.dept] : (p.internal ? 'ทุกฝ่าย' : 'ภายนอก')) + '</td><td class="mono">' + (p.line || 'NULL') + '</td></tr>').join('') + '</tbody></table>';
+  if (TB === 'scheduled_messages') tbl = '<table><thead><tr><th>id</th><th>owner</th><th>kind</th><th>to</th><th>message</th><th>run_at</th><th>status</th></tr></thead><tbody>' +
+    S.sched.slice().reverse().map(s => '<tr class="' + F(s.id) + '"><td class="mono">' + s.id + '</td><td>' + esc(P(s.owner).name) + '</td><td class="mono">' + s.kind + '</td><td>' + esc(P(s.to).name) + '</td><td>' + esc(s.message || s.title) + '</td><td class="mono">' + isoShort(s.run_at) + '</td><td>' + pillS(s.status) + '</td></tr>').join('') + '</tbody></table>';
+  if (TB === 'message_log') tbl = '<table><thead><tr><th>id</th><th>to</th><th>what</th><th>method</th><th>sent_at</th></tr></thead><tbody>' +
+    S.log.slice().reverse().map(l => '<tr class="' + F('log:' + l.id) + '"><td class="mono">' + l.id + '</td><td>' + esc(l.to) + '</td><td>' + esc(l.what) + '</td><td class="mono">' + l.method + '</td><td class="mono">' + isoShort(l.at) + '</td></tr>').join('') + '</tbody></table>';
+  if (TB === 'meetings') tbl = '<table><thead><tr><th>id</th><th>title</th><th>organizer_id</th><th>start_at</th><th>remind_at</th><th>reminded</th></tr></thead><tbody>' +
+    (S.meetings.length ? S.meetings.slice().reverse().map(m => '<tr class="' + F(m.id) + '"><td class="mono">' + m.id + '</td><td>' + esc(m.title) + '</td><td>' + esc(P(m.org).name) + '</td><td class="mono">' + isoShort(m.start) + '</td><td class="mono">' + isoShort(new Date(m.start - 15 * 60000)) + '</td><td class="mono">' + m.reminded + '</td></tr>').join('') : '<tr><td colspan="6">ยังไม่มีนัด</td></tr>') + '</tbody></table>';
+  if (TB === 'meeting_attendees') { const rows = S.meetings.flatMap(m => m.att.map(a => ({ m, a }))).reverse(); tbl = '<table><thead><tr><th>meeting_id</th><th>profile_id</th><th>ชื่อ</th><th>status</th></tr></thead><tbody>' +
+    (rows.length ? rows.map(({ m, a }) => '<tr class="' + F('att:' + m.id + a.id) + '"><td class="mono">' + m.id + '</td><td class="mono">' + a.id + '</td><td>' + esc(P(a.id).name) + '</td><td class="mono">' + a.status + '</td></tr>').join('') : '<tr><td colspan="4">ยังไม่มีผู้เข้าร่วม</td></tr>') + '</tbody></table>'; }
+  if (TB === 'finance.v_monthly_summary') tbl = '<table><thead><tr><th>month</th><th>revenue</th><th>expense</th><th>net_profit</th></tr></thead><tbody>' +
+    FIN.months.slice().reverse().map(r => '<tr><td class="mono">2026 ' + r.m + '</td><td class="mono">' + mb(r.rev) + '</td><td class="mono">' + mb(r.exp) + '</td><td class="mono">' + mb(r.rev - r.exp) + '</td></tr>').join('') + '</tbody></table>';
+  if (TB === 'memories') tbl = '<table><thead><tr><th>id</th><th>owner</th><th>subject</th><th>fact</th><th>source</th></tr></thead><tbody>' +
+    S.memories.slice().reverse().map(m => '<tr class="' + F(m.id) + '"><td class="mono">' + m.id + '</td><td>' + esc(P(m.owner).name) + '</td><td>' + esc(m.subject) + '</td><td>' + esc(m.fact) + '</td><td>' + esc(m.source) + '</td></tr>').join('') + '</tbody></table>';
+  const ev = events().slice(0, 6);
+  $('#p-db').innerHTML =
+    '<div class="dbnote" style="margin-top:0">SQL ล่าสุดที่ Edge Function รันบน Supabase</div><pre class="sql">' + hl(S.sql) + '</pre>' +
+    '<div class="dbsel">' + ['tasks', 'task_updates', 'meetings', 'meeting_attendees', 'finance.v_monthly_summary', 'profiles', 'scheduled_messages', 'message_log', 'memories'].map(k => '<button data-t="' + k + '" aria-pressed="' + (k === TB) + '">' + k + '</button>').join('') + '</div>' +
+    '<div class="tbl-wrap">' + tbl + '</div>' +
+    '<div class="dbnote">pg_cron · cron.job (เวลาในตารางเป็น UTC)</div>' +
+    '<div class="tbl-wrap"><table><thead><tr><th>jobname</th><th>schedule</th><th>เวลาไทย</th><th>เรียก</th></tr></thead><tbody>' +
+      '<tr><td class="mono">daily-report-0900</td><td class="mono">0 2 * * *</td><td>ทุกวัน 09:00</td><td class="mono">/functions/v1/daily-report</td></tr>' +
+      '<tr><td class="mono">scheduler-every-minute</td><td class="mono">* * * * *</td><td>ทุกนาที</td><td class="mono">/functions/v1/scheduler</td></tr>' +
+    '</tbody></table></div>' +
+    '<div class="dbnote">สิ่งที่ scheduler จะหยิบในรอบถัดๆ ไป</div>' +
+    '<div class="tbl-wrap"><table><thead><tr><th>เวลา</th><th>อะไร</th></tr></thead><tbody>' + ev.map(e => '<tr><td class="mono">' + esc(rel(e.at, S.now)) + '</td><td>' + esc(evLabel(e)) + '</td></tr>').join('') + '</tbody></table></div>';
+  $$('#p-db [data-t]').forEach(b => b.addEventListener('click', () => { S.dbTable = b.dataset.t; render(); }));
+
+  // Trace
+  const tz = S.trace;
+  $('#trCnt').textContent = tz.steps.length;
+  $('#p-trace').innerHTML =
+    '<div class="tr-head"><p>เส้นทางของ <b>' + esc(tz.cmd || '—') + '</b>' + (tz.at ? ' · ' + hm(tz.at) : '') + '</p><button class="btn sm pri" id="to3d">เล่นเส้นทางแบบนี้ใน 3D</button></div>' +
+    (tz.steps.length ? '<ol class="trace">' + tz.steps.map((s, i) => '<li><span class="n">' + (i + 1) + '</span><div class="tc"><span class="lane" style="background:var(' + LANES[s.lane] + ')">' + esc(s.lane) + '</span><span class="tt">' + esc(s.title) + '</span><pre>' + esc(s.code) + '</pre></div></li>').join('') + '</ol>'
+      : '<div class="empty">พิมพ์ในแชต หรือกด "ข้ามไปงานถัดไป" แล้วกลับมาดูว่าข้อมูลวิ่งผ่านส่วนไหนบ้าง</div>');
+  $('#to3d').addEventListener('click', () => { location.hash = 'architecture'; A3.play(tz.scen || 'ask'); });
+
+  if (S.flash.size) { clearTimeout(render._t); render._t = setTimeout(() => S.flash.clear(), 1900); }
+}
+
+$$('.ptabs button').forEach(b => b.addEventListener('click', () => {
+  $$('.ptabs button').forEach(x => x.setAttribute('aria-selected', x === b ? 'true' : 'false'));
+  ['dash', 'db', 'trace'].forEach(k => $('#p-' + k).hidden = k !== b.dataset.p);
+}));
+$('#cmdForm').addEventListener('submit', e => { e.preventDefault(); const v = $('#cmd').value; $('#cmd').value = ''; submit(v); });
+$('#goNext').addEventListener('click', () => { const e = events()[0]; if (e) advanceTo(new Date(Math.max(e.at, S.now))); });
+$('#goHour').addEventListener('click', () => advanceTo(new Date(S.now.getTime() + 3600000)));
+$('#goReset').addEventListener('click', () => { if (!S.busy) boot(); });
+
+function boot() {
+  seed();
+  const box = $('#chats'); box.innerHTML = '';
+  PERSONAS.forEach(id => { const c = document.createElement('div'); c.className = 'chat'; c.dataset.u = id; box.appendChild(c); chats[id] = c; });
+  bubble('u_ceo', 'bot', 'สวัสดีครับ ผมเลขาเป็ด เลขา AI ของทั้งบริษัท\nทุกวัน 09:00 ผมจะรายงานงานทุกฝ่ายให้คุณ และตามคนที่งานใกล้ครบกำหนดให้เอง ถามได้ตลอดว่างานของใครถึงไหนครับ');
+  bubble('u_nid', 'bot', 'สวัสดีครับคุณนิด ผมเลขาเป็ด จะรายงานงานของฝ่ายขายให้ทุกวัน 09:00 และแจ้งทันทีถ้าลูกทีมติดปัญหาหรือเลยกำหนดครับ');
+  bubble('u_ton', 'bot', 'สวัสดีครับคุณต้น ผมเลขาเป็ด ถ้างานใกล้ครบกำหนดผมจะทักมาถาม ตอบเป็นภาษาพูดได้เลย เช่น "ได้ 80% แล้ว รอเอกสาร"');
+  S.unread = {};
+  S.chips = {};
+  switchTo('u_ceo');
+}
+
+/* =========================================================
+   Router
+   ========================================================= */
+const VIEWS = ['architecture', 'demo', 'plan', 'feasibility'];
+$('#copySum').addEventListener('click', () => {
+  const el = $('#sumText'), btn = $('#copySum');
+  const fallback = () => { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'เลือกข้อความแล้ว กด Ctrl/Cmd+C'; };
+  try { navigator.clipboard.writeText(el.textContent).then(() => { btn.textContent = 'คัดลอกแล้ว'; setTimeout(() => btn.textContent = 'คัดลอก', 1800); }, fallback); } catch (e) { fallback(); }
+});
+function route() {
+  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'architecture';
+  VIEWS.forEach(k => $('#v-' + k).hidden = k !== v);
+  $$('.nav a').forEach(a => { if (a.dataset.v === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  if (v === 'architecture') A3.start(); else A3.stop();
+  if (v === 'demo') PERSONAS.forEach(scrollChat);
+  window.scrollTo(0, 0);
+}
+addEventListener('hashchange', route);
+document.addEventListener('visibilitychange', () => { if (document.hidden) A3.stop(); else if (!$('#v-architecture').hidden) A3.start(); });
+boot();
+route();
+})();
+</script>
+
+</body>
+</html>
