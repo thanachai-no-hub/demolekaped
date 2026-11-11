@@ -12,18 +12,24 @@ img { max-width: 100%; }
 </style>
 <title>เลขาเป็ด</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Prompt:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 </head>
 <body>
 <style>
-/* Layout: sticky top nav → three views (3D architecture on Supabase / playable multi-role mockup / build plan); LINE-green identity, Supabase mint for the backend plate */
+/* Style: shadcn/ui-like neutral zinc system (white cards, 1px borders, rounded-lg, quiet shadows) with LINE green as the one accent.
+   Layout: sticky top nav → three views (3D architecture on Supabase / playable multi-role mockup / build plan); LINE-green identity, Supabase mint for the backend plate */
 :root {
-  --bg: #f4f7f5;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --surface-2: #eaf0ec;
-  --fg: #12201a;
-  --muted: #56655d;
-  --line: #d6dfd9;
+  --surface-2: #f4f4f5;
+  --fg: #09090b;
+  --muted: #71717a;
+  --line: #e4e4e7;
+  --ring: #a1a1aa;
+  --shadow: 0 1px 2px rgb(0 0 0 / .05), 0 1px 3px rgb(0 0 0 / .04);
+  --radius: 12px;
+  --road: #d4d4d8;
+  --road-dash: #ffffff;
   --accent: #067a39;
   --accent-fill: #06c755;
   --on-accent: #022410;
@@ -35,8 +41,8 @@ img { max-width: 100%; }
   --chat-bg: #dce6ef;
   --bubble-me: #8de08f;
   --bubble-bot: #ffffff;
-  --stage: #e6ede8;
-  --grid: #c7d3cb;
+  --stage: #fafafa;
+  --grid: #e4e4e7;
   --c-line: #06c755;
   --c-supa: #2fb67c;
   --c-api: #2f6fde;
@@ -46,27 +52,27 @@ img { max-width: 100%; }
   --c-worker: #5b6b8a;
   --c-ext: #9aa49e;
   --duck: #f2b705;
-  --font-display: "Prompt", "Noto Sans Thai", system-ui, sans-serif;
-  --font-body: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, sans-serif;
+  --font-display: "Inter", "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, sans-serif;
+  --font-body: "Inter", "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0b100e; --surface: #161c19; --surface-2: #111613; --fg: #eef4f0; --muted: #a0aea6;
-    --line: #2a332e; --accent: #4fdc88; --accent-fill: #06c755; --on-accent: #02180a;
+    --bg: #09090b; --surface: #0f0f12; --surface-2: #18181b; --fg: #fafafa; --muted: #a1a1aa;
+    --line: #27272a; --ring: #52525b; --shadow: 0 1px 2px rgb(0 0 0 / .4); --road: #27272a; --road-dash: #52525b; --accent: #4fdc88; --accent-fill: #06c755; --on-accent: #02180a;
     --warn: #f3c566; --warn-bg: #2a2110; --bad: #ff7b72; --bad-bg: #2d1513; --info: #6b9cff;
     --chat-bg: #131b22; --bubble-me: #2f8f4a; --bubble-bot: #232a26;
-    --stage: #0f1513; --grid: #26302b;
+    --stage: #0c0c0e; --grid: #1f1f23;
     --c-line: #2fdc75; --c-supa: #3ecf8e; --c-api: #6b9cff; --c-ai: #f0b429; --c-db: #3cc4c4; --c-queue: #ff7a4d; --c-worker: #9aa8c7; --c-ext: #5f6a64;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0b100e; --surface: #161c19; --surface-2: #111613; --fg: #eef4f0; --muted: #a0aea6;
-  --line: #2a332e; --accent: #4fdc88; --accent-fill: #06c755; --on-accent: #02180a;
+  --bg: #09090b; --surface: #0f0f12; --surface-2: #18181b; --fg: #fafafa; --muted: #a1a1aa;
+  --line: #27272a; --ring: #52525b; --shadow: 0 1px 2px rgb(0 0 0 / .4); --road: #27272a; --road-dash: #52525b; --accent: #4fdc88; --accent-fill: #06c755; --on-accent: #02180a;
   --warn: #f3c566; --warn-bg: #2a2110; --bad: #ff7b72; --bad-bg: #2d1513; --info: #6b9cff;
   --chat-bg: #131b22; --bubble-me: #2f8f4a; --bubble-bot: #232a26;
-  --stage: #0f1513; --grid: #26302b;
+  --stage: #0c0c0e; --grid: #1f1f23;
   --c-line: #2fdc75; --c-supa: #3ecf8e; --c-api: #6b9cff; --c-ai: #f0b429; --c-db: #3cc4c4; --c-queue: #ff7a4d; --c-worker: #9aa8c7; --c-ext: #5f6a64;
   color-scheme: dark;
 }
@@ -458,6 +464,48 @@ footer { color: var(--muted); font-size: 13px; padding-block: 8px 40px; }
 @media (prefers-reduced-motion: reduce) {
   .flash { animation: none; }
 }
+
+/* ---------- shadcn/ui-style component layer ---------- */
+h1, h2, h3, h4 { letter-spacing: -0.015em; }
+.vh h1 { font-weight: 700; letter-spacing: -0.025em; }
+.card, .panel, .stage3d, .clock, .layer, .role, .tbl, .codebox, .dt-wrap, .wk, .vd, .risk, .row, .fcard, .seg button, .who button { box-shadow: var(--shadow); }
+.card, .panel, .clock, .layer, .role, .tbl, .codebox, .dt-wrap, .wk, .vd, .risk { border-radius: var(--radius); }
+.stage3d { border-radius: calc(var(--radius) + 4px); }
+.btn { border-radius: 8px; height: 36px; padding: 0 14px; font-weight: 500; transition: background .15s, border-color .15s; }
+.btn.sm { height: 30px; padding: 0 10px; border-radius: 7px; }
+.btn:hover { border-color: var(--ring); background: var(--surface-2); }
+.btn.pri { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.btn.pri:hover { background: color-mix(in srgb, var(--fg) 88%, var(--bg)); color: var(--bg); }
+.nav { border-radius: 10px; padding: 3px; }
+.nav a { border-radius: 7px; }
+.seg button { border-radius: 8px; background: var(--surface); }
+.seg button[aria-pressed="true"] { border-color: var(--fg); box-shadow: 0 0 0 1px var(--fg); }
+.eyebrow { display: inline-flex; width: fit-content; align-items: center; gap: 6px; font-size: 12px; letter-spacing: .02em; text-transform: none; color: var(--fg); background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
+.eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-fill); }
+.lbl { border-radius: 6px; box-shadow: var(--shadow); }
+.steplist li.on .n { background: var(--fg); color: var(--bg); }
+.ptabs button[aria-selected="true"] { border-bottom-color: var(--fg); }
+.legend { border-radius: 10px; box-shadow: var(--shadow); gap: 6px; }
+.legend .ic { width: 22px; height: 14px; display: inline-block; flex: none; }
+/* step caption inside the 3D stage */
+.cap { position: absolute; left: 12px; top: 12px; width: min(300px, calc(100% - 24px)); background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 12px 14px; display: grid; gap: 6px; backdrop-filter: blur(6px); pointer-events: none; }
+.cap-top { display: flex; align-items: center; gap: 8px; }
+.badge { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 12px; font-weight: 600; background: var(--fg); color: var(--bg); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.badge.soft { background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); font-weight: 500; }
+.cap-t { font-weight: 600; font-size: 14.5px; line-height: 1.35; }
+.cap-route { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.cap-route b { color: var(--fg); font-weight: 600; }
+.meta { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 4px 10px; margin: 0; font-size: 13px; }
+.meta dt { color: var(--muted); display: flex; align-items: center; gap: 5px; }
+.meta dd { margin: 0; font-weight: 500; }
+.meta dd.store { color: var(--c-db); }
+.cargo-tag { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); white-space: nowrap; pointer-events: none; display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; background: var(--fg); color: var(--bg); font-size: 12.5px; font-weight: 600; box-shadow: 0 4px 12px rgb(0 0 0 / .18); }
+.cargo-tag svg { width: 14px; height: 14px; }
+@media (max-width: 640px) {
+  .cap { top: auto; bottom: 10px; left: 10px; width: calc(100% - 20px); padding: 10px 12px; gap: 4px; }
+  .cap .meta { display: none; }
+  .cargo-tag { font-size: 11.5px; height: 22px; padding: 0 8px; }
+}
 </style>
 
 <div class="wrap">
@@ -482,20 +530,20 @@ footer { color: var(--muted); font-size: 13px; padding-block: 8px 40px; }
     <div class="vh">
       <div class="eyebrow">ภาพรวมสถาปัตยกรรม · Supabase</div>
       <h1>เลขาเป็ดรับคำสั่ง ตามงาน และรายงานผลอย่างไร</h1>
-      <p>ทุกอย่างหลังบ้านอยู่บน Supabase แผ่นเดียว ได้แก่ ฐานข้อมูล Postgres, Edge Functions, ตัวตั้งเวลา pg_cron และสิทธิ์การเห็นข้อมูลตาม role เลือกสถานการณ์ด้านขวา แล้วดูจุดสีเขียววิ่งตามเส้นทางจริงของข้อมูล ลากเพื่อหมุนภาพ แตะกล่องเพื่อดูรายละเอียด</p>
+      <p>ดูเหมือนระบบขนส่ง: รถคันเขียวคือข้อมูลหนึ่งชิ้น วิ่งไปตามถนนจากคนหนึ่งไปอีกจุดหนึ่ง กล่องมุมซ้ายบอกว่ารถขนอะไร ส่งไปที่ไหน ที่นั่นทำหน้าที่อะไร และเก็บไว้ที่ไหน เลือกสถานการณ์ด้านขวา ลากเพื่อหมุนภาพ แตะสิ่งของเพื่อดูรายละเอียด</p>
     </div>
     <div class="arch">
       <div class="stage3d" id="stage">
         <canvas id="cv" aria-label="แผนภาพ 3 มิติของระบบเลขาเป็ด"></canvas>
         <div class="labels" id="labels"></div>
         <div class="legend" aria-hidden="true">
-          <span><i style="background:var(--c-line)"></i>LINE</span>
-          <span><i style="background:var(--c-supa)"></i>Supabase</span>
-          <span><i style="background:var(--c-ai)"></i>AI</span>
-          <span><i style="background:var(--c-db)"></i>ฐานข้อมูล</span>
-          <span><i style="background:var(--c-queue)"></i>ตั้งเวลา</span>
+          <span><svg class="ic" viewBox="0 0 22 14"><rect x="1" y="3" width="12" height="8" rx="1.5" fill="currentColor" opacity=".25"/><rect x="13" y="5" width="7" height="6" rx="1.5" fill="#06c755"/><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="16" cy="12" r="1.8" fill="currentColor"/></svg>รถขนข้อมูล</span>
+          <span><svg class="ic" viewBox="0 0 22 14"><rect x="0" y="5" width="22" height="5" rx="2" fill="var(--road)"/><path d="M2 7.5h4M9 7.5h4M16 7.5h4" stroke="#06c755" stroke-width="1.6"/></svg>ถนนที่รถกำลังวิ่ง</span>
+          <span><svg class="ic" viewBox="0 0 22 14"><rect x="0" y="5" width="22" height="5" rx="2" fill="var(--road)"/></svg>ถนนอื่นในระบบ</span>
+          <span><svg class="ic" viewBox="0 0 22 14"><rect x="1" y="2" width="20" height="10" rx="2" fill="var(--c-supa)" opacity=".5"/></svg>Supabase (หลังบ้าน)</span>
         </div>
-        <div class="stage-hint">ลากเพื่อหมุน · แตะกล่องเพื่อดูรายละเอียด</div>
+        <div class="cap" id="cap" aria-live="polite"></div>
+        <div class="stage-hint">ลากเพื่อหมุน · แตะสิ่งของเพื่อดูรายละเอียด</div>
       </div>
       <div class="side">
         <div class="card">
@@ -510,6 +558,7 @@ footer { color: var(--muted); font-size: 13px; padding-block: 8px 40px; }
         <div class="card">
           <div class="cur-t" id="curT"></div>
           <div class="cur-d" id="curD"></div>
+          <dl class="meta" id="curMeta" style="margin-top:10px"></dl>
           <pre class="payload" id="curCode"></pre>
         </div>
         <div class="card">
@@ -957,7 +1006,38 @@ const NODES = {
   ext:    { name: 'Calendar / Email', sub: 'ระยะ 2', col: '--c-ext', pos: [10, 1.5], shape: 'ext', dim: true,
             role: 'เชื่อมปฏิทินและอีเมลในระยะ 2 เพื่อจัดนัดและสรุปเอกสาร', tech: 'Google Calendar, Outlook', io: 'ยังไม่อยู่ในต้นแบบ' }
 };
-const EDGES = [['ceo','line'],['head','line'],['staff','line'],['line','api'],['api','agent'],['agent','llm'],['agent','db'],['agent','line',{lift:1.8}],['cron','worker'],['worker','db'],['worker','agent'],['agent','ext',{dash:true}]];
+const EDGES = [['ceo','line'],['head','line'],['staff','line'],['line','api'],['api','agent'],['agent','llm'],['agent','db'],['agent','line',{bend:2.6}],['cron','worker'],['worker','db'],['worker','agent',{bend:-1.2}],['agent','ext',{dash:true}]];
+
+
+const PEOPLE = ['ceo', 'head', 'staff'];
+const DOES = {
+  ceo: 'อ่านคำตอบ แล้วกดปุ่มหรือพิมพ์ต่อ', head: 'อ่านรายงานของฝ่าย แล้วสั่งงานต่อ', staff: 'อ่านการตาม แล้วตอบความคืบหน้า',
+  line: 'รับข้อความจากแอป แล้วส่งต่อให้ระบบ หรือส่งข้อความออกไปถึงคน',
+  api: 'ตรวจว่ามาจาก LINE จริง และดูว่าใครเป็นคนพิมพ์',
+  agent: 'คิดว่าต้องทำอะไร แล้วสั่งงานต่อ', llm: 'อ่านภาษาไทย เลือกเครื่องมือ หรือเรียบเรียงคำตอบ',
+  db: 'เก็บข้อมูล และค้นข้อมูลให้', cron: 'ปลุกระบบตามเวลาที่ตั้งไว้', worker: 'หยิบงานที่ถึงเวลาไปทำ', ext: 'ยังไม่ใช้ในระยะ 1'
+};
+function cargoOf(s) {
+  const [a, b] = s.p, c = s.c || '';
+  if (PEOPLE.includes(a)) return /postback|data/.test(c) || /กด/.test(s.t) ? 'การกดปุ่ม' : 'ข้อความที่พิมพ์';
+  if (a === 'line' && PEOPLE.includes(b)) return /\[/.test(c) ? 'การ์ดพร้อมปุ่ม' : 'ข้อความ';
+  if (a === 'line' && b === 'api') return /postback/.test(c) || /postback|กด/.test(s.t) ? 'การกดปุ่ม (webhook)' : 'ข้อความ (webhook)';
+  if (a === 'api') return 'คำสั่งที่ตรวจแล้ว';
+  if (b === 'llm') return /tool_result/.test(c) ? 'ผลค้นข้อมูล' : 'คำถาม + รายการเครื่องมือ';
+  if (a === 'llm') return /tool_use/.test(c) ? 'คำสั่งเครื่องมือ' : 'คำตอบที่เรียบเรียงแล้ว';
+  if (b === 'db') return /^\s*(insert|update)/im.test(c) ? 'ข้อมูลที่จะบันทึก' : 'คำค้นหา (SQL)';
+  if (a === 'db') return 'ข้อมูลที่ค้นได้';
+  if (a === 'cron') return 'สัญญาณตั้งเวลา';
+  if (a === 'worker' && b === 'agent') return 'งานให้เรียบเรียง';
+  if (b === 'line') return /reply/.test(c + s.t) ? 'คำตอบ (reply)' : 'ข้อความส่งออก (push)';
+  return 'ข้อมูล';
+}
+function storeOf(s) {
+  const c = s.c || ''; let m;
+  if (s.p[1] === 'db' && (m = c.match(/(?:insert into|update)\s+([\w.]+)/i))) return 'บันทึกลง Postgres › ตาราง ' + m[1];
+  if (s.p[1] === 'db' && (m = c.match(/from\s+([\w.]+)/i))) return 'ค้นจาก Postgres › ตาราง ' + m[1];
+  return '';
+}
 
 const WEBHOOK = (text, uid) => `POST /functions/v1/line-webhook
 X-Line-Signature: 3q2+7wK1…=
@@ -1061,7 +1141,7 @@ const SCEN = {
 const A3 = (function () {
   let ok = false, renderer, scene, camera, controls, raf = 0, active = false, clock;
   const meshes = {}, labels = {}, edgeObjs = {};
-  let packet, halo, ground, grid, plate, plateLbl;
+  let truck, cargoTag, ground, grid, plate, plateLbl;
   const st = { scen: 'report', i: 0, t: 0, hold: 0, playing: !reduced };
   const stage = $('#stage'), cv = $('#cv'), lblBox = $('#labels');
   const PLATE = { x0: -4.2, x1: 6.3, z0: -6.2, z1: 9.6 };
@@ -1221,7 +1301,7 @@ const A3 = (function () {
         }
       }
       const sc = ['ceo', 'head', 'staff'].includes(id) ? 1.45 : id === 'llm' || id === 'ext' ? 1.25 : 1.15;
-      g.scale.setScalar(sc); h *= sc;
+      g.scale.setScalar(sc); g.userData.base = sc; h *= sc;
       g.userData.face = true;
       g.traverse(m => { m.userData.id = id; });
       n.h = h; n.top = h * 0.6;
@@ -1233,21 +1313,55 @@ const A3 = (function () {
       lblBox.appendChild(el); labels[id] = el;
     });
 
+    // Roads: flat ribbons on the ground with a dashed centre line that scrolls in the direction of travel
+    const DASH = tex((x, w, h) => { x.fillStyle = '#000'; x.fillRect(0, 0, w, h); x.fillStyle = '#fff'; x.fillRect(10, 0, 70, h); }, 128, 8);
+    const ribbon = (curve, width, y, n) => {
+      const pos = [], uv = [], idx = [];
+      for (let i = 0; i <= n; i++) {
+        const t = i / n, p = curve.getPoint(t), d = curve.getTangent(t);
+        let nx = -d.z, nz = d.x; const L = Math.hypot(nx, nz) || 1; nx /= L; nz /= L;
+        pos.push(p.x + nx * width / 2, y, p.z + nz * width / 2, p.x - nx * width / 2, y, p.z - nz * width / 2);
+        uv.push(t, 1, t, 0);
+        if (i < n) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      g.setIndex(idx); g.computeVertexNormals(); return g;
+    };
     EDGES.forEach(([a, b, o]) => {
       o = o || {};
-      const pa = anchor(a), pb = anchor(b);
+      const A = NODES[a].pos, B = NODES[b].pos;
+      const pa = new THREE.Vector3(A[0], 0, A[1]), pb = new THREE.Vector3(B[0], 0, B[1]);
       const mid = pa.clone().add(pb).multiplyScalar(0.5);
-      mid.y = Math.max(pa.y, pb.y) + 0.8 + pa.distanceTo(pb) * 0.12 + (o.lift || 0);
+      const dx = pb.x - pa.x, dz = pb.z - pa.z, L = Math.hypot(dx, dz) || 1;
+      mid.x += -dz / L * (o.bend || 0); mid.z += dx / L * (o.bend || 0);
       const curve = new THREE.QuadraticBezierCurve3(pa, mid, pb);
-      const m = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.4 });
-      const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, o.dash ? 0.03 : 0.05, 6, false), m);
-      scene.add(tube);
-      edgeObjs[a + '|' + b] = { curve, tube, dash: o.dash };
+      const len = curve.getLength();
+      const road = new THREE.Mesh(ribbon(curve, 0.5, 0.135, 60), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: !!o.dash, opacity: o.dash ? 0.4 : 1 }));
+      const dt = DASH.clone(); dt.needsUpdate = true; dt.wrapS = THREE.RepeatWrapping; dt.repeat.set(len / 0.9, 1);
+      const dash = new THREE.Mesh(ribbon(curve, 0.09, 0.145, 60), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, alphaMap: dt, transparent: true }));
+      scene.add(road); scene.add(dash);
+      edgeObjs[a + '|' + b] = { curve, road, dash, dt, dim: o.dash, len };
     });
 
-    packet = new THREE.Mesh(new THREE.SphereGeometry(0.24, 20, 16), new THREE.MeshBasicMaterial());
-    halo = new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 16), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.25 }));
-    scene.add(packet); scene.add(halo);
+    // Delivery truck that carries each step's data along the road
+    truck = new THREE.Group();
+    const tm = c => new THREE.MeshStandardMaterial({ color: new THREE.Color(c), roughness: 0.45, metalness: 0.05 });
+    const box = (w, h, d, c, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), tm(c)); m.position.set(x, y, z); truck.add(m); return m; };
+    box(1.0, 0.72, 0.66, '#f4f4f5', -0.22, 0.6, 0);
+    box(1.01, 0.12, 0.67, '#06c755', -0.22, 0.5, 0);
+    box(0.44, 0.52, 0.64, '#06c755', 0.52, 0.5, 0);
+    box(0.04, 0.22, 0.52, '#1b2430', 0.74, 0.62, 0);
+    box(0.36, 0.3, 0.36, '#c8955a', -0.25, 1.11, 0);
+    box(0.37, 0.06, 0.08, '#e8d2a8', -0.25, 1.2, 0);
+    [[-0.45, 0.33], [-0.45, -0.33], [0.5, 0.33], [0.5, -0.33]].forEach(([x, z]) => {
+      const w = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.1, 16), tm('#18181b')); w.rotation.x = Math.PI / 2; w.position.set(x, 0.3, z); truck.add(w);
+    });
+    truck.scale.setScalar(0.95);
+    scene.add(truck);
+    cargoTag = document.createElement('div'); cargoTag.className = 'cargo-tag';
+    lblBox.appendChild(cargoTag);
 
     recolor();
     new ResizeObserver(resize).observe(stage);
@@ -1278,7 +1392,6 @@ const A3 = (function () {
       if (m.userData.keep) return;
       m.material.color = tint(m.userData.c || NODES[id].col);
     }));
-    packet.material.color = col('--accent-fill'); halo.material.color = col('--accent-fill');
     highlight();
   }
 
@@ -1290,9 +1403,11 @@ const A3 = (function () {
     camera.aspect = w / h;
     if (camera.aspect < 1.1) {
       // portrait phone: look along the x axis so the long side of the scene runs top-to-bottom
+      controls.target.set(2.2, 0, 1.5);
       const k = Math.min(1.5, Math.max(0.9, 0.82 / camera.aspect));
       camera.position.copy(controls.target).add(new THREE.Vector3(22, 24, 0).multiplyScalar(k));
     } else {
+      controls.target.set(-4.6, 0, 1.2);
       const k = Math.min(2.7, Math.max(1.05, 1.5 / camera.aspect));
       camera.position.copy(controls.target).add(new THREE.Vector3(-1.5, 18, 21).multiplyScalar(k));
     }
@@ -1307,9 +1422,9 @@ const A3 = (function () {
   function highlight() {
     if (!ok) return;
     const s = SCEN[st.scen].steps[st.i];
-    Object.values(edgeObjs).forEach(o => { o.tube.material.opacity = o.dash ? 0.2 : 0.32; o.tube.material.color = col('--muted'); });
+    Object.values(edgeObjs).forEach(o => { o.road.material.color = col('--road'); o.dash.material.color = col('--road-dash'); o.dash.material.opacity = o.dim ? 0.3 : 0.9; });
     const { e } = edgeFor(s.p[0], s.p[1]);
-    if (e) { e.tube.material.opacity = 1; e.tube.material.color = col('--accent-fill'); }
+    if (e) { e.road.material.color = col('--road').lerp(col('--accent-fill'), 0.35); e.dash.material.color = col('--accent-fill'); e.dash.material.opacity = 1; }
     Object.keys(labels).forEach(id => labels[id].classList.toggle('on', s.p.includes(id)));
   }
 
@@ -1320,6 +1435,14 @@ const A3 = (function () {
     $('#curT').textContent = (st.i + 1) + '. ' + s.t;
     $('#curD').textContent = NODES[s.p[0]].name + ' → ' + NODES[s.p[1]].name + (s.d ? ' · ' + s.d : '');
     $('#curCode').textContent = s.c;
+    const cargo = cargoOf(s), store = storeOf(s), from = NODES[s.p[0]], to = NODES[s.p[1]];
+    const meta = '<dt>ขนอะไร</dt><dd>' + esc(cargo) + '</dd><dt>ส่งไปที่</dt><dd>' + esc(to.name) + '</dd><dt>ทำหน้าที่</dt><dd>' + esc(DOES[s.p[1]] || '') + '</dd>' + (store ? '<dt>เก็บไว้ที่</dt><dd class="store">' + esc(store) + '</dd>' : '');
+    $('#curMeta').innerHTML = meta;
+    $('#cap').innerHTML = '<div class="cap-top"><span class="badge">ขั้น ' + (st.i + 1) + '/' + steps.length + '</span><span class="badge soft">' + esc(SCEN[st.scen].name) + '</span></div>' +
+      '<div class="cap-t">' + esc(s.t) + '</div>' +
+      '<div class="cap-route"><b>' + esc(from.name) + '</b><span aria-hidden="true">→</span><b>' + esc(to.name) + '</b></div>' +
+      '<dl class="meta">' + meta + '</dl>';
+    if (cargoTag) cargoTag.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5l6-3 6 3v6l-6 3-6-3z"/><path d="M2 5l6 3 6-3M8 8v6"/></svg>' + esc(cargo);
     $$('#stepList li').forEach((li, k) => { li.classList.toggle('on', k === st.i); li.classList.toggle('done', k < st.i); });
     const on = $('#stepList li.on'); if (on && !$('#v-architecture').hidden) { const box = $('#stepList'); box.scrollTop = on.offsetTop - box.offsetTop - 60; }
     highlight();
@@ -1360,18 +1483,25 @@ const A3 = (function () {
     Object.keys(meshes).forEach(id => { const g = meshes[id]; g.rotation.y = Math.atan2(camera.position.x - g.position.x, camera.position.z - g.position.z); });
     const s = SCEN[st.scen].steps[st.i];
     const { e, rev } = edgeFor(s.p[0], s.p[1]);
-    if (st.t < 1) st.t = Math.min(1, st.t + dt / 1.3);
-    else if (st.playing) { st.hold += dt; if (st.hold > 1.1) setStep(st.i + 1); }
+    if (st.t < 1) st.t = Math.min(1, st.t + dt / 2.1);
+    else { st.hold += dt; if (st.playing && st.hold > 1.6) setStep(st.i + 1); }
     if (e) {
-      const p = e.curve.getPoint(rev ? 1 - st.t : st.t);
-      packet.position.copy(p); halo.position.copy(p);
-      halo.scale.setScalar(reduced ? 1 : 1 + 0.25 * Math.sin(performance.now() / 160));
+      const tt = 0.06 + 0.88 * (st.t < 0.5 ? 2 * st.t * st.t : 1 - Math.pow(-2 * st.t + 2, 2) / 2);
+      const u = rev ? 1 - tt : tt;
+      const p = e.curve.getPoint(u), d = e.curve.getTangent(u); if (rev) d.negate();
+      truck.position.set(p.x, 0.14, p.z);
+      truck.rotation.y = Math.atan2(-d.z, d.x);
+      if (!reduced) e.dt.offset.x += (rev ? 1 : -1) * dt * 1.2;
     }
+    Object.values(meshes).forEach(g => { if (g.userData.base) g.scale.setScalar(g.userData.base); });
+    const dest = meshes[s.p[1]];
+    if (dest) { const k = st.t >= 1 && st.hold < 0.6 && !reduced ? 1 + 0.07 * Math.sin(st.hold / 0.6 * Math.PI) : 1; dest.scale.setScalar(dest.userData.base * k); }
     renderer.render(scene, camera);
     const w = stage.clientWidth, h = stage.clientHeight;
     Object.keys(labels).forEach(id => { const n = NODES[id]; placeLabel(labels[id], n.pos[0], n.h + 0.45, n.pos[1], w, h); });
     if (camera.aspect < 1.1) placeLabel(plateLbl, PLATE.x1 + 1.2, 0.2, (PLATE.z0 + PLATE.z1) / 2, w, h);
     else placeLabel(plateLbl, PLATE.x0 + 1.6, 0.2, PLATE.z1 + 0.6, w, h);
+    placeLabel(cargoTag, truck.position.x, 1.85, truck.position.z, w, h);
   }
 
   function start() { if (!ok) return; if (!active) { active = true; clock.getDelta(); frame(); } }
