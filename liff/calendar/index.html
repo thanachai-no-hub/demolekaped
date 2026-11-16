@@ -20,12 +20,14 @@
   --bg:#fafafa;--surface:#fff;--surface2:#f4f4f5;--line:#e4e4e7;--fg:#09090b;--muted:#71717a;--faint:#a1a1aa;
   --green:#06c755;--green-ink:#067a39;--on-green:#022410;--duck:#f2b705;--duck-ink:#2a1a00;--black:#0b0b0d;--on-black:#fff;
   --bad:#c2362f;--bad-bg:#fde9e7;--warn:#8a5a00;--warn-bg:#fff3d6;--info:#2f6fde;
+  --duck-soft:#fff4cc;--duck-deep:#8a6400;--ok-bg:#e6f8ee;--info-bg:#e8f0fd;
   --shadow:0 8px 30px rgba(9,9,11,.12);--r:14px;
 }
 @media (prefers-color-scheme:dark){
   :root{
     --bg:#09090b;--surface:#18181b;--surface2:#27272a;--line:#3f3f46;--fg:#fafafa;--muted:#a1a1aa;--faint:#71717a;
     --green-ink:#3ddc84;--black:#f4f4f5;--on-black:#09090b;--bad:#f87171;--bad-bg:#3b1515;--warn:#fbbf24;--warn-bg:#3a2a05;--info:#7aa7ff;
+    --duck-soft:#2c2406;--duck-deep:#f2c94c;--ok-bg:#0f2a1b;--info-bg:#162238;
     --shadow:0 8px 30px rgba(0,0,0,.5);
   }
 }
@@ -36,14 +38,17 @@ button,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 :focus-visible{outline:3px solid var(--info);outline-offset:2px;border-radius:8px}
 .wrap{max-width:480px;margin:0 auto;padding:0 16px}
+main.wrap{padding-top:12px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
-/* หัว */
-header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:env(safe-area-inset-top)}
-.top{display:flex;align-items:center;gap:8px;padding:12px 0 8px}
-.brand{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
-.logo{width:32px;height:32px;border-radius:10px;background:var(--duck);color:var(--duck-ink);display:grid;place-items:center;font-size:18px;flex:none}
-.brand b{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* หัว (เหมือน shared/app.css: แถบเหลืองเป็ด + โลโก้เป็ด + "เลขาเป็ด" เหนือชื่อหน้า) */
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:env(safe-area-inset-top);border-bottom:1px solid var(--line)}
+header::before{content:"";display:block;height:3px;background:var(--duck)}
+.top{display:flex;align-items:center;gap:10px;padding:10px 0 6px}
+.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.logo{width:40px;height:40px;border-radius:50%;background:var(--duck) url(../assets/lekaped-mark.svg) center/cover no-repeat;font-size:0;color:transparent;flex:none}
+.brand b{font-size:18px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.brand b::before{content:"เลขาเป็ด";display:block;font-size:11px;font-weight:700;color:var(--duck-deep);letter-spacing:.02em}
 .me{font-size:12px;color:var(--muted);white-space:nowrap}
 .iconbtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:none}
 .iconbtn svg{width:20px;height:20px}
@@ -80,7 +85,7 @@ header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:env(safe
 .ev .title{font-weight:600;overflow-wrap:anywhere}
 .ev .sub{font-size:12px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
-.chip{font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip{font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .chip.meeting{background:var(--green);border-color:var(--green);color:var(--on-green)}
 .chip.reminder{background:var(--duck);border-color:var(--duck);color:var(--duck-ink)}
 .chip.must{background:var(--bad-bg);border-color:var(--bad-bg);color:var(--bad)}
@@ -93,7 +98,8 @@ header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:env(safe
 .av{width:24px;height:24px;border-radius:99px;background:var(--surface2);border:2px solid var(--surface);display:grid;place-items:center;font-size:11px;font-weight:700;margin-left:-6px;position:relative}
 .av:first-child{margin-left:0}
 .av.accepted{box-shadow:0 0 0 2px var(--green)} .av.declined{box-shadow:0 0 0 2px var(--bad);opacity:.6} .av.pending{box-shadow:0 0 0 2px var(--duck)}
-.empty{color:var(--muted);text-align:center;padding:24px 8px;background:var(--surface);border:1px dashed var(--line);border-radius:var(--r);font-size:14px}
+.empty{color:var(--muted);text-align:center;padding:20px 12px 24px;background:var(--surface);border:1px dashed var(--line);border-radius:var(--r);font-size:15px}
+.empty::before{content:"";display:block;width:72px;height:72px;margin:0 auto 8px;background:url(../assets/lekaped-mascot.svg) center/contain no-repeat}
 
 /* ปุ่มลอย */
 .fab{position:fixed;right:max(16px,calc(50% - 224px));bottom:calc(20px + env(safe-area-inset-bottom));z-index:6;height:52px;padding:0 20px;border:0;border-radius:99px;background:var(--green);color:var(--on-green);font-weight:700;font-size:15px;box-shadow:var(--shadow);display:flex;align-items:center;gap:6px}
@@ -146,6 +152,10 @@ textarea.inp{min-height:72px;resize:vertical}
 .toast.on{opacity:1;transform:translateX(-50%)}
 .state{padding:40px 16px;text-align:center;color:var(--muted)}
 .state b{display:block;color:var(--fg);font-size:17px;margin-bottom:6px}
+#boot::before{content:"";display:block;width:112px;height:112px;margin:0 auto 12px;background:url(../assets/lekaped-mascot.svg) center/contain no-repeat;animation:bob 1.2s ease-in-out infinite}
+#boot .spin{display:none}
+@keyframes bob{50%{transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){#boot::before{animation:none}}
 .spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--green);border-radius:99px;animation:sp 1s linear infinite;margin:0 auto 12px}
 @keyframes sp{to{transform:rotate(360deg)}}
 .devbadge{font-size:11px;background:var(--warn-bg);color:var(--warn);padding:1px 6px;border-radius:6px;font-weight:700}
@@ -155,7 +165,7 @@ textarea.inp{min-height:72px;resize:vertical}
 <header>
   <div class="wrap">
     <div class="top">
-      <div class="brand"><div class="logo" aria-hidden="true">🦆</div><div style="min-width:0"><b>ปฏิทินเลขาเป็ด</b><div class="me" id="me">กำลังโหลด…</div></div></div>
+      <div class="brand"><div class="logo" aria-hidden="true">🦆</div><div style="min-width:0"><b>ปฏิทิน</b><div class="me" id="me">กำลังโหลด…</div></div></div>
       <button class="iconbtn" id="refresh" aria-label="โหลดใหม่"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
     </div>
     <div class="monthbar">

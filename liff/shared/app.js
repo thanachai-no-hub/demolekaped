@@ -88,14 +88,14 @@
     el.innerHTML = esc(t) + (DEV_USER ? ' <span class="devbadge">DEV</span>' : "");
   }
   function showPending(p) {
-    state(`<div class="big">⏳</div><b>รออนุมัติการลงทะเบียน</b>คำขอของ ${esc(p.full_name)} (${esc(p.role_th)}) รอ <b style="display:inline;font-size:inherit">${esc(p.approver)}</b> อนุมัติอยู่<br>อนุมัติแล้วเลขาเป็ดจะแจ้งในแชตทันที
+    state(`<b>รออนุมัติการลงทะเบียน</b>คำขอของ ${esc(p.full_name)} (${esc(p.role_th)}) รอ <b style="display:inline;font-size:inherit">${esc(p.approver)}</b> อนุมัติอยู่<br>อนุมัติแล้วเลขาเป็ดจะแจ้งในแชตทันที
       <a class="btn" href="${esc(link("../register/"))}">ดู / แก้ไขคำขอ</a>`);
   }
   // แทนเนื้อหาหลักด้วยข้อความสถานะ
   function state(html) {
     const main = $("#main"); if (!main) return;
     for (const el of $$("body > .fab, body > .bottombar")) el.hidden = true;
-    main.innerHTML = `<div class="state">${html}</div>`;
+    main.innerHTML = `<div class="state${/class="big"/.test(html) ? "" : " duck"}">${html}</div>`;
   }
   function fail(e) {
     state(`<b>${e.status === 403 ? "ใช้หน้านี้ไม่ได้" : "เปิดหน้านี้ไม่สำเร็จ"}</b>${esc(e.message)}` +
@@ -110,7 +110,8 @@
   }
   // อักษรแรกของชื่อ (สระหน้า เ แ โ ใ ไ เอา 2 ตัว เหมือนปฏิทิน)
   function initial(n) { const c = [...String(n || "?").replace(/^คุณ/, "")]; return /^[เแโใไ]/.test(c[0] || "") ? c.slice(0, 2).join("") : c[0] || "?"; }
-  const pbar = (p, status) => `<div class="pb ${esc(status)}" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100" aria-label="ความคืบหน้า ${p}%"><i style="width:${Math.max(2, Math.min(100, p))}%"></i></div>`;
+  // แถบหนา + % ต่อท้าย (เหมือนการ์ดในแชต)
+  const pbar = (p, status) => `<div class="pbrow ${esc(status)}"><div class="pb ${esc(status)}" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100" aria-label="ความคืบหน้า ${p}%"><i style="width:${Math.max(2, Math.min(100, p))}%"></i></div><b aria-hidden="true">${p}%</b></div>`;
 
   // การ์ดงานหนึ่งใบ (การ์ดดำ / ตามงาน) · actions = HTML ปุ่ม
   function taskItem(t, o = {}) {
@@ -122,7 +123,7 @@
         <div class="t">${t.special ? '<span class="pill black" style="margin-right:6px">การ์ดดำ</span>' : ""}${esc(t.title)}</div><span class="pill ${esc(st)}">${esc(t.status_th)}</span></div>
       ${o.owner === false ? "" : `<div class="who">${avatar(t.owner)}<span><b>${esc(t.owner.name)}</b> · ${esc(t.dept || "")}${t.approver && t.special ? " · ผู้อนุมัติ " + esc(t.approver.name) : ""}</span></div>`}
       ${pbar(t.progress, st)}
-      <div class="sub">${t.progress}% · ${esc(t.due_text)} · กำหนด ${esc(when(t.due))}${o.nudgeInfo === false ? "" : " · " + esc(nud)}</div>
+      <div class="sub">${esc(t.due_text)} · กำหนด ${esc(when(t.due))}${o.nudgeInfo === false ? "" : " · " + esc(nud)}</div>
       ${t.detail ? `<div class="sub">${esc(t.detail)}</div>` : ""}
       ${ext}
       ${t.last?.note ? `<div class="note"><small>อัปเดตล่าสุด${t.last.by ? " · " + esc(t.last.by) : ""} · ${esc(ago(t.last.at))}</small>${esc(t.last.note)}</div>` : ""}

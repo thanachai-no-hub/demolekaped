@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="เลขาเป็ด">
+  <ellipse cx="120" cy="224" rx="66" ry="8" fill="#000" opacity=".08"/>
+  <ellipse cx="96" cy="215" rx="17" ry="7.5" fill="#F28C28"/>
+  <ellipse cx="144" cy="215" rx="17" ry="7.5" fill="#F28C28"/>
+  <path d="M120 98C170 98 196 134 196 168C196 200 162 216 120 216C78 216 44 200 44 168C44 134 70 98 120 98Z" fill="#F7C21B"/>
+  <ellipse cx="120" cy="178" rx="46" ry="32" fill="#FFD84D"/>
+  <path d="M60 140C42 148 36 176 50 194C62 197 73 183 73 162C73 152 69 144 60 140Z" fill="#E3A300"/>
+  <circle cx="120" cy="80" r="54" fill="#F7C21B"/>
+  <path d="M110 31C104 17 117 9 124 19C130 9 145 15 136 31Z" fill="#F7C21B"/>
+  <ellipse cx="98" cy="54" rx="18" ry="9" fill="#FFE27F" opacity=".85" transform="rotate(-22 98 54)"/>
+  <ellipse cx="98" cy="79" rx="7" ry="8.5" fill="#1F2A44"/>
+  <ellipse cx="142" cy="79" rx="7" ry="8.5" fill="#1F2A44"/>
+  <circle cx="100.6" cy="75.8" r="2.5" fill="#fff"/>
+  <circle cx="144.6" cy="75.8" r="2.5" fill="#fff"/>
+  <ellipse cx="82" cy="99" rx="9" ry="5" fill="#F4846A" opacity=".5"/>
+  <ellipse cx="158" cy="99" rx="9" ry="5" fill="#F4846A" opacity=".5"/>
+  <path d="M95 97C95 88 145 88 145 97C145 110 133 116 120 116C107 116 95 110 95 97Z" fill="#F28C28"/>
+  <path d="M100 99C112 105 128 105 140 99" stroke="#C4651A" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <path d="M96 126L120 139L107 151Z" fill="#fff"/>
+  <path d="M144 126L120 139L133 151Z" fill="#fff"/>
+  <path d="M113 136H127L129 145L120 150L111 145Z" fill="#1F2A44"/>
+  <path d="M115.5 149H124.5L131 184L120 195L109 184Z" fill="#1F2A44"/>
+  <g transform="rotate(9 170 166)">
+    <rect x="148" y="130" width="46" height="60" rx="7" fill="#fff" stroke="#1F2A44" stroke-width="3.2"/>
+    <rect x="160" y="123" width="22" height="11" rx="3.5" fill="#1F2A44"/>
+    <path d="M156 149l3.5 3.5 6-7M156 162l3.5 3.5 6-7" stroke="#06C755" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M170 148H186M170 161H186M157 175H180" stroke="#C9CED6" stroke-width="3.2" stroke-linecap="round"/>
+  </g>
+  <path d="M150 170C139 177 139 195 155 199C170 200 177 188 173 176C169 167 159 165 150 170Z" fill="#E3A300"/>
+</svg>

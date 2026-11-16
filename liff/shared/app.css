@@ -1,14 +1,16 @@
-/* เลขาเป็ด · สไตล์ร่วมของหน้า LIFF (โทเคนเดียวกับ liff/calendar/index.html) */
+/* เลขาเป็ด · สไตล์ร่วมของหน้า LIFF (โทเคนเดียวกับ liff/calendar/index.html · ระบบออกแบบ: liff/assets/DESIGN.md) */
 :root{
   --bg:#fafafa;--surface:#fff;--surface2:#f4f4f5;--line:#e4e4e7;--fg:#09090b;--muted:#71717a;--faint:#a1a1aa;
   --green:#06c755;--green-ink:#067a39;--on-green:#022410;--duck:#f2b705;--duck-ink:#2a1a00;--black:#0b0b0d;--on-black:#fff;
-  --bad:#c2362f;--bad-bg:#fde9e7;--warn:#8a5a00;--warn-bg:#fff3d6;--info:#2f6fde;
+  --bad:#c2362f;--bad-bg:#fde9e7;--warn:#8a5a00;--warn-bg:#fff3d6;--info:#2f6fde;--amber:#e8a317;
+  --duck-soft:#fff4cc;--duck-deep:#8a6400;--ok-bg:#e6f8ee;--info-bg:#e8f0fd;
   --shadow:0 8px 30px rgba(9,9,11,.12);--r:14px;
 }
 @media (prefers-color-scheme:dark){
   :root{
     --bg:#09090b;--surface:#18181b;--surface2:#27272a;--line:#3f3f46;--fg:#fafafa;--muted:#a1a1aa;--faint:#71717a;
     --green-ink:#3ddc84;--black:#f4f4f5;--on-black:#09090b;--bad:#f87171;--bad-bg:#3b1515;--warn:#fbbf24;--warn-bg:#3a2a05;--info:#7aa7ff;
+    --duck-soft:#2c2406;--duck-deep:#f2c94c;--ok-bg:#0f2a1b;--info-bg:#162238;
     --shadow:0 8px 30px rgba(0,0,0,.5);
   }
 }
@@ -20,25 +22,29 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 a{color:inherit}
 :focus-visible{outline:3px solid var(--info);outline-offset:2px;border-radius:8px}
 .wrap{max-width:480px;margin:0 auto;padding:0 16px}
+main.wrap{padding-top:12px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 [hidden]{display:none!important}
 
 /* หัว */
-header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:env(safe-area-inset-top)}
-.top{display:flex;align-items:center;gap:8px;padding:12px 0 8px}
-.brand{display:flex;align-items:center;gap:8px;flex:1;min-width:0;text-decoration:none}
-.logo{width:32px;height:32px;border-radius:10px;background:var(--duck);color:var(--duck-ink);display:grid;place-items:center;font-size:18px;flex:none}
-.logo.black{background:var(--black);color:var(--on-black)}
-.brand b{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:env(safe-area-inset-top);border-bottom:1px solid var(--line)}
+header::before{content:"";display:block;height:3px;background:var(--duck)}
+.top{display:flex;align-items:center;gap:10px;padding:10px 0}
+.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0;text-decoration:none}
+/* โลโก้ = เป็ดเลขา (ไม่ใช้อีโมจิ) · .black = กรอบดำของการ์ดดำ */
+.logo{width:40px;height:40px;border-radius:50%;background:var(--duck) url(../assets/lekaped-mark.svg) center/cover no-repeat;font-size:0;color:transparent;flex:none}
+.logo.black{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--black)}
+.brand b{font-size:18px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.brand b::before{content:"เลขาเป็ด";display:block;font-size:11px;font-weight:700;color:var(--duck-deep);letter-spacing:.02em}
 .me{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .iconbtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:none;text-decoration:none}
 .iconbtn svg{width:20px;height:20px}
 .devbadge{font-size:11px;background:var(--warn-bg);color:var(--warn);padding:1px 6px;border-radius:6px;font-weight:700}
 
 /* แท็บ */
-.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 0;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .tabs::-webkit-scrollbar{display:none}
-.tabs button{flex:none;min-height:40px;padding:0 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.tabs button{flex:none;min-height:44px;padding:0 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .tabs button[aria-selected=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .tabs .n{font-size:12px;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--surface2);color:var(--muted);display:inline-grid;place-items:center}
 .tabs button[aria-selected=true] .n{background:var(--bg);color:var(--fg)}
@@ -61,26 +67,41 @@ header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:env(safe
 .pick .check{width:24px;height:24px;border-radius:7px;border:2px solid var(--line);display:grid;place-items:center;font-size:14px;color:transparent}
 .pick[aria-checked=true] .check{background:var(--green);border-color:var(--green);color:var(--on-green)}
 
-.pill{font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap;flex:none}
-.pill.in_progress,.pill.not_started{border-color:var(--info);color:var(--info)}
-.pill.not_started{border-color:var(--line);color:var(--muted)}
-.pill.done{background:var(--green);border-color:var(--green);color:var(--on-green)}
-.pill.overdue{background:var(--bad-bg);border-color:var(--bad-bg);color:var(--bad)}
-.pill.blocked{background:var(--warn-bg);border-color:var(--warn-bg);color:var(--warn)}
-.pill.awaiting,.pill.extpend,.pill.pending{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
-.pill.rejected{text-decoration:line-through}
-.pill.black{background:var(--black);border-color:var(--black);color:var(--on-black)}
+/* ป้ายสถานะ: พื้นอ่อน + ตัวเข้ม + ไอคอน (ตรงกับการ์ดในแชต) */
+.pill{font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--surface2);color:var(--muted);white-space:nowrap;flex:none;line-height:1.5}
+.pill::before{margin-right:3px}
+.pill.in_progress{background:var(--info-bg);color:var(--info)} .pill.in_progress::before{content:"▶"}
+.pill.not_started::before{content:"○"}
+.pill.done{background:var(--ok-bg);color:var(--green-ink)} .pill.done::before{content:"✓"}
+.pill.overdue{background:var(--bad-bg);color:var(--bad)} .pill.overdue::before{content:"⏰"}
+.pill.blocked{background:var(--warn-bg);color:var(--warn)} .pill.blocked::before{content:"⚠"}
+.pill.awaiting,.pill.extpend,.pill.pending{background:var(--warn-bg);color:var(--warn)}
+.pill.awaiting::before,.pill.extpend::before,.pill.pending::before{content:"⏳"}
+.pill.rejected{text-decoration:line-through} .pill.rejected::before{content:"✕"}
+.pill.black{background:var(--black);color:var(--on-black)}
 
-.pb{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden}
+/* แถบความคืบหน้าแบบหนา + % */
+.pbrow{display:flex;align-items:center;gap:10px}
+.pbrow .pb{flex:1}
+.pbrow b{font-size:13px;min-width:38px;text-align:right}
+.pbrow.overdue b{color:var(--bad)}
+.pb{height:8px;background:var(--surface2);border-radius:99px;overflow:hidden}
 .pb i{display:block;height:100%;background:var(--green);border-radius:99px}
-.pb.overdue i{background:var(--bad)} .pb.blocked i{background:var(--duck)}
+.pb.overdue i{background:var(--bad)} .pb.blocked i,.pb.awaiting i,.pb.extpend i{background:var(--amber,#e8a317)}
 
 .av{width:28px;height:28px;border-radius:99px;background:var(--surface2);display:grid;place-items:center;font-size:12px;font-weight:700;flex:none;overflow:hidden;object-fit:cover}
 .av.lg{width:56px;height:56px;font-size:22px}
 .av.md{width:36px;height:36px;font-size:14px}
 
-.empty{color:var(--muted);text-align:center;padding:24px 8px;background:var(--surface);border:1px dashed var(--line);border-radius:var(--r);font-size:14px}
+/* หน้าว่าง / สถานะ: มีเป็ดบอกเป็นภาษาคน */
+.empty{color:var(--muted);text-align:center;padding:20px 12px 24px;background:var(--surface);border:1px dashed var(--line);border-radius:var(--r);font-size:15px}
+.empty::before{content:"";display:block;width:72px;height:72px;margin:0 auto 8px;background:url(../assets/lekaped-mascot.svg) center/contain no-repeat}
 .state{padding:40px 16px;text-align:center;color:var(--muted)}
+.state.duck::before,#boot::before{content:"";display:block;width:112px;height:112px;margin:0 auto 12px;background:url(../assets/lekaped-mascot.svg) center/contain no-repeat}
+#boot::before{animation:bob 1.2s ease-in-out infinite}
+#boot .spin{display:none}
+@keyframes bob{50%{transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){#boot::before{animation:none}}
 .state b{display:block;color:var(--fg);font-size:17px;margin-bottom:6px}
 .state .btn{max-width:260px;margin:16px auto 0;display:flex;align-items:center;justify-content:center;text-decoration:none}
 .spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--green);border-radius:99px;animation:sp 1s linear infinite;margin:0 auto 12px}
@@ -103,7 +124,7 @@ textarea.inp{min-height:72px;resize:vertical}
 .seg button[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .seg button:disabled{opacity:.45}
 .chiprow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.chiprow button{min-height:36px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;padding:2px 12px}
+.chiprow button{min-height:40px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;padding:2px 12px}
 .chiprow button[aria-pressed=true]{background:var(--green);border-color:var(--green);color:var(--on-green)}
 .people{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:8px;background:var(--surface)}
 .person{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;border:0;border-bottom:1px solid var(--line);background:transparent;padding:6px 12px;text-align:left}
@@ -135,12 +156,14 @@ textarea.inp{min-height:72px;resize:vertical}
 .kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:600;overflow-wrap:anywhere}
 
 /* ตัวอย่างการ์ด LINE */
-.fx{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
-.fx .h{background:var(--green);color:var(--on-green);font-weight:700;padding:9px 13px}
+.fx{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surface)}
+.fx .h{background:var(--duck-soft);color:var(--duck-ink);font-weight:700;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.fx .h::before{content:"";width:30px;height:30px;border-radius:50%;flex:none;background:var(--duck) url(../assets/lekaped-mark.svg) center/cover no-repeat}
+@media (prefers-color-scheme:dark){.fx .h{color:var(--fg)}}
 .fx.black .h{background:#0b0b0d;color:#fff}
-.fx .b{padding:10px 13px;display:flex;flex-direction:column;gap:8px}
+.fx .b{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
 .step{display:flex;gap:10px;font-size:14px}
-.step i{width:8px;height:8px;border-radius:99px;background:var(--green);flex:none;margin-top:7px}
+.step i{width:10px;height:10px;border-radius:99px;background:var(--green);flex:none;margin-top:7px}
 .step i.a{background:var(--duck)} .step i.r{background:var(--bad)} .step i.n{background:#9aa49e}
 .step small{display:block;color:var(--muted);font-size:12px}
 

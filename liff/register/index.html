@@ -113,7 +113,7 @@ function showProfile() {
 }
 function showPendingView(p) {
   $("#pageTitle").textContent = "รออนุมัติ";
-  $("#view").innerHTML = `<div class="card"><div class="state" style="padding:8px 0 12px"><div class="big">⏳</div><b>ส่งคำขอแล้ว รอ ${esc(p.approver)} อนุมัติ</b>อนุมัติแล้วเลขาเป็ดจะแจ้งในแชต LINE ทันที</div>
+  $("#view").innerHTML = `<div class="card"><div class="state duck" style="padding:8px 0 12px"><b>ส่งคำขอแล้ว รอ ${esc(p.approver)} อนุมัติ</b>อนุมัติแล้วเลขาเป็ดจะแจ้งในแชต LINE ทันที</div>
     <dl class="kv">${kvRows([["ชื่อ", p.full_name], ["ชื่อเล่น", p.nickname], ["บทบาท", p.role_th], ["แผนก", p.role !== "ceo" ? p.department : ""], ["หัวหน้า", p.head?.name], ["ตำแหน่ง", p.title], ["เบอร์โทร", p.phone], ["ส่งเมื่อ", when(isoBkk(p.created_at))]])}</dl>
     <div class="actions"><button class="btn" id="editReq">แก้ไขคำขอ</button><button class="btn danger" id="cancelReq">ยกเลิกคำขอ</button></div></div>`;
   $("#view").hidden = false;
