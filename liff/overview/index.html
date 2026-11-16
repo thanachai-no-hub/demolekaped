@@ -236,7 +236,7 @@ function summary(d) {
     </div>`);
   }
   const dec = d.alerts.filter((a) => a.decide), watch = d.alerts.filter((a) => !a.decide);
-  out.push(`<h2 class="sec">เรื่องที่รอ${d.me.role === "ceo" ? "ท่าน" : "คุณ"}ตัดสินใจ <small>${dec.length ? dec.length + " เรื่อง" : ""}</small></h2>`);
+  out.push(`<h2 class="sec">เรื่องที่รอ${d.me.role === "ceo" && !d.me.dev ? "ท่าน" : "คุณ"}ตัดสินใจ <small>${dec.length ? dec.length + " เรื่อง" : ""}</small></h2>`);
   out.push(dec.length ? dec.map(alertItem).join("") : `<div class="empty">ไม่มีเรื่องรอตัดสินใจ</div>`);
   if (watch.length) out.push(`<h2 class="sec">ต้องจับตา <small>${watch.length} เรื่อง</small></h2>`, watch.map(alertItem).join(""));
   if (d.work.meetings_today.length) out.push(`<h2 class="sec">ประชุมวันนี้</h2><div class="box rowlist">${d.work.meetings_today.map(meetRow).join("")}</div>`);
@@ -349,7 +349,7 @@ function procurement(d) {
     ${kpi("ส่งของล่าช้า", p.late.length, "รายการ", p.late.length ? `<span class="d down">ช้าสุด ${p.late[0].late_days} วัน</span>` : '<span class="d up">ตรงเวลาทั้งหมด</span>', p.late.length ? "bad" : "")}
     ${kpi("ใช้จ่ายเดือน " + esc(p.month_label), mb(p.month_spend), "ล้าน", '<span class="muted">PO ที่อนุมัติในเดือนนี้</span>')}
   </div>
-  <h2 class="sec">รออนุมัติ <small>${d.me.role === "ceo" ? "ท่านอนุมัติได้ทุกใบ" : "อนุมัติได้ไม่เกิน " + baht(p.ceo_limit)}</small></h2>
+  <h2 class="sec">รออนุมัติ <small>${d.me.role === "ceo" ? (d.me.dev ? "Dev อนุมัติได้ทุกใบ (สิทธิ์เท่า CEO)" : "ท่านอนุมัติได้ทุกใบ") : "อนุมัติได้ไม่เกิน " + baht(p.ceo_limit)}</small></h2>
   ${p.awaiting.length ? p.awaiting.map((o) => poCard(o)).join("") : `<div class="empty">ไม่มี PO รออนุมัติ</div>`}
   <h2 class="sec" id="late">ส่งของล่าช้า <small>${p.late.length} รายการ</small></h2>
   ${p.late.length ? p.late.map((o) => poCard(o, false)).join("") : `<div class="empty">ไม่มีของส่งล่าช้า</div>`}

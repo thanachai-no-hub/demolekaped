@@ -82,6 +82,7 @@
     const me = await api("me");
     S.me = me;
     setMe(me);
+    if (me.viewing_as) devBanner(me.viewing_as);
     if (needMember && !me.registered) {
       if (me.pending) { showPending(me.pending); return new Promise(() => {}); }
       location.replace(link("../register/"));
@@ -93,9 +94,25 @@
   function pre(path) { const p = S.pre[path]; delete S.pre[path]; return p || api(path); }
   function setMe(me) {
     const el = $("#me"); if (!el) return;
-    const t = me.me ? `${me.me.name} · ${me.me.title}` : me.pending ? "รออนุมัติการลงทะเบียน" : "ยังไม่ได้ลงทะเบียน";
+    const t = me.viewing_as ? `ดูแบบ ${me.viewing_as.label}` : me.me ? `${me.me.name} · ${me.me.title}` : me.pending ? "รออนุมัติการลงทะเบียน" : "ยังไม่ได้ลงทะเบียน";
     el.innerHTML = esc(t) + (DEV_USER ? ' <span class="devbadge">DEV</span>' : "");
   }
+  // ===== โหมดสลับ (Dev เท่านั้น · server เป็นคนบอกผ่าน me.viewing_as) =====
+  // แถบติดด้านบนทุกหน้า + ปุ่มกลับเป็นตัวเอง · ระหว่างนี้ทุกปุ่มที่ส่ง/แก้ข้อมูลจะถูก server ปฏิเสธ (view_only)
+  function devBanner(v, apiFn = api) {
+    if (document.getElementById("devview")) return;
+    const el = document.createElement("div");
+    el.id = "devview"; el.className = "devview"; el.setAttribute("role", "status");
+    el.innerHTML = `<span>🛠 โหมด Dev · กำลังดูแบบ <b>${esc(v.label || v.name)}</b> · อ่านอย่างเดียว</span><button type="button">กลับเป็นตัวเอง</button>`;
+    const host = document.querySelector("header");
+    if (host) host.appendChild(el); else document.body.prepend(el);
+    el.querySelector("button").onclick = async (e) => {
+      e.target.disabled = true; e.target.textContent = "กำลังกลับ…";
+      try { await apiFn("dev/view", { staff_id: null }); location.reload(); }
+      catch (er) { e.target.disabled = false; e.target.textContent = "กลับเป็นตัวเอง"; alert(er.message); }
+    };
+  }
+  async function switchView(staffId) { await api("dev/view", { staff_id: staffId }); location.reload(); }
   function showPending(p) {
     state(`<b>รออนุมัติการลงทะเบียน</b>คำขอของ ${esc(p.full_name)} (${esc(p.role_th)}) รอ <b style="display:inline;font-size:inherit">${esc(p.approver)}</b> อนุมัติอยู่<br>อนุมัติแล้วเลขาเป็ดจะแจ้งในแชตทันที
       <a class="btn" href="${esc(link("../register/"))}">ดู / แก้ไขคำขอ</a>`);
@@ -314,6 +331,6 @@
     return { openUpdate, openRequest };
   }
 
-  window.Duck = { LIFF_ID, DEV_USER, S, $, $$, esc, link, fixLinks, pad, bkkNow, todayStr, addDays, dow, when, ago, api, boot, pre, sdkReady, state, fail, showPending,
+  window.Duck = { LIFF_ID, DEV_USER, S, $, $$, esc, link, fixLinks, pad, bkkNow, todayStr, addDays, dow, when, ago, api, boot, pre, sdkReady, state, fail, showPending, devBanner, switchView,
     avatar, initial, pbar, taskItem, photoThumb, viewPhotos, shrinkPhoto, openSheet, closeSheets, toast, busy, deliveredText, ownerSheets, MONTHS };
 })();

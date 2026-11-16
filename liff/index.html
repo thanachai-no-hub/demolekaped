@@ -22,6 +22,10 @@
   background:var(--surface-2,transparent);color:var(--fg);font-size:14px;line-height:1.3;text-decoration:none}
 .cmd .ex a:focus-visible{outline:3px solid #06c755;outline-offset:2px}
 .cmd .ex a::before{content:"💬";margin-right:6px}
+.dvlist{display:grid;gap:8px;margin-top:10px}
+.dvlist button{display:flex;flex-direction:column;align-items:flex-start;width:100%;min-height:48px;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;text-align:left}
+.dvlist button small{color:var(--muted);font-size:12px}
+.dvlist h3{font-size:13px;color:var(--muted);margin:6px 2px 0}
 </style>
 <!--
   เลขาเป็ด · หน้าหลัก LIFF (Endpoint URL ของ LIFF app = โฟลเดอร์นี้)
@@ -44,6 +48,7 @@
     <div id="alerts"></div>
     <h2 class="sec">เปิดหน้า</h2>
     <div class="tiles" id="tiles"></div>
+    <div id="devSec" hidden><div class="dvlist" id="dvlist" hidden></div></div>
     <div id="chatSec" hidden>
       <h2 class="sec">สั่งงานด้วยการพิมพ์ในแชท</h2>
       <p class="hint">แตะตัวอย่าง แล้วกดส่งในแชทเลขาเป็ด · แก้ข้อความก่อนส่งได้</p>
@@ -110,7 +115,7 @@ function render(me) {
     return;
   }
   const m = me.me, c = me.counts;
-  $("#profile").innerHTML = `${avatar(m, "lg")}<div class="nm"><b>${esc(m.full)}</b><small>${esc(m.role_th)}${m.role !== "ceo" ? " · " + esc(m.dept) : ""}${m.job ? " · " + esc(m.job) : ""}</small></div>`;
+  $("#profile").innerHTML = `${avatar(m, "lg")}<div class="nm"><b>${esc(m.full)}</b><small>${esc(m.role_th)}${m.role !== "ceo" ? " · " + esc(m.dept) : ""}${m.job && !m.dev ? " · " + esc(m.job) : ""}</small></div>`;
   const alerts = [];
   if (c.registrations) alerts.push(`มีคำขอลงทะเบียนรอคุณอนุมัติ ${c.registrations} คน`);
   if (c.black_awaiting) alerts.push(`การ์ดดำรอคุณอนุมัติ ${c.black_awaiting} งาน`);
@@ -121,6 +126,23 @@ function render(me) {
     return tile({ ...p, s: m.role === "staff" && p.sStaff ? p.sStaff : n && p.sBadge ? p.sBadge : p.s }, n, p.wide || p.href === "register/");
   }).join("");
   const cmds = CHAT.filter((x) => x.roles.includes(m.role) && (!x.show || x.show(c)));
+  // Dev (ไม่ได้ดูแบบใครอยู่): ไทล์โหมดสลับ → เลือกหัวหน้า/พนักงานที่จะดูแบบ
+  if (me.dev && !me.viewing_as) {
+    $("#tiles").insertAdjacentHTML("beforeend", `<a class="tile wide" href="#" id="dvTile"><span class="ic" style="background:#52525b;color:#fff" aria-hidden="true">🛠</span><span style="min-width:0"><b style="display:block">โหมดสลับ (Dev)</b><small>ดูแบบหัวหน้า / พนักงาน · อ่านอย่างเดียว</small></span></a>`);
+    $("#devSec").hidden = false;
+    $("#dvTile").onclick = async (e) => {
+      e.preventDefault();
+      const el = $("#dvlist");
+      if (!el.hidden) { el.hidden = true; return; }
+      el.hidden = false; el.innerHTML = '<div class="hint">กำลังโหลด…</div>';
+      try {
+        const d = await Duck.api("dev/view");
+        const btn = (p) => `<button type="button" data-id="${esc(p.id)}"><b>${esc(p.label)}</b><small>${esc(p.full)}${p.linked ? "" : " · ยังไม่ผูก LINE"}</small></button>`;
+        el.innerHTML = `<h3>หัวหน้า</h3>${d.heads.map(btn).join("")}<h3>พนักงาน</h3>${d.staff.map(btn).join("")}`;
+        el.onclick = (ev) => { const b = ev.target.closest("[data-id]"); if (b) { b.disabled = true; Duck.switchView(b.dataset.id).catch((er) => { b.disabled = false; alert(er.message); }); } };
+      } catch (er) { el.innerHTML = `<div class="errbox">${esc(er.message)}</div>`; }
+    };
+  }
   $("#cmds").innerHTML = cmds.map((x) => `<div class="cmd"><b><span aria-hidden="true">${esc(x.ic)}</span>${esc(x.t)}</b><div class="ex">${
     x.ex.map((e) => `<a href="${esc(chatLink(e))}">${esc(e)}</a>`).join("")}</div></div>`).join("");
   $("#chatSec").hidden = !cmds.length;
