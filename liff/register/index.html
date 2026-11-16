@@ -139,7 +139,8 @@ function showProfile() {
   const m = S.me.me, p = S.me.pending;
   $("#pageTitle").textContent = "โปรไฟล์ของฉัน";
   $("#view").innerHTML = `<div class="card"><div class="profile" style="margin-bottom:12px">${avatar(m, "lg")}<div class="nm"><b>${esc(m.full)}</b><small>คุณ${esc(m.nick)} · ${esc(m.role_th)}</small></div></div>
-    <dl class="kv">${kvRows([["แผนก", m.role !== "ceo" ? m.dept : "ผู้บริหาร"], ["หัวหน้า", m.head?.name], ["ตำแหน่ง", m.job], ["เบอร์โทร", m.phone]])}</dl>
+    <dl class="kv">${kvRows([["แผนก", m.dev ? (m.dept || "Dev") : m.role !== "ceo" ? m.dept : "ผู้บริหาร"], ["หัวหน้า", m.head?.name], ["ตำแหน่ง", m.job], ["เบอร์โทร", m.phone]])}</dl>
+    ${m.dev ? `<div class="okbox">บทบาท Dev ตั้งโดยผู้ดูแลระบบ · แก้ได้เฉพาะชื่อ ตำแหน่ง และเบอร์โทร</div>` : ""}
     ${p ? `<div class="warnbox">ขอเปลี่ยนเป็น ${esc(p.role_th)}${p.role !== "ceo" ? " · " + esc(p.department) : ""} · รอ ${esc(p.approver)} อนุมัติ</div>` : ""}
     <div class="actions"><button class="btn" id="editBtn">แก้ไขโปรไฟล์</button>${p ? `<button class="btn danger" id="cancelReq">ยกเลิกคำขอ</button>` : ""}</div></div>`;
   $("#view").hidden = false;
@@ -231,6 +232,8 @@ function openForm(v, edit = false) {
   const dept = v?.department && v.role !== "ceo" ? v.department : "";
   if (dept && !names.includes(dept)) { $("#fDept").value = OTHER; $("#fDeptOther").value = dept; } else { $("#fDept").value = dept; $("#fDeptOther").value = ""; }
   setRole(v?.role || "staff", v?.head_id);
+  // Dev: บทบาท/แผนก/หัวหน้า ตั้งโดยผู้ดูแลระบบ ไม่ให้เลือกเป็น CEO หรือเปลี่ยนเอง
+  if (S.me.me?.dev) { $("#role").closest(".field").hidden = true; $("#deptField").hidden = true; $("#headField").hidden = true; }
   nickPrev();
   window.scrollTo(0, 0);
 }
