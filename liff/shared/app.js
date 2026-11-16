@@ -126,9 +126,48 @@
       <div class="sub">${esc(t.due_text)} · กำหนด ${esc(when(t.due))}${o.nudgeInfo === false ? "" : " · " + esc(nud)}</div>
       ${t.detail ? `<div class="sub">${esc(t.detail)}</div>` : ""}
       ${ext}
-      ${t.last?.note ? `<div class="note"><small>อัปเดตล่าสุด${t.last.by ? " · " + esc(t.last.by) : ""} · ${esc(ago(t.last.at))}</small>${esc(t.last.note)}</div>` : ""}
+      ${t.last?.note || t.last?.photos?.length ? `<div class="note${t.last.photos?.length ? " hasph" : ""}">${photoThumb(t)}<div><small>อัปเดตล่าสุด${t.last.by ? " · " + esc(t.last.by) : ""} · ${esc(ago(t.last.at))}</small>${esc(t.last.note || "")}</div></div>` : ""}
       ${o.actions ? `<div class="btnrow">${o.actions}</div>` : ""}
     </article>`;
+  }
+
+  // รูปงานในอัปเดตล่าสุด (signed URL จาก API อายุ 1 ชม.) · แตะ = ดูเต็มจอ
+  function photoThumb(t) {
+    const ph = t.last?.photos || [];
+    if (!ph.length) return "";
+    return `<button type="button" class="thumb" data-photos="${esc(t.id)}" aria-label="ดูรูปงาน ${ph.length} รูป"><img src="${esc(ph[0])}" alt="" loading="lazy">${ph.length > 1 ? `<span>${ph.length}</span>` : ""}</button>`;
+  }
+  // ตัวดูรูปเต็มจอ: แตะรูป = รูปถัดไป · ปุ่ม × หรือ Esc = ปิด
+  function viewPhotos(urls, start = 0) {
+    if (!urls?.length) return;
+    let i = start, el = $("#photoView");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "photoView"; el.className = "pview"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "รูปงาน");
+      el.innerHTML = `<img alt="รูปงาน"><div class="pbar"><span></span><button type="button" class="close" aria-label="ปิด">×</button></div>`;
+      document.body.appendChild(el);
+    }
+    const show = () => { $("img", el).src = el._u[i]; $("span", el).textContent = el._u.length > 1 ? `${i + 1} / ${el._u.length} · แตะรูปเพื่อดูรูปถัดไป` : ""; };
+    el._u = urls;
+    el.onclick = (e) => { if (e.target.closest(".close")) { el.hidden = true; return; } if (e.target.tagName === "IMG" && el._u.length > 1) { i = (i + 1) % el._u.length; show(); } };
+    show(); el.hidden = false; $(".close", el).focus();
+  }
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#photoView") && !$("#photoView").hidden) $("#photoView").hidden = true; });
+
+  // ย่อรูปในเครื่องก่อนส่ง: ด้านยาวไม่เกิน max px · JPEG คุณภาพ q · คืน { type, data(base64), url(preview), size }
+  async function shrinkPhoto(file, max = 1600, q = 0.8) {
+    if (!/^image\//.test(file.type || "image/")) throw new Error("ไฟล์นี้ไม่ใช่รูป");
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error("เปิดรูปไม่ได้ ลองรูปอื่น")); i.src = url; });
+      const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const cv = document.createElement("canvas");
+      cv.width = Math.max(1, Math.round(img.naturalWidth * k)); cv.height = Math.max(1, Math.round(img.naturalHeight * k));
+      cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+      const dataUrl = cv.toDataURL("image/jpeg", q);
+      const data = dataUrl.slice(dataUrl.indexOf(",") + 1);
+      return { type: "image/jpeg", data, url: dataUrl, size: Math.floor(data.length * 3 / 4) };
+    } finally { URL.revokeObjectURL(url); }
   }
 
   // ===== sheet / toast =====
@@ -164,5 +203,5 @@
   }
 
   window.Duck = { LIFF_ID, DEV_USER, S, $, $$, esc, link, fixLinks, pad, bkkNow, todayStr, addDays, dow, when, ago, api, boot, state, fail, showPending,
-    avatar, initial, pbar, taskItem, openSheet, closeSheets, toast, busy, deliveredText, MONTHS };
+    avatar, initial, pbar, taskItem, photoThumb, viewPhotos, shrinkPhoto, openSheet, closeSheets, toast, busy, deliveredText, MONTHS };
 })();

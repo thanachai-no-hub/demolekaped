@@ -99,6 +99,8 @@ function actions(x) {
 
 let cur = null;
 $("#list").onclick = async (e) => {
+  const ph = e.target.closest("[data-photos]");
+  if (ph) return Duck.viewPhotos(S.items.find((i) => i.id === ph.dataset.photos)?.last?.photos || []);
   const b = e.target.closest("[data-act]"); if (!b) return;
   const x = S.items.find((i) => i.id === b.closest("[data-id]").dataset.id); if (!x) return;
   const act = b.dataset.act;
