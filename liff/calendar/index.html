@@ -458,10 +458,10 @@ function setDur(m) { S.dur = m; for (const b of $("#dur").children) b.setAttribu
 $("#dur").onclick = (e) => { const b = e.target.closest("[data-m]"); if (b) setDur(+b.dataset.m); };
 function renderPeople() {
   const q = $("#fSearch").value.trim().toLowerCase();
-  const list = (S.people || []).filter((p) => !q || [p.name, p.full, p.nick, p.dept, p.title].join(" ").toLowerCase().includes(q));
+  const list = (S.people || []).filter((p) => !q || [p.name, p.full, p.nick, p.real, p.line_name, p.dept, p.title].join(" ").toLowerCase().includes(q));
   $("#people").innerHTML = list.length ? list.map((p) => {
     const on = S.picked.has(p.id);
-    return `<button type="button" class="person" role="option" aria-checked="${on}" aria-selected="${on}" data-pid="${p.id}"><span class="av">${esc(p.initials)}</span><span class="nm">${esc(p.name)}<small>${esc(p.title)}${p.linked ? "" : " · ยังไม่ผูก LINE"}</small></span><span class="check">${on ? "✓" : ""}</span></button>`;
+    return `<button type="button" class="person" role="option" aria-checked="${on}" aria-selected="${on}" data-pid="${p.id}"><span class="av">${esc(p.initials)}</span><span class="nm">${esc(p.real || p.name)}<small>${esc([p.line_name ? "LINE: " + p.line_name : "", p.title].filter(Boolean).join(" · "))}${p.linked ? "" : " · ยังไม่ผูก LINE"}</small></span><span class="check">${on ? "✓" : ""}</span></button>`;
   }).join("") : `<div class="state" style="padding:16px">ไม่พบชื่อนี้</div>`;
 }
 function renderPicked() {
@@ -513,9 +513,9 @@ function showDetail(e) {
   const day = thaiDay(evDay(e));
   let h = "";
   if (e.type === "meeting") {
-    h += `<dl class="kv"><dt>เวลา</dt><dd>${esc(day)} ${evTime(e.start)}–${evTime(e.end)} น. (${e.minutes} นาที)</dd><dt>ผู้จัด</dt><dd>${esc(e.organizer.name)}</dd>${e.note ? `<dt>หมายเหตุ</dt><dd>${esc(e.note)}</dd>` : ""}</dl>`;
+    h += `<dl class="kv"><dt>เวลา</dt><dd>${esc(day)} ${evTime(e.start)}–${evTime(e.end)} น. (${e.minutes} นาที)</dd><dt>ผู้จัด</dt><dd>${esc(e.organizer.real || e.organizer.name)}</dd>${e.note ? `<dt>หมายเหตุ</dt><dd>${esc(e.note)}</dd>` : ""}</dl>`;
     h += `<div class="lbl">ผู้เข้าร่วม ${e.attendees.length} คน</div><div style="margin-bottom:14px">` + e.attendees.map((a) =>
-      `<div class="att"><span class="av ${a.status}">${esc(a.initials)}</span><span class="nm">${esc(a.name)}</span><span class="chip ${a.status}">${ST_TH[a.status]}</span></div>`).join("") + `</div>`;
+      `<div class="att"><span class="av ${a.status}">${esc(a.initials)}</span><span class="nm">${esc(a.real || a.name)}${a.line_name ? `<small style="display:block;color:var(--muted)">LINE: ${esc(a.line_name)}</small>` : ""}</span><span class="chip ${a.status}">${ST_TH[a.status]}</span></div>`).join("") + `</div>`;
     h += `<div id="detMsg"></div>`;
     if (e.canReply) h += `<div class="actions"><button class="btn primary" data-act="accepted" ${e.myStatus === "accepted" ? "disabled" : ""}>ตอบรับ</button><button class="btn" data-act="declined" ${e.myStatus === "declined" ? "disabled" : ""}>ไม่สะดวก</button></div>`;
     if (e.canCancel) h += `<div class="actions"><button class="btn danger" data-act="cancel">ยกเลิกนัดนี้</button></div>`;
