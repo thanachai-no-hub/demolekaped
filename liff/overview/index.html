@@ -7,9 +7,9 @@
 <title>ภาพรวมบริษัท · เลขาเป็ด</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="../shared/app.css">
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8" defer></script>
 <script src="../shared/app.js"></script>
 <!--
   เลขาเป็ด · ภาพรวมบริษัท (LIFF) · การเงิน / จัดซื้อ / โครงการ / งาน · ข้อมูลจาก GET app-api/overview
@@ -158,7 +158,7 @@ const daysTo = (ymd) => Math.round((new Date(ymd + "T00:00:00Z") - new Date(S.d.
 
 (async () => {
   try {
-    const me = await boot();
+    const me = await boot({ prefetch: "overview" });
     if (me.me.role === "staff") { Duck.fail(Object.assign(new Error("ภาพรวมบริษัทเปิดให้เฉพาะ CEO และหัวหน้าฝ่ายครับ ดูงานของคุณได้ที่หน้างานของฉัน"), { status: 403 })); return; }
     fixLinks();
     await load();
@@ -167,7 +167,7 @@ const daysTo = (ymd) => Math.round((new Date(ymd + "T00:00:00Z") - new Date(S.d.
 })();
 
 async function load() {
-  const d = await api("overview");
+  const d = await Duck.pre("overview");
   S.d = d;
   $("#me").innerHTML = `ข้อมูล ณ ${esc(d.as_of_text)}` + (Duck.DEV_USER ? ' <span class="devbadge">DEV</span>' : "");
   const want = new URLSearchParams(location.search).get("tab");

@@ -7,9 +7,9 @@
 <title>งานของฉัน · เลขาเป็ด</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="../shared/app.css">
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8" defer></script>
 <script src="../shared/app.js"></script>
 <!--
   เลขาเป็ด · งานของฉัน (ทุกตำแหน่งเห็นงานที่ตัวเองเป็นเจ้าของ) · เปิดจากการ์ด "งานของฉัน" ในแชต
@@ -91,7 +91,7 @@ const deep = new URLSearchParams(location.search).get("task");
 
 (async () => {
   try {
-    await boot();
+    await boot({ prefetch: "mytasks" });
     Duck.fixLinks();
     await load();
     $("#boot").hidden = true;
@@ -100,7 +100,7 @@ const deep = new URLSearchParams(location.search).get("task");
 })();
 
 async function load() {
-  S.d = await api("mytasks");
+  S.d = await Duck.pre("mytasks");
   render();
 }
 $("#refresh").onclick = (e) => busy(e.currentTarget, () => load().then(() => toast("อัปเดตแล้ว")).catch((er) => toast(er.message)), "…");

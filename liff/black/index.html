@@ -7,9 +7,9 @@
 <title>การ์ดดำ · เลขาเป็ด</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="../shared/app.css">
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8" defer></script>
 <script src="../shared/app.js"></script>
 <!-- เลขาเป็ด · การ์ดดำ (LIFF) · CEO เห็นทั้งหมด / หัวหน้าเห็นฝ่ายตัวเอง / พนักงานเห็นของตัวเอง · ทดสอบ: http://localhost:8766/black/?dev=<LINE userId> -->
 </head>
@@ -54,7 +54,7 @@ const S = { items: [], tab: null, me: null };
 
 (async () => {
   try {
-    await boot();
+    await boot({ prefetch: "black" });
     Duck.fixLinks();
     await load();
     $("#boot").hidden = true; $("#tabs").hidden = false;
@@ -62,7 +62,7 @@ const S = { items: [], tab: null, me: null };
 })();
 
 async function load() {
-  const d = await api("black");
+  const d = await Duck.pre("black");
   S.items = d.items; S.me = d.me;
   $("#fab").hidden = !d.can_new;
   if (!S.tab) {

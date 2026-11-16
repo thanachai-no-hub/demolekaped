@@ -11,7 +11,7 @@
   const LOCAL = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
   const DEV_USER = LOCAL ? qs.get("dev") : null;
   const API = DEV_USER ? DEV_API_URL : API_URL;
-  const S = { token: null, me: null, profile: null };
+  const S = { token: null, me: null, profile: null, pre: {} };
 
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -62,9 +62,15 @@
     return data;
   }
 
+  // LINE SDK โหลดแบบ defer (ไม่บล็อกการวาดหน้า) · สคริปต์ defer ทำงานเสร็จก่อน DOMContentLoaded
+  const sdkReady = () => window.liff || document.readyState !== "loading" ? Promise.resolve()
+    : new Promise((ok) => document.addEventListener("DOMContentLoaded", ok, { once: true }));
+
   // ===== เริ่มหน้า: LIFF → login → /me · needMember: ยังไม่ลงทะเบียน → ../register/ · รออนุมัติ → แสดงสถานะ =====
-  async function boot({ needMember = true, title } = {}) {
+  // prefetch: path ข้อมูลหลักของหน้า ยิงพร้อม /me (ไม่ต้องรอกันทีละรอบ) แล้วหยิบด้วย pre(path)
+  async function boot({ needMember = true, title, prefetch } = {}) {
     if (!DEV_USER) {
+      await sdkReady();
       if (!window.liff) throw new Error("โหลด LINE SDK ไม่สำเร็จ");
       await liff.init({ liffId: LIFF_ID });
       if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return new Promise(() => {}); }
@@ -72,6 +78,7 @@
       if (!S.token) throw new Error("ไม่ได้รับ ID token กรุณาเปิดจากแชตเลขาเป็ดใน LINE");
       try { S.profile = await liff.getProfile(); } catch {}
     }
+    if (prefetch) { S.pre[prefetch] = api(prefetch); S.pre[prefetch].catch(() => {}); }
     const me = await api("me");
     S.me = me;
     setMe(me);
@@ -82,6 +89,8 @@
     }
     return me;
   }
+  // ข้อมูลที่ boot ยิงไว้ล่วงหน้า (ใช้ได้ครั้งเดียว) · ไม่มี = เรียกใหม่
+  function pre(path) { const p = S.pre[path]; delete S.pre[path]; return p || api(path); }
   function setMe(me) {
     const el = $("#me"); if (!el) return;
     const t = me.me ? `${me.me.name} · ${me.me.title}` : me.pending ? "รออนุมัติการลงทะเบียน" : "ยังไม่ได้ลงทะเบียน";
@@ -305,6 +314,6 @@
     return { openUpdate, openRequest };
   }
 
-  window.Duck = { LIFF_ID, DEV_USER, S, $, $$, esc, link, fixLinks, pad, bkkNow, todayStr, addDays, dow, when, ago, api, boot, state, fail, showPending,
+  window.Duck = { LIFF_ID, DEV_USER, S, $, $$, esc, link, fixLinks, pad, bkkNow, todayStr, addDays, dow, when, ago, api, boot, pre, sdkReady, state, fail, showPending,
     avatar, initial, pbar, taskItem, photoThumb, viewPhotos, shrinkPhoto, openSheet, closeSheets, toast, busy, deliveredText, ownerSheets, MONTHS };
 })();

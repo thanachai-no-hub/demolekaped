@@ -7,9 +7,9 @@
 <title>ตามงาน · เลขาเป็ด</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="../shared/app.css">
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8" defer></script>
 <script src="../shared/app.js"></script>
 <!-- เลขาเป็ด · ตามงาน (CEO ทั้งบริษัท / หัวหน้าฝ่ายตัวเอง) + งานของฉัน (อัปเดต / ขอเลื่อน) · ทดสอบ: http://localhost:8766/followup/?dev=<LINE userId> -->
 </head>
@@ -65,7 +65,7 @@ const S = { d: null, tab: null, sel: new Set() };
 
 (async () => {
   try {
-    await boot();
+    await boot({ prefetch: "followup" });
     Duck.fixLinks();
     await load();
     $("#boot").hidden = true;
@@ -73,7 +73,7 @@ const S = { d: null, tab: null, sel: new Set() };
 })();
 
 async function load() {
-  S.d = await api("followup");
+  S.d = await Duck.pre("followup");
   const ids = new Set((S.d.team || []).map((x) => x.id));
   for (const id of [...S.sel]) if (!ids.has(id)) S.sel.delete(id);
   const team = !!S.d.team;
