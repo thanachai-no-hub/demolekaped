@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>ภาพรวมบริษัท · เลขาเป็ด</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/app.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+<script src="../shared/app.js"></script>
+<!--
+  เลขาเป็ด · ภาพรวมบริษัท (LIFF) · การเงิน / จัดซื้อ / โครงการ / งาน · ข้อมูลจาก GET app-api/overview
+  CEO เห็นทุกอย่าง · หัวหน้าฝ่ายการเงิน = การเงิน + จัดซื้อ + โครงการ + งานฝ่าย · หัวหน้าอื่น = โครงการของฝ่าย + งานฝ่าย · พนักงานใช้ไม่ได้
+  แท็บตรง: ?tab=finance | procurement | projects | work · ทดสอบ: http://localhost:8766/overview/?dev=<LINE userId>
+  กราฟเป็น SVG ในหน้า (ไม่ใช้ไลบรารี) · หน่วย: บาท (API) → แสดง "ล้านบาท" ทศนิยม 1 ตำแหน่ง หรือ ฿ คั่นหลักพัน
+-->
+<style>
+:root{--c-rev:#16a34a;--c-exp:#a855f7;--grid:#e4e4e7}
+@media (prefers-color-scheme:dark){:root{--c-rev:#16a34a;--c-exp:#a855f7;--grid:#3f3f46}}
+.asof{font-size:12px;color:var(--muted)}
+.panel{display:flex;flex-direction:column;gap:12px;padding-bottom:12px}
+.panel>h2.sec{margin:8px 0 0}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;min-width:0;display:flex;flex-direction:column;gap:2px;text-decoration:none}
+.kpi small{font-size:12px;color:var(--muted);line-height:1.35}
+.kpi b{font-size:22px;line-height:1.2;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi b em{font-style:normal;font-size:13px;font-weight:600;color:var(--muted);margin-left:3px}
+.kpi .d{font-size:12px;font-weight:700}
+.up{color:var(--green-ink)} .down{color:var(--bad)} .flat{color:var(--muted)}
+.kpi.bad{border-color:var(--bad)} .kpi.warn{border-color:var(--amber)}
+.alert{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--info);border-radius:var(--r);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.alert.warn{border-left-color:var(--amber)} .alert.bad{border-left-color:var(--bad)}
+.alert .t{font-weight:600;overflow-wrap:anywhere}
+.alert .sub{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.alert .btnrow .btn{min-width:0;flex:1}
+.alert .go{align-self:flex-start;min-height:44px;display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--green-ink);text-decoration:none;background:none;border:0;padding:0 2px}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart svg text{fill:var(--muted);font:11px "IBM Plex Sans Thai",system-ui,sans-serif}
+.chart svg .lbl{fill:var(--fg);font-weight:700}
+.chart svg .hit{fill:transparent;cursor:pointer}
+.chart svg .hit:focus{outline:none}
+.chart svg g.col.on .hl{fill:var(--surface2)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-bottom:6px}
+.legend i{display:inline-block;width:12px;height:8px;border-radius:2px;margin-right:4px;vertical-align:1px}
+.legend i.line{height:2px;width:14px;background:var(--fg);vertical-align:3px}
+.tip{min-height:40px;font-size:13px;background:var(--surface2);border-radius:10px;padding:6px 10px;margin-top:8px;font-variant-numeric:tabular-nums}
+.tip b{font-weight:700}
+details.tbl{margin-top:8px;font-size:13px}
+details.tbl summary{min-height:44px;display:flex;align-items:center;font-weight:600;color:var(--green-ink);cursor:pointer}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right;font-size:13px}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600}
+.hbars{display:flex;flex-direction:column;gap:10px}
+.hbar .top{display:flex;gap:8px;font-size:13px;align-items:baseline}
+.hbar .top span{flex:1;min-width:0;overflow-wrap:anywhere}
+.hbar .top b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.hbar .top small{font-size:12px;font-weight:700;white-space:nowrap}
+.track{height:10px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-top:4px}
+.track i{display:block;height:100%;border-radius:99px;background:var(--c-rev)}
+.track i.exp{background:var(--c-exp)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.rowlist{display:flex;flex-direction:column}
+.rowlist .r{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.rowlist .r:last-child{border-bottom:0}
+.rowlist .r .m{flex:1;min-width:0}
+.rowlist .r .m b{display:block;font-weight:600;overflow-wrap:anywhere}
+.rowlist .r .m small{display:block;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.rowlist .r .v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rowlist .r .v small{display:block;font-size:12px;font-weight:700}
+.po{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:6px}
+.po .row{display:flex;gap:8px;align-items:flex-start}
+.po .row .t{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
+.po .amt{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.po .sub{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.po.done{opacity:.75}
+.pill.at_risk,.pill.late{background:var(--warn-bg);color:var(--warn)} .pill.at_risk::before{content:"⚠"}
+.pill.delayed,.pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.delayed::before{content:"⏰"}
+.pill.on_track,.pill.approved,.pill.delivered{background:var(--ok-bg);color:var(--green-ink)} .pill.on_track::before,.pill.approved::before,.pill.delivered::before{content:"✓"}
+.pill.ordered{background:var(--info-bg);color:var(--info)} .pill.ordered::before{content:"🚚"}
+.pill.awaiting_approval{background:var(--warn-bg);color:var(--warn)} .pill.awaiting_approval::before{content:"⏳"}
+.pill.ceo{background:var(--black);color:var(--on-black)}
+.proj{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px}
+.proj .row{display:flex;gap:8px;align-items:flex-start}
+.proj .row .t{flex:1;min-width:0;font-weight:700;overflow-wrap:anywhere}
+.proj .row .t small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.meter .lab{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);gap:8px}
+.meter .lab b{color:var(--fg);font-variant-numeric:tabular-nums}
+.meter .bar{position:relative;height:10px;background:var(--surface2);border-radius:99px;margin-top:4px}
+.meter .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--green)}
+.meter .bar i.warn{background:var(--amber)} .meter .bar i.bad{background:var(--bad)}
+.meter .bar .mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--fg);border-radius:2px}
+.meter .bar .over{position:absolute;right:0;top:0;bottom:0;border-radius:0 99px 99px 0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.6) 0 3px,transparent 3px 6px)}
+.reasons{font-size:13px;color:var(--warn);background:var(--warn-bg);border-radius:10px;padding:6px 10px}
+.reasons.bad{color:var(--bad);background:var(--bad-bg)}
+.kvs{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.kvs dt{color:var(--muted)} .kvs dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.dept{display:grid;grid-template-columns:1fr repeat(3,52px);gap:4px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.dept:last-child{border-bottom:0}
+.dept .nm b{display:block;font-weight:600} .dept .nm small{color:var(--muted);font-size:12px}
+.dept .c{text-align:center;font-weight:700;font-variant-numeric:tabular-nums;border-radius:10px;padding:4px 0}
+.dept .c small{display:block;font-size:11px;font-weight:600;color:var(--muted)}
+.dept .c.bad{background:var(--bad-bg);color:var(--bad)} .dept .c.warn{background:var(--warn-bg);color:var(--warn)}
+.dept.hd{padding:0 0 4px} .dept.hd span{font-size:11px;color:var(--muted);text-align:center}
+.links{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.links .btn{font-size:14px}
+.muted{color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <a class="iconbtn" href="../" data-page aria-label="หน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+      <div class="brand"><div class="logo" aria-hidden="true">🦆</div><div style="min-width:0"><b>ภาพรวมบริษัท</b><div class="me" id="me">กำลังโหลด…</div></div></div>
+      <button class="iconbtn" id="refresh" aria-label="โหลดข้อมูลใหม่"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+    </div>
+    <div class="tabs" role="tablist" aria-label="หมวดข้อมูล" id="tabs" hidden></div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <div class="state" id="boot"><div class="spin"></div>กำลังโหลด…</div>
+  <div id="panel" class="panel" role="tabpanel" tabindex="-1" hidden></div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="poSheet" role="dialog" aria-modal="true" aria-labelledby="poTitle" hidden>
+  <div class="grab"></div>
+  <h3><span id="poTitle">อนุมัติใบสั่งซื้อ</span><button class="close" data-close aria-label="ปิด">×</button></h3>
+  <div id="poInfo"></div>
+  <div class="field" id="poNoteF"><label for="poNote">เหตุผล / หมายเหตุถึงผู้ขอ <small>(ไม่บังคับ)</small></label><textarea class="inp" id="poNote" maxlength="300" placeholder="เช่น ขอใบเสนอราคาเปรียบเทียบอีก 2 เจ้า"></textarea></div>
+  <div id="poMsg"></div>
+  <div class="actions"><button class="btn primary" id="poGo">อนุมัติ</button></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const { $, $$, esc, api, boot, fail, toast, busy, openSheet, closeSheets, link, fixLinks, when, deliveredText } = Duck;
+const TABS = [
+  { k: "summary", t: "ภาพรวม" }, { k: "finance", t: "การเงิน" }, { k: "procurement", t: "จัดซื้อ" },
+  { k: "projects", t: "โครงการ" }, { k: "work", t: "งาน" },
+];
+const S = { d: null, tab: null, po: null, approve: true };
+
+// ===== ตัวเลขแบบไทย =====
+const mb = (x) => (x / 1e6).toLocaleString("th-TH", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const MB = (x) => mb(x) + " ล้านบาท";
+const baht = (x) => "฿" + Math.round(x).toLocaleString("th-TH");
+const money = (x) => Math.abs(x) >= 1e6 ? MB(x) : baht(x);
+const delta = (v, goodUp = true) => v == null ? "" : `<span class="d ${v === 0 ? "flat" : (v > 0) === goodUp ? "up" : "down"}">${v > 0 ? "▲" : v < 0 ? "▼" : "•"} ${Math.abs(v).toLocaleString("th-TH", { maximumFractionDigits: 1 })}%</span>`;
+const dshort = (ymd) => ymd ? when(ymd + "T00:00:00+07:00", false) : "";
+const daysTo = (ymd) => Math.round((new Date(ymd + "T00:00:00Z") - new Date(S.d.today + "T00:00:00Z")) / 864e5);
+
+(async () => {
+  try {
+    const me = await boot();
+    if (me.me.role === "staff") { Duck.fail(Object.assign(new Error("ภาพรวมบริษัทเปิดให้เฉพาะ CEO และหัวหน้าฝ่ายครับ ดูงานของคุณได้ที่หน้างานของฉัน"), { status: 403 })); return; }
+    fixLinks();
+    await load();
+    $("#boot").hidden = true; $("#tabs").hidden = false; $("#panel").hidden = false;
+  } catch (e) { fail(e); }
+})();
+
+async function load() {
+  const d = await api("overview");
+  S.d = d;
+  $("#me").innerHTML = `ข้อมูล ณ ${esc(d.as_of_text)}` + (Duck.DEV_USER ? ' <span class="devbadge">DEV</span>' : "");
+  const want = new URLSearchParams(location.search).get("tab");
+  const keys = d.sections.map((s) => s);
+  if (!S.tab || !keys.includes(S.tab)) S.tab = keys.includes(want) ? want : "summary";
+  render();
+}
+$("#refresh").onclick = (e) => busy(e.currentTarget, () => load().then(() => toast("อัปเดตแล้ว")).catch((er) => toast(er.message)), "…");
+
+// ===== แท็บ (role=tab · ลูกศรซ้าย/ขวาเลื่อนแท็บ) =====
+function renderTabs() {
+  const d = S.d;
+  const badge = { summary: d.decisions, procurement: d.procurement?.awaiting.filter((o) => o.can_decide).length || 0, projects: d.projects.filter((p) => p.status === "delayed" || p.status === "at_risk").length, work: d.work.totals.overdue };
+  $("#tabs").innerHTML = TABS.filter((t) => d.sections.includes(t.k)).map((t) =>
+    `<button role="tab" id="tab-${t.k}" aria-controls="panel" aria-selected="${S.tab === t.k}" tabindex="${S.tab === t.k ? 0 : -1}" data-k="${t.k}">${t.t}${badge[t.k] ? `<span class="n hot" aria-label="${badge[t.k]} เรื่องต้องดู">${badge[t.k]}</span>` : ""}</button>`).join("");
+  $("#panel").setAttribute("aria-labelledby", "tab-" + S.tab);
+  const sel = $("#tab-" + S.tab), bar = $("#tabs");   // แท็บที่เลือกต้องเห็นเต็ม (จอแคบเลื่อนแท็บได้)
+  if (sel && (sel.offsetLeft < bar.scrollLeft || sel.offsetLeft + sel.offsetWidth > bar.scrollLeft + bar.clientWidth)) bar.scrollLeft = sel.offsetLeft - 16;
+}
+$("#tabs").onclick = (e) => { const b = e.target.closest("[data-k]"); if (b) go(b.dataset.k); };
+$("#tabs").onkeydown = (e) => {
+  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+  const bs = $$("[role=tab]", $("#tabs")), i = bs.findIndex((b) => b.dataset.k === S.tab);
+  const j = e.key === "Home" ? 0 : e.key === "End" ? bs.length - 1 : (i + (e.key === "ArrowRight" ? 1 : -1) + bs.length) % bs.length;
+  e.preventDefault(); go(bs[j].dataset.k); $(`#tab-${bs[j].dataset.k}`).focus();
+};
+function go(k, focus) {
+  S.tab = k;
+  const u = new URL(location.href);
+  if (k === "summary") u.searchParams.delete("tab"); else u.searchParams.set("tab", k);
+  history.replaceState(null, "", u.pathname + u.search);
+  render();
+  window.scrollTo(0, 0);
+  if (focus) $("#panel").focus();
+}
+document.addEventListener("click", (e) => { const a = e.target.closest("[data-tab]"); if (a) { e.preventDefault(); go(a.dataset.tab, true); } });
+
+function render() {
+  renderTabs();
+  const f = { summary, finance, procurement, projects, work }[S.tab];
+  $("#panel").innerHTML = f(S.d);
+  fixLinks($("#panel"));
+  if (S.tab === "finance") bindChart();
+}
+
+// ===== ภาพรวม =====
+function kpi(label, value, unit, d, cls = "", attrs = "") {
+  return `<div class="kpi ${cls}" ${attrs}><small>${label}</small><b>${value}${unit ? `<em>${unit}</em>` : ""}</b>${d || ""}</div>`;
+}
+function summary(d) {
+  const k = d.kpi, out = [];
+  if (k) {
+    out.push(`<div class="kpis">
+      ${kpi("รายได้ " + esc(k.month), mb(k.revenue), "ล้าน", delta(k.revenue_delta) + ` <span class="muted">จาก ${esc(k.prev_month)}</span>`)}
+      ${kpi("กำไร · มาร์จิ้น " + k.margin.toLocaleString("th-TH") + "%", mb(k.profit), "ล้าน", delta(k.profit_delta), k.profit < 0 ? "bad" : "")}
+      ${kpi("ค่าใช้จ่าย " + esc(k.month), mb(k.expense), "ล้าน", delta(k.expense_delta, false))}
+      ${kpi("เงินสดในมือ", mb(k.cash), "ล้าน", delta(k.cash_delta))}
+      ${kpi("ลูกหนี้ค้างชำระ " + k.ar_count + " ราย", mb(k.ar_overdue), "ล้าน", `<span class="d down">เกิน 60 วัน ${mb(k.ar_over60)} ล้าน</span>`, k.ar_over60 ? "warn" : "")}
+      ${kpi("รายได้เดือนนี้ถึงวันที่ " + k.mtd.day, mb(k.mtd.revenue), "ล้าน", delta(k.mtd.delta) + ' <span class="muted">ช่วงเดียวกันเดือนก่อน</span>')}
+    </div>`);
+  } else {
+    const t = d.work.totals, risk = d.projects.filter((p) => p.status !== "on_track" && p.status !== "done").length;
+    out.push(`<div class="kpis">
+      ${kpi("โครงการของฝ่าย", d.projects.length, "โครงการ", risk ? `<span class="d down">ต้องดู ${risk}</span>` : '<span class="d up">ตามแผนทั้งหมด</span>', risk ? "warn" : "")}
+      ${kpi("งานเปิดในฝ่าย", t.open, "งาน", t.overdue ? `<span class="d down">เลยกำหนด ${t.overdue}</span>` : '<span class="d up">ไม่มีงานเลยกำหนด</span>', t.overdue ? "bad" : "")}
+    </div>`);
+  }
+  const dec = d.alerts.filter((a) => a.decide), watch = d.alerts.filter((a) => !a.decide);
+  out.push(`<h2 class="sec">เรื่องที่รอ${d.me.role === "ceo" ? "ท่าน" : "คุณ"}ตัดสินใจ <small>${dec.length ? dec.length + " เรื่อง" : ""}</small></h2>`);
+  out.push(dec.length ? dec.map(alertItem).join("") : `<div class="empty">ไม่มีเรื่องรอตัดสินใจ</div>`);
+  if (watch.length) out.push(`<h2 class="sec">ต้องจับตา <small>${watch.length} เรื่อง</small></h2>`, watch.map(alertItem).join(""));
+  if (d.work.meetings_today.length) out.push(`<h2 class="sec">ประชุมวันนี้</h2><div class="box rowlist">${d.work.meetings_today.map(meetRow).join("")}</div>`);
+  return out.join("");
+}
+function alertItem(a) {
+  let act = "";
+  if (a.po_id) act = `<div class="btnrow"><button class="btn sm primary" data-po="${esc(a.po_id)}" data-ok="1">อนุมัติ</button><button class="btn sm danger" data-po="${esc(a.po_id)}" data-ok="0">ไม่อนุมัติ</button></div>`;
+  else if (a.tab) act = `<a class="go" href="?tab=${esc(a.tab)}" data-tab="${esc(a.tab)}">${esc(a.label || "ดู")} ›</a>`;
+  else if (a.href) act = `<a class="go" href="${esc(a.href)}" data-page>${esc(a.label || "เปิด")} ›</a>`;
+  return `<div class="alert ${esc(a.tone)}"><div class="t">${esc(a.title)}</div>${a.sub ? `<div class="sub">${esc(a.sub)}</div>` : ""}${act}</div>`;
+}
+const meetRow = (m) => `<div class="r"><div class="m"><b>${esc(m.time)} · ${esc(m.title)}</b><small>นัดโดย ${esc(m.organizer || "-")} · ${m.people} คน${m.mine ? " · คุณอยู่ในนัดนี้" : ""}</small></div></div>`;
+
+// ===== การเงิน =====
+function finance(d) {
+  const f = d.finance, k = d.kpi;
+  if (!f) return `<div class="empty">ยังไม่มีข้อมูลการเงินในระบบ</div>`;
+  const maxP = Math.max(...f.by_project.map((p) => p.revenue), 1);
+  return `
+  <div class="kpis">
+    ${kpi("รายได้ " + esc(k.month), mb(k.revenue), "ล้าน", delta(k.revenue_delta))}
+    ${kpi("กำไร · มาร์จิ้น " + k.margin.toLocaleString("th-TH") + "%", mb(k.profit), "ล้าน", delta(k.profit_delta), k.profit < 0 ? "bad" : "")}
+  </div>
+  <h2 class="sec">รายได้ ค่าใช้จ่าย กำไร 6 เดือน <small>ล้านบาท</small></h2>
+  <div class="chart">${chart(f.months)}
+    <div class="tip" id="tip" aria-live="polite"></div>
+    <details class="tbl"><summary>ดูเป็นตาราง</summary>
+      <table><thead><tr><th>เดือน</th><th>รายได้</th><th>ค่าใช้จ่าย</th><th>กำไร</th></tr></thead>
+      <tbody>${f.months.map((m) => `<tr><td>${esc(m.label)}</td><td>${mb(m.revenue)}</td><td>${mb(m.expense)}</td><td>${mb(m.profit)}</td></tr>`).join("")}</tbody></table>
+    </details>
+  </div>
+  ${f.expense_note ? `<div class="warnbox" style="margin:0">ค่าใช้จ่ายที่เพิ่มขึ้นส่วนใหญ่มาจาก ${esc(f.expense_note)}</div>` : ""}
+  <h2 class="sec">รายได้ตามโครงการ <small>${esc(k.month)} · เทียบเดือนก่อน</small></h2>
+  <div class="box hbars">${f.by_project.map((p) => `<div class="hbar"><div class="top"><span>${esc(p.name)}</span><b>${mb(p.revenue)} ล้าน</b>${delta(p.delta)}</div>
+    <div class="track" role="img" aria-label="${esc(p.name)} ${mb(p.revenue)} ล้านบาท"><i style="width:${Math.max(2, (p.revenue / maxP) * 100)}%"></i></div></div>`).join("") || '<div class="muted">ไม่มีข้อมูล</div>'}</div>
+  <h2 class="sec">เงินสด</h2>
+  <div class="kpis">
+    ${kpi("เงินสดปลายเดือน", mb(f.cash), "ล้าน", delta(k.cash_delta))}
+    ${kpi("ลูกหนี้ค้าง / เงินสด", Math.round((k.ar_overdue / f.cash) * 100) + "%", "", `<span class="muted">ค้าง ${mb(k.ar_overdue)} ล้าน</span>`, k.ar_overdue / f.cash > 0.15 ? "warn" : "")}
+  </div>
+  <h2 class="sec">ลูกหนี้ค้างชำระ <small>${f.ar.length} ราย · ${mb(k.ar_overdue)} ล้านบาท</small></h2>
+  <div class="box rowlist">${f.ar.map((r) => `<div class="r"><div class="m"><b>${esc(r.customer)}</b><small>ค้าง ${r.days} วัน</small></div>
+    <div class="v">${money(r.amount)}<small class="${r.days > 90 ? "down" : r.days > 60 ? "" : "flat"}" style="${r.days > 60 && r.days <= 90 ? "color:var(--warn)" : ""}">${r.days > 90 ? "เกิน 90 วัน" : r.days > 60 ? "เกิน 60 วัน" : "ไม่เกิน 60 วัน"}</small></div></div>`).join("") || '<div class="muted">ไม่มีลูกหนี้ค้าง</div>'}</div>
+  <p class="muted">ที่มา: ${esc(f.as_of_label)}</p>`;
+}
+
+// กราฟแท่งคู่ รายได้/ค่าใช้จ่าย + เส้นกำไร (แกนเดียว หน่วยล้านบาท) · แตะคอลัมน์เพื่อดูตัวเลข
+function chart(ms) {
+  const W = 343, H = 196, L = 30, R = 6, T = 14, B = 24, ih = H - T - B, iw = W - L - R;
+  const max = Math.max(...ms.map((m) => Math.max(m.revenue, m.expense)), 1) / 1e6;
+  const step = max > 40 ? 10 : max > 20 ? 5 : max > 8 ? 2 : 1, top = Math.ceil(max / step) * step;
+  const minP = Math.min(0, ...ms.map((m) => m.profit / 1e6)), bot = minP < 0 ? -Math.ceil(-minP / step) * step : 0;
+  const y = (v) => T + ih - ((v - bot) / (top - bot)) * ih;
+  const cw = iw / ms.length, bw = Math.min(16, cw / 3.2);
+  let g = "";
+  for (let v = bot; v <= top + 1e-9; v += step) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  const bar = (x, v, c) => { const y0 = y(0), y1 = y(v / 1e6), h = Math.max(1, y0 - y1); return `<path d="M${x},${y0}V${y1 + 4}a4,4 0 0 1 4,-4h${bw - 8}a4,4 0 0 1 4,4V${y0}Z" fill="${c}"/>`.replace(`V${y1 + 4}`, h < 4 ? `V${y1}` : `V${y1 + 4}`); };
+  let cols = "", pts = [];
+  ms.forEach((m, i) => {
+    const cx = L + cw * i + cw / 2, last = i === ms.length - 1;
+    pts.push([cx, y(m.profit / 1e6)]);
+    cols += `<g class="col" data-i="${i}"><rect class="hl" x="${L + cw * i + 2}" y="${T}" width="${cw - 4}" height="${ih}" rx="6" fill="transparent"/>
+      ${bar(cx - bw - 1, m.revenue, "var(--c-rev)")}${bar(cx + 1, m.expense, "var(--c-exp)")}
+      <text x="${cx}" y="${H - 6}" text-anchor="middle" class="${last ? "lbl" : ""}">${esc(m.label)}</text>
+      ${last ? `<text x="${cx - bw / 2 - 1}" y="${y(m.revenue / 1e6) - 4}" text-anchor="middle" class="lbl">${mb(m.revenue)}</text>` : ""}
+      <rect class="hit" x="${L + cw * i}" y="0" width="${cw}" height="${H}" tabindex="0" role="button" aria-label="${esc(m.label)} รายได้ ${mb(m.revenue)} ค่าใช้จ่าย ${mb(m.expense)} กำไร ${mb(m.profit)} ล้านบาท"/></g>`;
+  });
+  const line = `<polyline points="${pts.map((p) => p.join(",")).join(" ")}" fill="none" stroke="var(--fg)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>` +
+    pts.map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--fg)" stroke="var(--surface)" stroke-width="2" pointer-events="none"/>`).join("") +
+    `<text x="${pts.at(-1)[0] + 7}" y="${pts.at(-1)[1] + 4}" class="lbl" pointer-events="none">${mb(ms.at(-1).profit)}</text>`;
+  return `<div class="legend" aria-hidden="true"><span><i style="background:var(--c-rev)"></i>รายได้</span><span><i style="background:var(--c-exp)"></i>ค่าใช้จ่าย</span><span><i class="line"></i>กำไร</span></div>
+    <svg viewBox="0 0 ${W} ${H}" role="group" aria-label="กราฟรายได้ ค่าใช้จ่าย และกำไร 6 เดือน หน่วยล้านบาท">${g}${cols}${line}</svg>`;
+}
+function bindChart() {
+  const ms = S.d.finance?.months; if (!ms) return;
+  const show = (i) => {
+    const m = ms[i];
+    $$(".chart g.col").forEach((g) => g.classList.toggle("on", +g.dataset.i === i));
+    $("#tip").innerHTML = `<b>${esc(m.label)}</b> · <span style="color:var(--c-rev)">■</span> รายได้ <b>${mb(m.revenue)}</b> · <span style="color:var(--c-exp)">■</span> ค่าใช้จ่าย <b>${mb(m.expense)}</b> · กำไร <b>${mb(m.profit)}</b> ล้าน`;
+  };
+  $$(".chart .hit").forEach((h) => {
+    const i = +h.parentNode.dataset.i;
+    h.addEventListener("mouseenter", () => show(i)); h.addEventListener("focus", () => show(i)); h.addEventListener("click", () => show(i));
+    h.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); show(i); } });
+  });
+  show(ms.length - 1);
+}
+
+// ===== จัดซื้อ =====
+function poCard(o, actions = true) {
+  const st = o.late_days ? `<span class="pill bad">ช้า ${o.late_days} วัน</span>` : `<span class="pill ${esc(o.status)}">${esc(o.status_th)}</span>`;
+  const btns = actions && o.can_decide ? `<div class="btnrow"><button class="btn sm primary" data-po="${esc(o.id)}" data-ok="1">อนุมัติ</button><button class="btn sm danger" data-po="${esc(o.id)}" data-ok="0">ไม่อนุมัติ</button></div>`
+    : o.status === "awaiting_approval" && !o.can_decide ? `<div class="sub"><span class="pill ceo">รอ CEO</span> ยอดเกิน ${baht(S.d.procurement.ceo_limit)}</div>` : "";
+  const dates = [o.needed_by && "ต้องใช้ " + dshort(o.needed_by), o.eta && "กำหนดส่ง " + dshort(o.eta)].filter(Boolean).join(" · ");
+  return `<article class="po"><div class="row"><div class="t">${esc(o.description)}</div>${st}</div>
+    <div class="amt">${baht(o.amount)}</div>
+    <div class="sub">${esc(o.po_no)} · ${esc(o.supplier)}${o.project ? " · " + esc(o.project.code) : ""} · ${esc(o.category)}</div>
+    <div class="sub">${o.requested_by ? "ขอโดย " + esc(o.requested_by) : ""}${dates ? " · " + dates : ""}${o.approver ? " · อนุมัติโดย " + esc(o.approver) : ""}</div>${btns}</article>`;
+}
+function procurement(d) {
+  const p = d.procurement;
+  if (!p) return `<div class="empty">ไม่มีสิทธิ์ดูข้อมูลจัดซื้อ</div>`;
+  const onTime = p.ordered.filter((o) => !o.late_days);
+  const mine = p.awaiting.filter((o) => o.can_decide), maxC = Math.max(...p.by_category.map((c) => c.amount), 1), maxS = Math.max(...p.top_suppliers.map((c) => c.amount), 1);
+  return `
+  <div class="kpis">
+    ${kpi("PO ที่ยังไม่ได้ของ " + p.open_count + " ใบ", mb(p.open_value), "ล้าน", '<span class="muted">รออนุมัติ + สั่งแล้ว</span>')}
+    ${kpi("รออนุมัติ " + p.awaiting.length + " ใบ", mb(p.awaiting_value), "ล้าน", mine.length ? `<span class="d down">รอคุณ ${mine.length} ใบ</span>` : '<span class="muted">ไม่มีที่รอคุณ</span>', mine.length ? "warn" : "")}
+    ${kpi("ส่งของล่าช้า", p.late.length, "รายการ", p.late.length ? `<span class="d down">ช้าสุด ${p.late[0].late_days} วัน</span>` : '<span class="d up">ตรงเวลาทั้งหมด</span>', p.late.length ? "bad" : "")}
+    ${kpi("ใช้จ่ายเดือน " + esc(p.month_label), mb(p.month_spend), "ล้าน", '<span class="muted">PO ที่อนุมัติในเดือนนี้</span>')}
+  </div>
+  <h2 class="sec">รออนุมัติ <small>${d.me.role === "ceo" ? "ท่านอนุมัติได้ทุกใบ" : "อนุมัติได้ไม่เกิน " + baht(p.ceo_limit)}</small></h2>
+  ${p.awaiting.length ? p.awaiting.map((o) => poCard(o)).join("") : `<div class="empty">ไม่มี PO รออนุมัติ</div>`}
+  <h2 class="sec" id="late">ส่งของล่าช้า <small>${p.late.length} รายการ</small></h2>
+  ${p.late.length ? p.late.map((o) => poCard(o, false)).join("") : `<div class="empty">ไม่มีของส่งล่าช้า</div>`}
+  <h2 class="sec">ใช้จ่ายตามหมวด <small>เดือน ${esc(p.month_label)} · รวม ${mb(p.month_spend)} ล้าน</small></h2>
+  <div class="box hbars">${p.by_category.map((c) => `<div class="hbar"><div class="top"><span>${esc(c.category)} <span class="muted">${c.count} ใบ</span></span><b>${money(c.amount)}</b></div>
+    <div class="track" role="img" aria-label="${esc(c.category)} ${money(c.amount)}"><i class="exp" style="width:${Math.max(2, (c.amount / maxC) * 100)}%"></i></div></div>`).join("") || '<div class="muted">ยังไม่มีการสั่งซื้อในเดือนนี้</div>'}</div>
+  <h2 class="sec">ผู้ขายหลัก <small>90 วันล่าสุด</small></h2>
+  <div class="box hbars">${p.top_suppliers.map((c) => `<div class="hbar"><div class="top"><span>${esc(c.supplier)} <span class="muted">${c.count} ใบ</span></span><b>${money(c.amount)}</b></div>
+    <div class="track"><i class="exp" style="width:${Math.max(2, (c.amount / maxS) * 100)}%"></i></div></div>`).join("") || '<div class="muted">ไม่มีข้อมูล</div>'}</div>
+  ${onTime.length ? `<h2 class="sec">สั่งแล้ว รอของ (ยังไม่ช้า) <small>${onTime.length} ใบ</small></h2>${onTime.map((o) => poCard(o, false)).join("")}` : ""}`;
+}
+
+// ===== โครงการ =====
+function meter(label, val, right, pct, cls, mark, over) {
+  return `<div class="meter"><div class="lab"><span>${label}</span><b>${right}</b></div>
+    <div class="bar" role="img" aria-label="${esc(label)} ${esc(right)}"><i class="${cls}" style="width:${Math.max(2, Math.min(100, pct))}%"></i>${over ? `<span class="over" style="width:${Math.min(40, over)}%"></span>` : ""}${mark != null ? `<span class="mark" style="left:calc(${Math.min(100, mark)}% - 1px)" title="เวลาที่ผ่านไป"></span>` : ""}</div></div>`;
+}
+function projects(d) {
+  if (!d.projects.length) return `<div class="empty">ยังไม่มีโครงการของฝ่ายคุณในระบบ</div>`;
+  return d.projects.map((p) => {
+    const late = p.days_left < 0, prCls = p.lag >= 15 || late ? "bad" : p.lag >= 7 ? "warn" : "";
+    const bCls = p.over_budget ? "bad" : p.spent_pct - p.progress >= 10 ? "warn" : "";
+    const ins = p.installments, nx = p.next_installment;
+    return `<article class="proj">
+      <div class="row"><div class="t">${esc(p.code)} · ${esc(p.name)}<small>${p.site_manager ? "ผู้จัดการหน้างาน " + esc(p.site_manager.name) : "ยังไม่ระบุผู้จัดการ"}${p.client ? " · ลูกค้า " + esc(p.client) : ""}</small></div><span class="pill ${esc(p.status)}">${esc(p.status_th)}</span></div>
+      ${meter("ความคืบหน้างาน (เส้นดำ = เวลาที่ผ่านไป " + p.elapsed_pct + "%)", p.progress, p.progress + "%", p.progress, prCls, p.elapsed_pct)}
+      ${meter("ใช้งบไปแล้ว" + (p.budget != null ? " " + mb(p.spent) + " จาก " + mb(p.budget) + " ล้าน" : ""), p.spent_pct, p.spent_pct.toLocaleString("th-TH") + "%" + (p.over_budget ? " · เกินงบ" : ""), p.spent_pct, bCls, null, p.over_budget ? p.spent_pct - 100 : 0)}
+      ${p.reasons.length ? `<div class="reasons ${p.status === "delayed" ? "bad" : ""}">${p.reasons.map(esc).join(" · ")}</div>` : ""}
+      <dl class="kvs">
+        <dt>กำหนดส่งมอบ</dt><dd>${dshort(p.target_end_date)} · ${late ? "เลยมา " + -p.days_left + " วัน" : "อีก " + p.days_left + " วัน"}</dd>
+        ${p.contract_value != null ? `<dt>มูลค่าสัญญา</dt><dd>${MB(p.contract_value)}</dd>` : ""}
+        ${ins ? `<dt>งวดเงิน</dt><dd>เบิก ${ins.billed}/${ins.total} · รับแล้ว ${ins.paid}${ins.unpaid ? ` · <span class="down">ค้าง ${ins.unpaid} งวด</span>` : ""}</dd>` : ""}
+        ${nx ? `<dt>งวดถัดไป</dt><dd>${esc(nx.label || "")}<br>${money(nx.amount)} · ${dshort(nx.due)}${daysTo(nx.due) >= 0 && daysTo(nx.due) <= 7 ? ` <span class="pill late">อีก ${daysTo(nx.due)} วัน</span>` : ""}</dd>` : ins ? `<dt>งวดถัดไป</dt><dd>${ins.billed >= ins.total ? "เบิกครบทุกงวดแล้ว" : "-"}</dd>` : ""}
+        ${p.po_open ? `<dt>PO ยังไม่ได้ของ</dt><dd>${money(p.po_open)}</dd>` : ""}
+      </dl></article>`;
+  }).join("");
+}
+
+// ===== งาน =====
+function work(d) {
+  const w = d.work;
+  return `
+  <div class="box"><div class="dept hd"><span></span><span>งานเปิด</span><span>เลยกำหนด</span><span>ติดปัญหา</span></div>
+  ${w.depts.map((x) => `<div class="dept"><div class="nm"><b>${esc(x.dept)}</b><small>${x.head ? "หัวหน้า " + esc(x.head) : ""}${x.avg != null ? " · เฉลี่ย " + x.avg + "%" : ""}</small></div>
+    <div class="c">${x.open}</div><div class="c ${x.overdue ? "bad" : ""}">${x.overdue}</div><div class="c ${x.blocked ? "warn" : ""}">${x.blocked}</div></div>`).join("")}</div>
+  <div class="links"><a class="btn" href="../followup/" data-page>⏰ เปิดหน้าตามงาน</a><a class="btn" href="../black/" data-page>■ เปิดการ์ดดำ</a></div>
+  <h2 class="sec">การ์ดดำรออนุมัติ <small>${w.black_awaiting.length} งาน</small></h2>
+  ${w.black_awaiting.length ? `<div class="box rowlist">${w.black_awaiting.map((b) => `<div class="r"><div class="m"><b>${esc(b.title)}</b><small>${esc(b.owner)} · ผู้อนุมัติ ${esc(b.approver || "-")}${b.mine ? " (คุณ)" : ""}</small></div></div>`).join("")}</div>` : `<div class="empty">ไม่มีการ์ดดำรออนุมัติ</div>`}
+  <h2 class="sec">คำขอเลื่อนรอคุณพิจารณา <small>${w.ext_waiting.length} งาน</small></h2>
+  ${w.ext_waiting.length ? `<div class="box rowlist">${w.ext_waiting.map((x) => `<div class="r"><div class="m"><b>${esc(x.title)}</b><small>${esc(x.by)} ขอเลื่อน ${esc(when(x.old_due, false))} → ${esc(when(x.new_due, false))} · ${esc(x.reason)}</small></div></div>`).join("")}</div>
+    <a class="btn" href="../followup/" data-page>พิจารณาในหน้าตามงาน</a>` : `<div class="empty">ไม่มีคำขอเลื่อนรอคุณ</div>`}
+  <h2 class="sec">ประชุมวันนี้ <small>${w.meetings_today.length} นัด</small></h2>
+  ${w.meetings_today.length ? `<div class="box rowlist">${w.meetings_today.map(meetRow).join("")}</div>` : `<div class="empty">วันนี้ไม่มีประชุม</div>`}`;
+}
+
+// ===== อนุมัติ / ไม่อนุมัติ PO =====
+function findPo(id) { const p = S.d.procurement; return p && [...p.awaiting, ...p.late, ...p.ordered].find((o) => o.id === id); }
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-po]"); if (!b) return;
+  const o = findPo(b.dataset.po); if (!o) return;
+  S.po = o; S.approve = b.dataset.ok === "1";
+  $("#poTitle").textContent = (S.approve ? "อนุมัติ " : "ไม่อนุมัติ ") + o.po_no;
+  $("#poInfo").innerHTML = `<dl class="kv"><dt>รายการ</dt><dd>${esc(o.description)}</dd><dt>ยอด</dt><dd>${baht(o.amount)}</dd><dt>ผู้ขาย</dt><dd>${esc(o.supplier)}</dd>
+    <dt>โครงการ</dt><dd>${o.project ? esc(o.project.code + " " + o.project.name) : "-"}</dd><dt>ผู้ขอ</dt><dd>${esc(o.requested_by || "-")}</dd>${o.needed_by ? `<dt>ต้องใช้</dt><dd>${dshort(o.needed_by)}${o.late_days ? ` <span class="down">(เลยมา ${o.late_days} วัน)</span>` : ""}</dd>` : ""}</dl>`;
+  $("#poNote").value = ""; $("#poMsg").innerHTML = "";
+  $("#poNote").placeholder = S.approve ? "เช่น สั่งได้เลย ขอส่งก่อนวันที่ต้องใช้" : "เช่น ขอใบเสนอราคาเปรียบเทียบอีก 2 เจ้า";
+  const go = $("#poGo"); go.textContent = S.approve ? "ยืนยันอนุมัติ " + baht(o.amount) : "ยืนยันไม่อนุมัติ"; go.className = "btn " + (S.approve ? "primary" : "danger");
+  openSheet("#poSheet");
+});
+$("#poGo").onclick = (e) => busy(e.currentTarget, async () => {
+  try {
+    const r = await api("po-decide", { po_id: S.po.id, approve: S.approve, note: $("#poNote").value.trim() });
+    closeSheets();
+    toast((S.approve ? "อนุมัติ " : "ไม่อนุมัติ ") + r.po.po_no + " แล้ว" + (deliveredText(r) ? " · " + deliveredText(r) : ""));
+    await load();
+  } catch (er) {
+    $("#poMsg").innerHTML = `<div class="errbox" role="alert">${esc(er.message)}</div>`;
+    if (er.status === 409) load().catch(() => {});
+  }
+}, "กำลังบันทึก…");
+</script>
+</body>
+</html>
