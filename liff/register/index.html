@@ -35,6 +35,41 @@
   <!-- โปรไฟล์ / คำขอที่รออยู่ -->
   <section id="view" hidden></section>
 
+  <!-- สไตล์การคุยของเลขาเป็ด (เห็นได้เฉพาะเจ้าของ) -->
+  <section id="style" hidden style="margin-top:12px">
+    <form class="card" id="styleForm" novalidate>
+      <h2 class="sec" style="margin-top:0">สไตล์การคุยของเลขาเป็ด</h2>
+      <div class="okbox" id="stNow"></div>
+      <div class="field"><label for="stCall">เรียกฉันว่า</label><input class="inp" id="stCall" maxlength="20" placeholder="เช่น พี่แอล"><div class="hint">หรือพิมพ์ในแชต เช่น “เรียกผมว่าพี่แอล”</div></div>
+      <div class="field"><span class="lbl" id="stToneLbl">โทนการคุย</span>
+        <div class="chiprow" role="group" aria-labelledby="stToneLbl" data-pref="tone">
+          <button type="button" data-v="">อัตโนมัติ</button><button type="button" data-v="formal">สุภาพทางการ</button><button type="button" data-v="friendly">เป็นกันเอง</button><button type="button" data-v="brief">สั้นกระชับ</button>
+        </div></div>
+      <div class="field"><span class="lbl" id="stEmoLbl">อีโมจิ</span>
+        <div class="chiprow" role="group" aria-labelledby="stEmoLbl" data-pref="emoji">
+          <button type="button" data-v="">อัตโนมัติ</button><button type="button" data-v="true">ใส่</button><button type="button" data-v="false">ไม่ใส่</button>
+        </div></div>
+      <div class="field"><span class="lbl" id="stLenLbl">ความยาวคำตอบ</span>
+        <div class="chiprow" role="group" aria-labelledby="stLenLbl" data-pref="reply_length">
+          <button type="button" data-v="">อัตโนมัติ</button><button type="button" data-v="short">สั้น</button><button type="button" data-v="normal">ปกติ</button><button type="button" data-v="detail">ละเอียด</button>
+        </div></div>
+      <div class="field">
+        <button type="button" class="switch" role="switch" aria-checked="false" id="stQuiet"><span class="tx">ช่วงห้ามทัก<small>เลื่อนรายงาน ตามงาน และเตือน ไปส่งตอนหมดช่วง · ยกเว้นเตือนที่ตั้งว่า “ห้ามพลาด”</small></span><span class="tg" aria-hidden="true"></span></button>
+        <div id="stQuietTimes" style="display:none;gap:8px;margin-top:8px;align-items:center">
+          <select class="inp" id="stQs" aria-label="เริ่มห้ามทัก"></select><span aria-hidden="true">ถึง</span><select class="inp" id="stQe" aria-label="สิ้นสุดห้ามทัก"></select>
+        </div>
+      </div>
+      <div id="stMsg"></div>
+      <div class="actions"><button type="submit" class="btn primary" id="stSave">บันทึกสไตล์การคุย</button></div>
+    </form>
+    <div class="card" style="margin-top:12px">
+      <h2 class="sec" style="margin-top:0">เลขาเป็ดสังเกตว่า…</h2>
+      <ul id="stObs" style="margin:0 0 12px;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px"></ul>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 12px">ความเป็นส่วนตัว: เห็นได้เฉพาะคุณ (หัวหน้าและ CEO ไม่เห็น) · เลขาเป็ดเก็บเป็นตัวเลขสรุป เช่น ช่วงเวลาที่ใช้ ความยาวข้อความ ไม่เก็บข้อความของคุณเพิ่ม · ล้างได้ทุกเมื่อ</p>
+      <button type="button" class="btn danger" id="stReset">ล้างสิ่งที่เรียนรู้</button>
+    </div>
+  </section>
+
   <!-- ฟอร์ม -->
   <form id="form" class="card" novalidate hidden style="margin-top:12px">
     <div id="formMsg"></div>
@@ -108,9 +143,60 @@ function showProfile() {
     ${p ? `<div class="warnbox">ขอเปลี่ยนเป็น ${esc(p.role_th)}${p.role !== "ceo" ? " · " + esc(p.department) : ""} · รอ ${esc(p.approver)} อนุมัติ</div>` : ""}
     <div class="actions"><button class="btn" id="editBtn">แก้ไขโปรไฟล์</button>${p ? `<button class="btn danger" id="cancelReq">ยกเลิกคำขอ</button>` : ""}</div></div>`;
   $("#view").hidden = false;
-  $("#editBtn").onclick = () => openForm({ full_name: m.full, nickname: m.nick, role: m.role, department: m.dept, head_id: m.head?.id, title: m.job, phone: m.phone }, true);
+  $("#editBtn").onclick = () => { $("#style").hidden = true; openForm({ full_name: m.full, nickname: m.nick, role: m.role, department: m.dept, head_id: m.head?.id, title: m.job, phone: m.phone }, true); };
   if (p) $("#cancelReq").onclick = (e) => cancelReq(e.target);
+  loadStyle();
 }
+
+// ===== สไตล์การคุยของเลขาเป็ด (ของตัวเองเท่านั้น) =====
+const hhmm = (m) => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+$("#stQs").innerHTML = $("#stQe").innerHTML = Array.from({ length: 48 }, (_, i) => `<option value="${i * 30}">${hhmm(i * 30)} น.</option>`).join("");
+async function loadStyle() {
+  try { renderStyle(await api("style")); $("#style").hidden = false; }
+  catch (e) { console.warn("style", e); }
+}
+function renderStyle(d) {
+  const ef = d.effective;
+  $("#stNow").innerHTML = `ตอนนี้เลขาเป็ดเรียกคุณว่า <b>${esc(ef.address)}</b> · คุยด้วยโทน<b>${esc(ef.tone_th)}</b>` + (ef.inferred ? ` <small>(ปรับเองจากการพิมพ์ ${d.messages} ข้อความ)</small>` : " <small>(คุณเลือกเอง)</small>");
+  $("#stCall").value = d.prefs.call_name || "";
+  $("#stCall").placeholder = "เว้นว่าง = " + ef.default_name;
+  for (const g of $$("[data-pref]")) {
+    const v = d.prefs[g.dataset.pref];
+    for (const b of g.children) b.setAttribute("aria-pressed", String(b.dataset.v === (v == null ? "" : String(v))));
+  }
+  const q = d.prefs.quiet_start != null;
+  setQuiet(q);
+  $("#stQs").value = String(q ? d.prefs.quiet_start - (d.prefs.quiet_start % 30) : 1320);
+  $("#stQe").value = String(q ? d.prefs.quiet_end - (d.prefs.quiet_end % 30) : 420);
+  const obs = (d.observations.length ? d.observations : ["ยังเรียนรู้ไม่พอ คุยกับเลขาเป็ดอีกสักพักนะครับ"]).concat(d.notes || []);
+  $("#stObs").innerHTML = obs.map((o) => `<li>${esc(o)}</li>`).join("");
+  $("#stMsg").innerHTML = "";
+}
+function setQuiet(on) { $("#stQuiet").setAttribute("aria-checked", String(on)); $("#stQuietTimes").style.display = on ? "flex" : "none"; }
+$("#stQuiet").onclick = () => setQuiet($("#stQuiet").getAttribute("aria-checked") !== "true");
+for (const g of $$("[data-pref]")) g.onclick = (e) => {
+  const b = e.target.closest("[data-v]"); if (!b) return;
+  for (const x of g.children) x.setAttribute("aria-pressed", String(x === b));
+};
+function chosen(key) {
+  const v = $(`[data-pref="${key}"] [aria-pressed="true"]`)?.dataset.v ?? "";
+  return v === "" ? null : v === "true" ? true : v === "false" ? false : v;
+}
+$("#styleForm").onsubmit = (e) => {
+  e.preventDefault();
+  const on = $("#stQuiet").getAttribute("aria-checked") === "true", qs = +$("#stQs").value, qe = +$("#stQe").value;
+  if (on && qs === qe) { $("#stMsg").innerHTML = `<div class="errbox" role="alert">เวลาเริ่มและสิ้นสุดต้องไม่ตรงกัน</div>`; return; }
+  const body = { call_name: $("#stCall").value.trim() || null, tone: chosen("tone"), emoji: chosen("emoji"), reply_length: chosen("reply_length"),
+    quiet_start: on ? qs : null, quiet_end: on ? qe : null };
+  busy($("#stSave"), async () => {
+    try { renderStyle(await api("style", body)); toast("บันทึกสไตล์การคุยแล้ว"); }
+    catch (err) { $("#stMsg").innerHTML = `<div class="errbox" role="alert">${esc(err.message)}</div>`; }
+  });
+};
+$("#stReset").onclick = (e) => {
+  if (!confirm("ล้างสิ่งที่เลขาเป็ดเรียนรู้เกี่ยวกับคุณ? (การตั้งค่าที่เลือกเองยังอยู่)")) return;
+  busy(e.target, async () => { try { renderStyle(await api("style/reset", {})); toast("ล้างสิ่งที่เรียนรู้แล้ว"); } catch (err) { toast(err.message); } });
+};
 function showPendingView(p) {
   $("#pageTitle").textContent = "รออนุมัติ";
   $("#view").innerHTML = `<div class="card"><div class="state duck" style="padding:8px 0 12px"><b>ส่งคำขอแล้ว รอ ${esc(p.approver)} อนุมัติ</b>อนุมัติแล้วเลขาเป็ดจะแจ้งในแชต LINE ทันที</div>
