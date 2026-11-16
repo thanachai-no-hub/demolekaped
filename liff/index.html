@@ -11,6 +11,18 @@
 <link rel="stylesheet" href="shared/app.css">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
 <script src="shared/app.js"></script>
+<style>
+.sec{font-size:15px;font-weight:700;margin:18px 2px 10px}
+.hint{color:var(--muted);font-size:13px;margin:-4px 2px 10px}
+.cmds{display:grid;gap:10px}
+.cmd{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.cmd b{display:flex;align-items:center;gap:8px;font-size:15px}
+.cmd .ex{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.cmd .ex a{display:inline-flex;align-items:center;min-height:40px;padding:8px 12px;border-radius:99px;border:1px solid var(--line);
+  background:var(--surface-2,transparent);color:var(--fg);font-size:14px;line-height:1.3;text-decoration:none}
+.cmd .ex a:focus-visible{outline:3px solid #06c755;outline-offset:2px}
+.cmd .ex a::before{content:"💬";margin-right:6px}
+</style>
 <!--
   เลขาเป็ด · หน้าหลัก LIFF (Endpoint URL ของ LIFF app = โฟลเดอร์นี้)
   เปิดหน้าย่อยด้วย https://liff.line.me/<LIFF_ID>/<page>/ → LINE โหลดหน้านี้พร้อม ?liff.state=/<page>/ แล้ว liff.init พาไปหน้านั้นเอง
@@ -30,7 +42,13 @@
   <section id="app" hidden>
     <div class="card profile" id="profile" style="margin-bottom:14px"></div>
     <div id="alerts"></div>
+    <h2 class="sec">เปิดหน้า</h2>
     <div class="tiles" id="tiles"></div>
+    <div id="chatSec" hidden>
+      <h2 class="sec">สั่งงานด้วยการพิมพ์ในแชท</h2>
+      <p class="hint">แตะตัวอย่าง แล้วกดส่งในแชทเลขาเป็ด · แก้ข้อความก่อนส่งได้</p>
+      <div class="cmds" id="cmds"></div>
+    </div>
   </section>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -44,7 +62,31 @@ const PAGES = [
   { href: "assign/", ic: "📝", bg: "#16a34a", t: "มอบงาน", s: "เลือกคน กำหนดส่ง แล้วเลขาเป็ดตามให้", roles: ["ceo", "head"] },
   { href: "black/", ic: "■", bg: "#0b0b0d", t: "การ์ดดำ", s: "งานพิเศษจาก CEO · อนุมัติ / ตาม / ขอเลื่อน", roles: ["ceo", "head", "staff"], badge: (c) => c.black_awaiting + c.ext_waiting },
   { href: "followup/", ic: "⏰", bg: "#dc2626", t: "ตามงาน", s: "เลยกำหนด ติดปัญหา ใกล้ครบ · ตามทีเดียว", roles: ["ceo", "head"], badge: (c, r) => r === "staff" ? 0 : c.overdue },
+  { href: "overview/?tab=finance", ic: "💰", bg: "#c98200", t: "การเงิน", s: "รายได้ กำไร เงินสด ลูกหนี้", roles: ["ceo", "head"], show: (c) => c.overview === "all" || c.overview === "finance" },
+  { href: "overview/?tab=procurement", ic: "🧾", bg: "#7c3aed", t: "จัดซื้อ", s: "PO รออนุมัติ · ของส่งช้า", roles: ["ceo", "head"], show: (c) => c.overview === "all" || c.overview === "finance", badge: (c) => c.po_awaiting || 0 },
+  { href: "overview/?tab=projects", ic: "🏗️", bg: "#0891b2", t: "โครงการ", s: "ความคืบหน้า · งบที่ใช้ · งวดเงิน", roles: ["ceo", "head"], show: (c) => !!c.overview },
   { href: "register/", ic: "👤", bg: "#2563eb", t: "โปรไฟล์ของฉัน", s: "ชื่อ แผนก ตำแหน่ง", roles: ["ceo", "head", "staff"], badge: (c) => c.registrations, sBadge: "มีคำขอลงทะเบียนรออนุมัติ" },
+];
+
+// สั่งงานด้วยการพิมพ์ในแชท · แตะตัวอย่าง → เปิดแชทเลขาเป็ดพร้อมข้อความ (กดส่งเอง)
+const OA_ID = "@297bbskj";
+const chatLink = (text) => "https://line.me/R/oaMessage/" + encodeURIComponent(OA_ID) + "/?" + encodeURIComponent(text);
+const CHAT = [
+  { ic: "📋", t: "สรุปงาน / รายงาน", roles: ["ceo", "head", "staff"], ex: ["สรุปงาน", "รายงานตอนนี้"] },
+  { ic: "🔎", t: "ถามว่างานถึงไหน", roles: ["ceo", "head"], ex: ["งานของคุณต้นถึงไหน", "ฝ่ายโครงการถึงไหนแล้ว"] },
+  { ic: "📝", t: "มอบงาน", roles: ["ceo", "head"], ex: ["ให้คุณต้นตรวจกันซึมสระ ภายในศุกร์นี้"] },
+  { ic: "■", t: "การ์ดดำ (งานพิเศษ)", roles: ["ceo"], ex: ["การ์ดดำ ให้คุณแพรทำ Mock-up ห้องน้ำ ภายในสัปดาห์หน้า", "การ์ดดำถึงไหนแล้ว"] },
+  { ic: "✅", t: "รออนุมัติ", roles: ["ceo", "head"], ex: ["รออนุมัติ"] },
+  { ic: "⏰", t: "ตามงาน", roles: ["ceo", "head"], ex: ["ตาม ต้น", "ตามคนที่เลยกำหนด"] },
+  { ic: "📈", t: "อัปเดตงาน (แนบรูป)", roles: ["ceo", "head", "staff"], ex: ["ตรวจรับเหล็กเสริมได้ 80% แล้ว", "เสร็จแล้ว"] },
+  { ic: "🚧", t: "ติดปัญหา / ขอเลื่อน", roles: ["head", "staff"], ex: ["ติดปัญหา รอผู้รับเหมาหลังคา", "ขอเลื่อนเป็นจันทร์หน้า"] },
+  { ic: "💰", t: "การเงิน / จัดซื้อ / โครงการ", roles: ["ceo", "head"], show: (c) => c.overview === "all" || c.overview === "finance", ex: ["การเงินเดือนนี้เป็นยังไง", "จัดซื้อ", "โครงการ"] },
+  { ic: "📅", t: "นัดประชุม", roles: ["ceo", "head", "staff"], ex: ["นัดประชุมทีม พรุ่งนี้บ่าย 2 เรื่องงานหลังคา", "นัดของฉัน"] },
+  { ic: "🔔", t: "เตือนความจำ", roles: ["ceo", "head", "staff"], ex: ["เตือนผมพรุ่งนี้ 9 โมง โทรหาเจ้าของบ้าน", "ทุกวันจันทร์ 8 โมง เตือนประชุมหน้างาน", "รายการเตือน"] },
+  { ic: "✉️", t: "ส่งข้อความ / ร่างข้อความ", roles: ["ceo", "head"], ex: ["พรุ่งนี้ 9 โมง ทักคุณสมชายเรื่องงวดเงิน", "ร่างข้อความถึงคุณวิชัย ขอเลื่อนนัดเป็นพุธหน้า"] },
+  { ic: "🧠", t: "ถามย้อนหลัง", roles: ["ceo", "head"], ex: ["ผมสั่งอะไรคุณสมชายไว้บ้าง"] },
+  { ic: "💬", t: "ถามเลขา", roles: ["ceo", "head", "staff"], ex: ["พรุ่งนี้ผมต้องรีบทำอะไรก่อน"] },
+  { ic: "🦆", t: "คู่มือภาพ", roles: ["ceo", "head", "staff"], ex: ["วิธีใช้"] },
 ];
 
 (async () => {
@@ -78,6 +120,10 @@ function render(me) {
     const n = p.badge ? p.badge(c, m.role) : 0;
     return tile({ ...p, s: m.role === "staff" && p.sStaff ? p.sStaff : n && p.sBadge ? p.sBadge : p.s }, n, p.wide || p.href === "register/");
   }).join("");
+  const cmds = CHAT.filter((x) => x.roles.includes(m.role) && (!x.show || x.show(c)));
+  $("#cmds").innerHTML = cmds.map((x) => `<div class="cmd"><b><span aria-hidden="true">${esc(x.ic)}</span>${esc(x.t)}</b><div class="ex">${
+    x.ex.map((e) => `<a href="${esc(chatLink(e))}">${esc(e)}</a>`).join("")}</div></div>`).join("");
+  $("#chatSec").hidden = !cmds.length;
 }
 function tile(p, badge, wide) {
   return `<a class="tile${wide ? " wide" : ""}" href="${esc(link(p.href))}"><span class="ic" style="background:${p.bg};color:#fff" aria-hidden="true">${p.ic}</span><span style="min-width:0"><b style="display:block">${esc(p.t)}</b><small>${esc(p.s)}</small></span>${badge ? `<span class="badge" aria-label="${badge} รายการรอ">${badge}</span>` : ""}</a>`;
