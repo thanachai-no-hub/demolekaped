@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>ลงทะเบียน · เลขาเป็ด</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/app.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+<script src="../shared/app.js"></script>
+<!-- เลขาเป็ด · ลงทะเบียน / โปรไฟล์ของฉัน / อนุมัติคำขอลงทะเบียน (LIFF) · ทดสอบ: http://localhost:8766/register/?dev=<LINE userId> -->
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <a class="iconbtn" href="../" data-page aria-label="หน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+      <div class="brand"><div class="logo" aria-hidden="true">🦆</div><div style="min-width:0"><b id="pageTitle">ลงทะเบียน</b><div class="me" id="me">กำลังโหลด…</div></div></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <div class="state" id="boot"><div class="spin"></div>กำลังโหลด…</div>
+
+  <!-- คำขอที่ฉันอนุมัติได้ -->
+  <section id="approvals" hidden style="margin-bottom:14px">
+    <h2 class="sec">รอคุณอนุมัติ <small id="apCount"></small></h2>
+    <div class="list" id="apList"></div>
+  </section>
+
+  <!-- โปรไฟล์ / คำขอที่รออยู่ -->
+  <section id="view" hidden></section>
+
+  <!-- ฟอร์ม -->
+  <form id="form" class="card" novalidate hidden style="margin-top:12px">
+    <div id="formMsg"></div>
+    <div class="profile" style="margin-bottom:14px" id="lineWho"></div>
+    <div class="field"><label for="fFull">ชื่อจริง-นามสกุล</label><input class="inp" id="fFull" maxlength="100" autocomplete="name" placeholder="เช่น สมชาย ใจดี"></div>
+    <div class="field"><label for="fNick">ชื่อเล่น</label><input class="inp" id="fNick" maxlength="30" autocomplete="nickname" placeholder="เช่น ต้น"><div class="hint">เลขาเป็ดจะเรียกคุณว่า “คุณ<span id="nickPrev">…</span>”</div></div>
+    <div class="field"><span class="lbl" id="roleLbl">บทบาท</span>
+      <div class="seg" role="group" aria-labelledby="roleLbl" id="role">
+        <button type="button" data-r="staff" aria-pressed="true">พนักงาน</button><button type="button" data-r="head" aria-pressed="false">หัวหน้าแผนก</button><button type="button" data-r="ceo" aria-pressed="false">ผู้บริหาร (CEO)</button>
+      </div>
+    </div>
+    <div class="field" id="deptField"><label for="fDept">แผนก</label>
+      <select class="inp" id="fDept"></select>
+      <input class="inp" id="fDeptOther" maxlength="50" placeholder="พิมพ์ชื่อแผนก เช่น ฝ่ายไอที" style="margin-top:8px" hidden>
+    </div>
+    <div class="field" id="headField"><label for="fHead">หัวหน้าคือใคร</label><select class="inp" id="fHead"></select><div class="hint" id="headHint"></div></div>
+    <div class="field"><label for="fTitle">ตำแหน่ง / หน้าที่ <small>(ไม่บังคับ)</small></label><input class="inp" id="fTitle" maxlength="80" placeholder="เช่น เจ้าหน้าที่ขาย"></div>
+    <div class="field"><label for="fPhone">เบอร์โทร <small>(ไม่บังคับ)</small></label><input class="inp" id="fPhone" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" placeholder="08x-xxx-xxxx"></div>
+    <div class="okbox" id="routeInfo"></div>
+    <div class="actions"><button type="button" class="btn" id="fCancel" hidden>ยกเลิก</button><button type="submit" class="btn primary" id="fNext">ถัดไป</button></div>
+  </form>
+
+  <!-- สรุปก่อนส่ง -->
+  <section id="summary" hidden style="margin-top:12px">
+    <div class="card">
+      <h2 class="sec" style="margin-top:0">ตรวจข้อมูลก่อนส่ง</h2>
+      <dl class="kv" id="sumKv"></dl>
+      <div id="sumNote"></div>
+      <div id="sumMsg"></div>
+      <div class="actions"><button type="button" class="btn" id="sBack">แก้ไข</button><button type="button" class="btn primary" id="sSend">ยืนยันส่ง</button></div>
+    </div>
+  </section>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="rejSheet" role="dialog" aria-modal="true" aria-labelledby="rejTitle" hidden>
+  <div class="grab"></div>
+  <h3><span id="rejTitle">ไม่อนุมัติ</span><button class="close" data-close aria-label="ปิด">×</button></h3>
+  <div class="field"><label for="rejReason">เหตุผล (ไม่บังคับ · ส่งให้ผู้ขอทาง LINE)</label><textarea class="inp" id="rejReason" maxlength="300" placeholder="เช่น ไม่ใช่พนักงานในแผนกนี้"></textarea></div>
+  <div id="rejMsg"></div>
+  <div class="actions"><button class="btn danger" id="rejGo">ไม่อนุมัติ</button></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const { $, $$, esc, api, boot, fail, avatar, toast, busy, openSheet, closeSheets, link, when } = Duck;
+const ROLE_TH = { staff: "พนักงาน", head: "หัวหน้าแผนก", ceo: "ผู้บริหาร (CEO)" };
+const OTHER = "__other";
+const S = { me: null, deps: null, role: "staff", edit: false, base: null };
+
+(async () => {
+  try {
+    S.me = await boot({ needMember: false });
+    Duck.fixLinks();
+    S.deps = await api("departments");
+    $("#boot").hidden = true;
+    if (S.me.counts?.registrations) loadApprovals();
+    if (S.me.registered) showProfile();
+    else if (S.me.pending) showPendingView(S.me.pending);
+    else openForm(null);
+  } catch (e) { fail(e); }
+})();
+
+// ===== โปรไฟล์ / คำขอที่รอ =====
+function kvRows(rows) { return rows.filter((r) => r[1]).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join(""); }
+function showProfile() {
+  const m = S.me.me, p = S.me.pending;
+  $("#pageTitle").textContent = "โปรไฟล์ของฉัน";
+  $("#view").innerHTML = `<div class="card"><div class="profile" style="margin-bottom:12px">${avatar(m, "lg")}<div class="nm"><b>${esc(m.full)}</b><small>คุณ${esc(m.nick)} · ${esc(m.role_th)}</small></div></div>
+    <dl class="kv">${kvRows([["แผนก", m.role !== "ceo" ? m.dept : "ผู้บริหาร"], ["หัวหน้า", m.head?.name], ["ตำแหน่ง", m.job], ["เบอร์โทร", m.phone]])}</dl>
+    ${p ? `<div class="warnbox">ขอเปลี่ยนเป็น ${esc(p.role_th)}${p.role !== "ceo" ? " · " + esc(p.department) : ""} · รอ ${esc(p.approver)} อนุมัติ</div>` : ""}
+    <div class="actions"><button class="btn" id="editBtn">แก้ไขโปรไฟล์</button>${p ? `<button class="btn danger" id="cancelReq">ยกเลิกคำขอ</button>` : ""}</div></div>`;
+  $("#view").hidden = false;
+  $("#editBtn").onclick = () => openForm({ full_name: m.full, nickname: m.nick, role: m.role, department: m.dept, head_id: m.head?.id, title: m.job, phone: m.phone }, true);
+  if (p) $("#cancelReq").onclick = (e) => cancelReq(e.target);
+}
+function showPendingView(p) {
+  $("#pageTitle").textContent = "รออนุมัติ";
+  $("#view").innerHTML = `<div class="card"><div class="state" style="padding:8px 0 12px"><div class="big">⏳</div><b>ส่งคำขอแล้ว รอ ${esc(p.approver)} อนุมัติ</b>อนุมัติแล้วเลขาเป็ดจะแจ้งในแชต LINE ทันที</div>
+    <dl class="kv">${kvRows([["ชื่อ", p.full_name], ["ชื่อเล่น", p.nickname], ["บทบาท", p.role_th], ["แผนก", p.role !== "ceo" ? p.department : ""], ["หัวหน้า", p.head?.name], ["ตำแหน่ง", p.title], ["เบอร์โทร", p.phone], ["ส่งเมื่อ", when(isoBkk(p.created_at))]])}</dl>
+    <div class="actions"><button class="btn" id="editReq">แก้ไขคำขอ</button><button class="btn danger" id="cancelReq">ยกเลิกคำขอ</button></div></div>`;
+  $("#view").hidden = false;
+  $("#editReq").onclick = () => openForm({ full_name: p.full_name, nickname: p.nickname, role: p.role, department: p.department, head_id: p.head?.id, title: p.title, phone: p.phone });
+  $("#cancelReq").onclick = (e) => cancelReq(e.target);
+}
+const isoBkk = (s) => new Date(new Date(s).getTime() + 7 * 3600e3).toISOString().slice(0, 19) + "+07:00";
+async function cancelReq(btn) {
+  if (!confirm("ยกเลิกคำขอที่รออนุมัติ?")) return;
+  await busy(btn, async () => { await api("register/cancel", {}); toast("ยกเลิกคำขอแล้ว"); setTimeout(() => location.reload(), 600); }).catch((e) => toast(e.message));
+}
+
+// ===== ฟอร์ม =====
+function openForm(v, edit = false) {
+  S.edit = edit; S.base = v;
+  $("#view").hidden = true; $("#summary").hidden = true; $("#form").hidden = false; $("#formMsg").innerHTML = "";
+  $("#fCancel").hidden = !(edit || S.me.pending);
+  $("#pageTitle").textContent = edit ? "แก้ไขโปรไฟล์" : "ลงทะเบียน";
+  const prof = Duck.S.profile;
+  $("#lineWho").innerHTML = prof || S.me.me ? `${avatar(S.me.me || { pic: prof?.pictureUrl, initials: Duck.initial(prof?.displayName) }, "md")}<div class="nm"><b>${esc(prof?.displayName || S.me.me?.full || "")}</b><small>บัญชี LINE ที่จะผูกกับเลขาเป็ด</small></div>` : "";
+  $("#fFull").value = v?.full_name || "";
+  $("#fNick").value = v?.nickname || "";
+  $("#fTitle").value = v?.title || "";
+  $("#fPhone").value = v?.phone || "";
+  // ตั้งชื่อเล่นจากชื่อ LINE ให้ก่อน (แก้ได้)
+  if (!v && prof?.displayName) $("#fNick").value = prof.displayName.split(/\s+/)[0].slice(0, 30);
+  const names = S.deps.departments.map((d) => d.name);
+  $("#fDept").innerHTML = `<option value="">— เลือกแผนก —</option>` + names.map((n) => `<option>${esc(n)}</option>`).join("") + `<option value="${OTHER}">แผนกอื่น (พิมพ์เอง)</option>`;
+  const dept = v?.department && v.role !== "ceo" ? v.department : "";
+  if (dept && !names.includes(dept)) { $("#fDept").value = OTHER; $("#fDeptOther").value = dept; } else { $("#fDept").value = dept; $("#fDeptOther").value = ""; }
+  setRole(v?.role || "staff", v?.head_id);
+  nickPrev();
+  window.scrollTo(0, 0);
+}
+$("#fCancel").onclick = () => { $("#form").hidden = true; S.me.registered ? showProfile() : showPendingView(S.me.pending); };
+function nickPrev() { $("#nickPrev").textContent = $("#fNick").value.trim().replace(/^คุณ/, "") || "…"; }
+$("#fNick").oninput = nickPrev;
+$("#role").onclick = (e) => { const b = e.target.closest("[data-r]"); if (b) setRole(b.dataset.r); };
+function setRole(r, headId) {
+  S.role = r;
+  for (const b of $("#role").children) b.setAttribute("aria-pressed", String(b.dataset.r === r));
+  $("#deptField").hidden = r === "ceo";
+  renderHeads(headId);
+}
+function deptValue() { const v = $("#fDept").value; return v === OTHER ? $("#fDeptOther").value.trim() : v; }
+$("#fDept").onchange = () => { $("#fDeptOther").hidden = $("#fDept").value !== OTHER; if (!$("#fDeptOther").hidden) $("#fDeptOther").focus(); renderHeads(); };
+$("#fDeptOther").oninput = () => renderHeads();
+function headsOf(dept) { return (S.deps.departments.find((d) => d.name === dept)?.heads || []).filter((h) => h.id !== S.me.me?.id); }
+function renderHeads(keep) {
+  $("#fDeptOther").hidden = $("#fDept").value !== OTHER;
+  const dept = deptValue(), heads = headsOf(dept), r = S.role;
+  $("#headField").hidden = r !== "staff";
+  const cur = keep ?? $("#fHead").value;
+  $("#fHead").innerHTML = heads.length ? (heads.length > 1 ? `<option value="">— เลือกหัวหน้า —</option>` : "") + heads.map((h) => `<option value="${esc(h.id)}">${esc(h.name)} · ${esc(h.full)}</option>`).join("") : `<option value="">ยังไม่มีหัวหน้าในแผนกนี้</option>`;
+  if (heads.some((h) => h.id === cur)) $("#fHead").value = cur;
+  $("#fHead").disabled = !heads.length;
+  $("#fHead").onchange = () => renderHeads();
+  $("#headHint").textContent = !dept ? "เลือกแผนกก่อน" : heads.length ? "" : "CEO จะเป็นผู้อนุมัติแทน";
+  const ceoOk = S.deps.ceo?.linked;
+  $("#routeInfo").innerHTML = "ผู้อนุมัติ: <b>" + esc(r === "ceo" ? "ผู้ดูแลระบบ" : r === "head" ? (ceoOk ? "CEO" : "ผู้ดูแลระบบ") : heads.length ? (heads.find((h) => h.id === $("#fHead").value)?.name || "หัวหน้าที่เลือก") : ceoOk ? "CEO" : "ผู้ดูแลระบบ") + "</b>"
+    + (r === "ceo" ? " · บทบาท CEO อนุมัติได้เฉพาะผู้ดูแลระบบ" : r === "head" ? " · หัวหน้าแผนกต้องให้ CEO อนุมัติ" : "") + (S.edit ? "<br>แก้ชื่อเล่น ตำแหน่ง เบอร์โทร มีผลทันที · เปลี่ยนแผนก หัวหน้า หรือบทบาท ต้องรออนุมัติ" : "");
+}
+function collect() {
+  return { full_name: $("#fFull").value.trim(), nickname: $("#fNick").value.trim().replace(/^คุณ\s*/, ""), role: S.role, department: S.role === "ceo" ? null : deptValue(),
+    head_id: S.role === "staff" ? $("#fHead").value || null : null, title: $("#fTitle").value.trim(), phone: $("#fPhone").value.trim(),
+    display_name: Duck.S.profile?.displayName || null, picture: Duck.S.profile?.pictureUrl || null };
+}
+$("#form").onsubmit = (e) => {
+  e.preventDefault();
+  const v = collect();
+  const err = (t, el) => { $("#formMsg").innerHTML = `<div class="errbox" role="alert">${esc(t)}</div>`; el?.focus(); $("#formMsg").scrollIntoView({ block: "nearest" }); };
+  if ([...v.full_name].length < 2) return err("กรุณาใส่ชื่อจริง-นามสกุล", $("#fFull"));
+  if (!v.nickname) return err("กรุณาใส่ชื่อเล่น", $("#fNick"));
+  if (v.role !== "ceo" && !v.department) return err("กรุณาเลือกแผนก", $("#fDept").value === OTHER ? $("#fDeptOther") : $("#fDept"));
+  if (v.role === "staff" && headsOf(v.department).length && !v.head_id) return err("กรุณาเลือกหัวหน้าของคุณ", $("#fHead"));
+  if (v.phone && !/^[0-9+\-\s()]{6,20}$/.test(v.phone)) return err("เบอร์โทรไม่ถูกต้อง", $("#fPhone"));
+  $("#formMsg").innerHTML = "";
+  const head = headsOf(v.department).find((h) => h.id === v.head_id);
+  $("#sumKv").innerHTML = kvRows([["ชื่อ", v.full_name], ["ชื่อเล่น", "คุณ" + v.nickname], ["บทบาท", ROLE_TH[v.role]], ["แผนก", v.department], ["หัวหน้า", v.role === "staff" ? head?.name || "ยังไม่มีหัวหน้า" : ""], ["ตำแหน่ง", v.title], ["เบอร์โทร", v.phone]]);
+  const m = S.me.me;
+  const structural = !m || v.role !== m.role || (v.role !== "ceo" && v.department !== m.dept) || (v.role === "staff" && (v.head_id || null) !== (m.head?.id || null));
+  $("#sumNote").innerHTML = `<div class="${structural ? "warnbox" : "okbox"}">${structural ? (m ? "เปลี่ยนแผนก/หัวหน้า/บทบาท ต้องรออนุมัติ ระหว่างนี้ใช้ข้อมูลเดิมไปก่อน" : "ส่งแล้วต้องรออนุมัติก่อนใช้งาน") + " · " + $("#routeInfo").innerHTML.split("<br>")[0] : "บันทึกทันที ไม่ต้องรออนุมัติ"}</div>`;
+  $("#sSend").textContent = structural ? "ยืนยันส่งคำขอ" : "บันทึก";
+  $("#sumMsg").innerHTML = "";
+  $("#form").hidden = true; $("#summary").hidden = false; window.scrollTo(0, 0);
+  S.pendingBody = v;
+};
+$("#sBack").onclick = () => { $("#summary").hidden = true; $("#form").hidden = false; };
+$("#sSend").onclick = (e) => busy(e.target, async () => {
+  try {
+    const r = await api("register", S.pendingBody);
+    if (r.pending) {
+      $("#summary").hidden = true;
+      S.me.pending = r.pending;
+      if (S.me.registered) { S.me = await api("me"); showProfile(); toast("ส่งคำขอแล้ว รอ " + r.approver + " อนุมัติ"); }
+      else showPendingView(r.pending);
+    } else { S.me = await api("me"); $("#summary").hidden = true; showProfile(); toast("บันทึกแล้ว"); }
+  } catch (err) { $("#sumMsg").innerHTML = `<div class="errbox" role="alert">${esc(err.message)}</div>`; }
+});
+
+// ===== อนุมัติคำขอ =====
+async function loadApprovals() {
+  try {
+    const { items } = await api("registrations");
+    $("#approvals").hidden = !items.length;
+    $("#apCount").textContent = items.length ? items.length + " คน" : "";
+    $("#apList").innerHTML = items.map((r) => `<article class="item" data-id="${esc(r.id)}">
+      <div class="row">${avatar({ pic: r.picture, initials: Duck.initial(r.nickname) }, "md")}<div class="t">${esc(r.full_name)} <span class="sub">(คุณ${esc(r.nickname)})</span><div class="sub">${r.change ? "ขอเปลี่ยนข้อมูล · " : ""}${esc(r.role_th)}${r.role !== "ceo" ? " · " + esc(r.department) : ""}${r.head ? " · หัวหน้า " + esc(r.head.name) : ""}</div></div><span class="pill pending">รออนุมัติ</span></div>
+      ${r.title || r.phone || r.display_name ? `<div class="sub">${[r.title, r.phone, r.display_name && "LINE: " + r.display_name].filter(Boolean).map(esc).join(" · ")}</div>` : ""}
+      <div class="btnrow"><button class="btn sm primary" data-ok="1">อนุมัติ</button><button class="btn sm" data-ok="0">ไม่อนุมัติ</button></div></article>`).join("");
+  } catch (e) { toast(e.message); }
+}
+let rejId = null;
+$("#apList").onclick = async (e) => {
+  const b = e.target.closest("[data-ok]"); if (!b) return;
+  const id = b.closest("[data-id]").dataset.id;
+  if (b.dataset.ok === "0") { rejId = id; $("#rejReason").value = ""; $("#rejMsg").innerHTML = ""; openSheet("#rejSheet"); return; }
+  await busy(b, async () => {
+    try { const r = await api("registrations/decide", { id, ok: true }); toast(r.message); loadApprovals(); }
+    catch (err) { toast(err.message); loadApprovals(); }
+  });
+};
+$("#rejGo").onclick = (e) => busy(e.target, async () => {
+  try { const r = await api("registrations/decide", { id: rejId, ok: false, reason: $("#rejReason").value.trim() || null }); closeSheets(); toast(r.message); loadApprovals(); }
+  catch (err) { $("#rejMsg").innerHTML = `<div class="errbox" role="alert">${esc(err.message)}</div>`; }
+});
+</script>
+</body>
+</html>

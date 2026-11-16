@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>การ์ดดำ · เลขาเป็ด</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/app.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+<script src="../shared/app.js"></script>
+<!-- เลขาเป็ด · การ์ดดำ (LIFF) · CEO เห็นทั้งหมด / หัวหน้าเห็นฝ่ายตัวเอง / พนักงานเห็นของตัวเอง · ทดสอบ: http://localhost:8766/black/?dev=<LINE userId> -->
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <a class="iconbtn" href="../" data-page aria-label="หน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+      <div class="brand"><div class="logo black" aria-hidden="true">■</div><div style="min-width:0"><b>การ์ดดำ</b><div class="me" id="me">กำลังโหลด…</div></div></div>
+      <button class="iconbtn" id="refresh" aria-label="โหลดใหม่"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+    </div>
+    <div class="tabs" role="tablist" id="tabs" hidden></div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <div class="state" id="boot"><div class="spin"></div>กำลังโหลด…</div>
+  <div class="list" id="list" role="tabpanel" aria-live="polite"></div>
+</main>
+
+<a class="fab dark" id="fab" href="../assign/?black=1" data-page hidden><span aria-hidden="true">+</span> การ์ดดำใหม่</a>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="dateSheet" role="dialog" aria-modal="true" aria-labelledby="dateTitle" hidden>
+  <div class="grab"></div>
+  <h3><span id="dateTitle">อนุมัติให้เลื่อนเป็นวันอื่น</span><button class="close" data-close aria-label="ปิด">×</button></h3>
+  <p class="me" id="dateSub" style="white-space:normal;margin:0 0 12px"></p>
+  <div class="row2 field"><input class="inp" type="date" id="dDate" aria-label="วันที่"><input class="inp" type="time" id="dTime" step="300" aria-label="เวลา"></div>
+  <div id="dateMsg"></div>
+  <div class="actions"><button class="btn primary" id="dateGo">อนุมัติวันนี้</button></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const { $, $$, esc, api, boot, fail, toast, busy, openSheet, closeSheets, link, when, todayStr, taskItem, deliveredText } = Duck;
+const TABS = [
+  { k: "pending", t: "รออนุมัติ", f: (x) => x.status === "awaiting" },
+  { k: "active", t: "กำลังทำ", f: (x) => ["in_progress", "not_started", "overdue", "blocked"].includes(x.status) },
+  { k: "ext", t: "ขอเลื่อน", f: (x) => x.status === "extpend" },
+  { k: "done", t: "เสร็จแล้ว", f: (x) => x.status === "done" || x.status === "rejected" },
+];
+const S = { items: [], tab: null, me: null };
+
+(async () => {
+  try {
+    await boot();
+    Duck.fixLinks();
+    await load();
+    $("#boot").hidden = true; $("#tabs").hidden = false;
+  } catch (e) { fail(e); }
+})();
+
+async function load() {
+  const d = await api("black");
+  S.items = d.items; S.me = d.me;
+  $("#fab").hidden = !d.can_new;
+  if (!S.tab) {
+    const mine = TABS.find((t) => S.items.some((x) => t.f(x) && (x.can.decide || x.can.ext_decide || x.can.ext_forward)));
+    S.tab = (mine || TABS.find((t) => t.k === "active" && S.items.some(t.f)) || TABS.find((t) => S.items.some(t.f)) || TABS[1]).k;
+  }
+  render();
+}
+$("#refresh").onclick = () => load().then(() => toast("อัปเดตแล้ว")).catch((e) => toast(e.message));
+
+function render() {
+  $("#tabs").innerHTML = TABS.map((t) => {
+    const list = S.items.filter(t.f), hot = list.some((x) => x.can.decide || x.can.ext_decide || x.can.ext_forward);
+    return `<button role="tab" aria-selected="${S.tab === t.k}" data-k="${t.k}">${t.t}<span class="n${hot ? " hot" : ""}">${list.length}</span></button>`;
+  }).join("");
+  const tab = TABS.find((t) => t.k === S.tab);
+  const list = S.items.filter(tab.f);
+  const scope = S.me.role === "ceo" ? "" : S.me.role === "head" ? "ใน" + S.me.dept : "ของคุณ";
+  $("#list").innerHTML = list.length ? list.map((x) => taskItem(x, { actions: actions(x) })).join("")
+    : `<div class="empty">ไม่มีการ์ดดำ${esc(scope)}ในหมวด “${tab.t}”${S.me.role === "ceo" && tab.k !== "done" ? "<br>แตะ “+ การ์ดดำใหม่” เพื่อสั่งงานพิเศษ" : ""}</div>`;
+}
+$("#tabs").onclick = (e) => { const b = e.target.closest("[data-k]"); if (b) { S.tab = b.dataset.k; render(); } };
+
+function actions(x) {
+  const a = [];
+  if (x.can.decide) a.push(`<button class="btn sm dark" data-act="approve">อนุมัติ</button>`, `<button class="btn sm" data-act="reject">ไม่อนุมัติ</button>`);
+  if (x.can.ext_forward) a.push(`<button class="btn sm dark" data-act="ext_fwd">ส่งต่อให้ CEO</button>`);
+  if (x.can.ext_decide) a.push(`<button class="btn sm dark" data-act="ext_ok">อนุมัติเลื่อน</button>`, `<button class="btn sm" data-act="ext_date">วันอื่น</button>`);
+  if (x.can.ext_reject) a.push(`<button class="btn sm danger" data-act="ext_rej">ไม่ให้เลื่อน</button>`);
+  if (x.can.nudge) a.push(`<button class="btn sm" data-act="nudge">ตามตอนนี้</button>`);
+  if (x.can.update) a.push(`<a class="btn sm" href="${esc(link("../followup/"))}">อัปเดตความคืบหน้า</a>`);
+  return a.join("");
+}
+
+let cur = null;
+$("#list").onclick = async (e) => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const x = S.items.find((i) => i.id === b.closest("[data-id]").dataset.id); if (!x) return;
+  const act = b.dataset.act;
+  if (act === "ext_date") {
+    cur = x; const d = x.ext.new_due;
+    $("#dDate").value = d.slice(0, 10); $("#dTime").value = d.slice(11, 16); $("#dDate").min = todayStr();
+    $("#dateSub").textContent = `${x.owner.name}ขอเลื่อน “${x.title}” จาก ${when(x.ext.old_due)} เป็น ${when(x.ext.new_due)}`;
+    $("#dateMsg").innerHTML = ""; openSheet("#dateSheet"); return;
+  }
+  const ask = { approve: `อนุมัติการ์ดดำ “${x.title}” ให้${x.owner.name}เริ่มทำ?`, reject: `ไม่อนุมัติการ์ดดำ “${x.title}”?`, ext_rej: `ไม่ให้${x.owner.name}เลื่อน “${x.title}” (คงกำหนดเดิม)?` }[act];
+  if (ask && !confirm(ask)) return;
+  const call = {
+    approve: () => api("black/decide", { task_id: x.id, ok: true }),
+    reject: () => api("black/decide", { task_id: x.id, ok: false }),
+    nudge: () => api("nudge", { task_ids: [x.id] }),
+    ext_fwd: () => api("ext/forward", { ext_id: x.ext.id }),
+    ext_ok: () => api("ext/decide", { ext_id: x.ext.id, result: "approved" }),
+    ext_rej: () => api("ext/decide", { ext_id: x.ext.id, result: "rejected" }),
+  }[act];
+  await busy(b, async () => {
+    try { const r = await call(); done(r); } catch (err) { toast(err.message); load().catch(() => {}); }
+  }, "…");
+};
+$("#dateGo").onclick = (e) => busy(e.target, async () => {
+  try { const r = await api("ext/decide", { ext_id: cur.ext.id, result: "approved", date: `${$("#dDate").value}T${$("#dTime").value}` }); closeSheets(); done(r); }
+  catch (err) { $("#dateMsg").innerHTML = `<div class="errbox" role="alert">${esc(err.message)}</div>`; }
+});
+function done(r) {
+  toast([r.messages?.[0], deliveredText(r)].filter(Boolean).join(" · ") || "เรียบร้อย");
+  load().catch((e) => toast(e.message));
+}
+</script>
+</body>
+</html>

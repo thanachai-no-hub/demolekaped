@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>เลขาเป็ด</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/app.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+<script src="shared/app.js"></script>
+<!--
+  เลขาเป็ด · หน้าหลัก LIFF (Endpoint URL ของ LIFF app = โฟลเดอร์นี้)
+  เปิดหน้าย่อยด้วย https://liff.line.me/<LIFF_ID>/<page>/ → LINE โหลดหน้านี้พร้อม ?liff.state=/<page>/ แล้ว liff.init พาไปหน้านั้นเอง
+  ทดสอบในเครื่อง: http://localhost:8766/?dev=<LINE userId>
+-->
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand"><div class="logo" aria-hidden="true">🦆</div><div style="min-width:0"><b>เลขาเป็ด</b><div class="me" id="me">กำลังโหลด…</div></div></div>
+    </div>
+  </div>
+</header>
+<main class="wrap" id="main">
+  <div class="state" id="boot"><div class="spin"></div>กำลังเปิด…</div>
+  <section id="app" hidden>
+    <div class="card profile" id="profile" style="margin-bottom:14px"></div>
+    <div id="alerts"></div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const { $, esc, link, boot, fail, avatar } = Duck;
+const PAGES = [
+  { href: "calendar/", ic: "📅", bg: "#ea580c", t: "ปฏิทิน", s: "นัดประชุม เตือนความจำ กำหนดส่ง", roles: ["ceo", "head", "staff"] },
+  { href: "assign/", ic: "📝", bg: "#16a34a", t: "มอบงาน", s: "เลือกคน กำหนดส่ง แล้วเลขาเป็ดตามให้", roles: ["ceo", "head"] },
+  { href: "black/", ic: "■", bg: "#0b0b0d", t: "การ์ดดำ", s: "งานพิเศษจาก CEO · อนุมัติ / ตาม / ขอเลื่อน", roles: ["ceo", "head", "staff"], badge: (c) => c.black_awaiting + c.ext_waiting },
+  { href: "followup/", ic: "⏰", bg: "#dc2626", t: "ตามงาน", s: "เลยกำหนด ติดปัญหา ใกล้ครบ · ตามทีเดียว", sStaff: "งานของฉัน อัปเดต % / ขอเลื่อน", roles: ["ceo", "head", "staff"], badge: (c, r) => r === "staff" ? 0 : c.overdue },
+  { href: "register/", ic: "👤", bg: "#2563eb", t: "โปรไฟล์ของฉัน", s: "ชื่อ แผนก ตำแหน่ง", roles: ["ceo", "head", "staff"], badge: (c) => c.registrations, sBadge: "มีคำขอลงทะเบียนรออนุมัติ" },
+];
+
+(async () => {
+  // เปิดผ่าน https://liff.line.me/<id>/<page>/ → liff.init จะพาไปหน้านั้นเอง ไม่ต้องแสดงเมนู
+  if (new URLSearchParams(location.search).has("liff.state") && !Duck.DEV_USER) {
+    try { await liff.init({ liffId: Duck.LIFF_ID }); } catch (e) { fail(e); }
+    return;
+  }
+  try {
+    const me = await boot({ needMember: false });
+    render(me);
+    $("#boot").hidden = true; $("#app").hidden = false;
+  } catch (e) { fail(e); }
+})();
+
+function render(me) {
+  if (!me.registered) {
+    const p = me.pending;
+    $("#profile").innerHTML = `${avatar(Duck.S.profile ? { pic: Duck.S.profile.pictureUrl, initials: "?" } : null, "lg")}<div class="nm"><b>${esc(Duck.S.profile?.displayName || "ยินดีต้อนรับ")}</b><small>${p ? "รอ " + esc(p.approver) + " อนุมัติการลงทะเบียน" : "ยังไม่ได้ลงทะเบียน"}</small></div>`;
+    $("#tiles").innerHTML = tile({ href: "register/", ic: p ? "⏳" : "👋", bg: "#f2b705", t: p ? "ดูคำขอลงทะเบียน" : "ลงทะเบียนเริ่มใช้งาน", s: p ? "แก้ไขหรือยกเลิกคำขอได้" : "ชื่อ แผนก บทบาท และหัวหน้าของคุณ" }, me.counts?.registrations, true);
+    return;
+  }
+  const m = me.me, c = me.counts;
+  $("#profile").innerHTML = `${avatar(m, "lg")}<div class="nm"><b>${esc(m.full)}</b><small>${esc(m.role_th)}${m.role !== "ceo" ? " · " + esc(m.dept) : ""}${m.job ? " · " + esc(m.job) : ""}</small></div>`;
+  const alerts = [];
+  if (c.registrations) alerts.push(`มีคำขอลงทะเบียนรอคุณอนุมัติ ${c.registrations} คน`);
+  if (c.black_awaiting) alerts.push(`การ์ดดำรอคุณอนุมัติ ${c.black_awaiting} งาน`);
+  if (c.ext_waiting) alerts.push(`คำขอเลื่อนรอคุณพิจารณา ${c.ext_waiting} งาน`);
+  $("#alerts").innerHTML = alerts.length ? `<div class="warnbox" role="status">${alerts.map(esc).join("<br>")}</div>` : "";
+  $("#tiles").innerHTML = PAGES.filter((p) => p.roles.includes(m.role)).map((p) => {
+    const n = p.badge ? p.badge(c, m.role) : 0;
+    return tile({ ...p, s: m.role === "staff" && p.sStaff ? p.sStaff : n && p.sBadge ? p.sBadge : p.s }, n, p.href === "register/");
+  }).join("");
+}
+function tile(p, badge, wide) {
+  return `<a class="tile${wide ? " wide" : ""}" href="${esc(link(p.href))}"><span class="ic" style="background:${p.bg};color:#fff" aria-hidden="true">${p.ic}</span><span style="min-width:0"><b style="display:block">${esc(p.t)}</b><small>${esc(p.s)}</small></span>${badge ? `<span class="badge" aria-label="${badge} รายการรอ">${badge}</span>` : ""}</a>`;
+}
+</script>
+</body>
+</html>

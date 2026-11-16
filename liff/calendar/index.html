@@ -12,7 +12,7 @@
 <!--
   เลขาเป็ด · ปฏิทิน (LIFF)  — ไฟล์เดียว ไม่มี build
   ตั้งค่า: LIFF_ID (จาก LINE Developers > LINE Login channel > LIFF) และ API_URL (Edge Function calendar-api)
-  ทดสอบในเครื่อง: python3 -m http.server 8766 แล้วเปิด http://localhost:8766/?dev=<LINE userId>
+  ทดสอบในเครื่อง: python3 -m http.server 8766 (ในโฟลเดอร์ liff) แล้วเปิด http://localhost:8766/calendar/?dev=<LINE userId>
     (ข้าม LIFF และส่ง header x-dev-line-user ไปที่ API ในเครื่อง · ใช้ได้เมื่อเปิดจาก localhost และ API ตั้ง CAL_DEV=1 เท่านั้น)
 -->
 <style>
@@ -279,6 +279,8 @@ async function boot() {
     await load();
     $("#boot").hidden = true; $("#app").hidden = false; $("#fab").hidden = false;
   } catch (e) {
+    // ยังไม่ลงทะเบียน → หน้าลงทะเบียน (LIFF app เดียวกัน)
+    if (e.status === 403 && e.body?.code === "not_registered") { location.replace("../register/" + (DEV_USER ? "?dev=" + encodeURIComponent(DEV_USER) : "")); return; }
     $("#boot").innerHTML = `<b>${e.status === 403 ? "ยังใช้ปฏิทินไม่ได้" : "เปิดปฏิทินไม่สำเร็จ"}</b>${esc(e.message)}` +
       (e.status === 403 ? "" : `<div style="margin-top:16px"><button class="btn" style="max-width:220px" onclick="location.reload()">ลองใหม่</button></div>`);
     $("#me").textContent = "";

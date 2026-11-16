@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>มอบงาน · เลขาเป็ด</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/app.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+<script src="../shared/app.js"></script>
+<!-- เลขาเป็ด · มอบงาน / การ์ดดำ (LIFF) · ?black=1 เปิดสวิตช์การ์ดดำไว้ก่อน · ทดสอบ: http://localhost:8766/assign/?dev=<LINE userId> -->
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <a class="iconbtn" href="../" data-page aria-label="หน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+      <div class="brand"><div class="logo" id="logo" aria-hidden="true">📝</div><div style="min-width:0"><b id="pageTitle">มอบงาน</b><div class="me" id="me">กำลังโหลด…</div></div></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <div class="state" id="boot"><div class="spin"></div>กำลังโหลด…</div>
+
+  <form id="form" novalidate hidden>
+    <div id="formMsg"></div>
+    <div class="field"><label for="fSearch">ผู้รับงาน <span id="pickedName" style="color:var(--fg)"></span></label>
+      <input class="inp" id="fSearch" type="search" placeholder="ค้นหาชื่อ หรือฝ่าย" autocomplete="off">
+      <div class="people" id="people" role="radiogroup" aria-label="ผู้รับงาน"></div>
+    </div>
+    <div class="field"><label for="fTitle">ชื่องาน</label><input class="inp" id="fTitle" maxlength="100" placeholder="เช่น สรุปลูกค้าเก่า 20 ราย" autocomplete="off"></div>
+    <div class="field"><label for="fDetail">รายละเอียด <small>(ไม่บังคับ)</small></label><textarea class="inp" id="fDetail" maxlength="1000" placeholder="สิ่งที่ต้องส่ง ข้อมูลที่ต้องใช้ ฯลฯ"></textarea></div>
+    <div class="field"><span class="lbl">กำหนดส่ง</span>
+      <div class="row2"><input class="inp" type="date" id="fDate" aria-label="วันที่ส่ง"><input class="inp" type="time" id="fTime" step="300" aria-label="เวลาส่ง"></div>
+      <div class="chiprow" id="chips"></div>
+    </div>
+    <div class="field" id="blackField" hidden>
+      <button type="button" class="switch" id="fBlack" role="switch" aria-checked="false"><span class="tx"><b>การ์ดดำ</b><small id="blackSub">งานพิเศษ ต้องให้หัวหน้าฝ่ายอนุมัติก่อนเริ่ม</small></span><span class="tg" aria-hidden="true"></span></button>
+      <div class="hint" id="blackHint" style="margin-top:8px"></div>
+    </div>
+    <div class="actions"><button type="submit" class="btn primary" id="fNext">ดูตัวอย่างก่อนส่ง</button></div>
+  </form>
+
+  <section id="done" hidden></section>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="pvSheet" role="dialog" aria-modal="true" aria-labelledby="pvTitle" hidden>
+  <div class="grab"></div>
+  <h3><span id="pvTitle">ตรวจก่อนส่ง</span><button class="close" data-close aria-label="ปิด">×</button></h3>
+  <div id="pvBody"></div>
+  <div id="pvMsg"></div>
+  <div class="actions"><button class="btn" data-close>แก้ไข</button><button class="btn primary" id="pvSend">ยืนยัน</button></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const { $, esc, api, boot, fail, avatar, toast, busy, openSheet, closeSheets, link, when, todayStr, addDays, dow, bkkNow, pad, deliveredText } = Duck;
+const S = { opt: null, owner: null, black: false, chip: null };
+
+(async () => {
+  try {
+    await boot();
+    Duck.fixLinks();
+    S.opt = await api("assign/options");
+    $("#boot").hidden = true;
+    if (!S.opt.allowed) {
+      Duck.state(`<div class="big">🙅</div><b>พนักงานมอบงานไม่ได้</b>${esc(S.opt.reason)}<a class="btn" href="${esc(link("../followup/"))}">ไปที่งานของฉัน</a>`);
+      return;
+    }
+    $("#blackField").hidden = !S.opt.black;
+    if (S.opt.black && new URLSearchParams(location.search).get("black") === "1") setBlack(true);
+    renderChips(); setDue(addDays(todayStr(), 1), "17:00", "tmr");
+    renderPeople();
+    $("#form").hidden = false;
+  } catch (e) { fail(e); }
+})();
+
+// ===== ผู้รับงาน =====
+function renderPeople() {
+  const q = $("#fSearch").value.trim().toLowerCase();
+  const list = S.opt.people.filter((p) => !q || [p.name, p.full, p.nick, p.dept, p.title, p.job].join(" ").toLowerCase().includes(q));
+  $("#people").innerHTML = list.length ? list.map((p) => {
+    const on = S.owner?.id === p.id;
+    return `<button type="button" class="person" role="radio" aria-checked="${on}" data-pid="${p.id}">${avatar(p, "md")}<span class="nm">${esc(p.name)}<small>${esc(p.title)}${p.job ? " · " + esc(p.job) : ""} · งานเปิด ${p.open_tasks}${p.linked ? "" : " · ยังไม่ผูก LINE"}</small></span><span class="radio"></span></button>`;
+  }).join("") : `<div class="state" style="padding:16px">ไม่พบชื่อนี้</div>`;
+}
+$("#fSearch").oninput = renderPeople;
+$("#people").onclick = (e) => {
+  const b = e.target.closest("[data-pid]"); if (!b) return;
+  S.owner = S.opt.people.find((p) => p.id === b.dataset.pid);
+  $("#pickedName").textContent = "· " + S.owner.name;
+  renderPeople(); renderBlack();
+};
+
+// ===== กำหนดส่ง =====
+function chipDefs() {
+  const t = todayStr(), now = bkkNow();
+  const fri = addDays(t, ((5 - dow(t)) + 7) % 7 || (now.getUTCHours() >= 17 ? 7 : 0));
+  return [
+    { k: "today", label: "วันนี้ 17:00", d: t, t: "17:00", ok: now.getUTCHours() < 17 },
+    { k: "tmr", label: "พรุ่งนี้", d: addDays(t, 1), t: "17:00", ok: true },
+    { k: "fri", label: "ศุกร์นี้", d: fri, t: "17:00", ok: true },
+    { k: "next", label: "สัปดาห์หน้า", d: addDays(t, 7), t: "17:00", ok: true },
+  ].filter((c) => c.ok);
+}
+function renderChips() {
+  $("#chips").innerHTML = chipDefs().map((c) => `<button type="button" data-k="${c.k}" aria-pressed="${S.chip === c.k}">${esc(c.label)}</button>`).join("");
+}
+function setDue(d, t, k) { $("#fDate").value = d; $("#fTime").value = t; $("#fDate").min = todayStr(); S.chip = k || null; renderChips(); }
+$("#chips").onclick = (e) => { const b = e.target.closest("[data-k]"); if (!b) return; const c = chipDefs().find((x) => x.k === b.dataset.k); setDue(c.d, c.t, c.k); };
+for (const id of ["#fDate", "#fTime"]) $(id).addEventListener("change", () => { S.chip = null; renderChips(); });
+
+// ===== การ์ดดำ =====
+function setBlack(on) { S.black = on; $("#fBlack").setAttribute("aria-checked", String(on)); $("#logo").textContent = on ? "■" : "📝"; $("#logo").classList.toggle("black", on); $("#pageTitle").textContent = on ? "การ์ดดำใหม่" : "มอบงาน"; renderBlack(); }
+$("#fBlack").onclick = () => { if (!$("#fBlack").disabled) setBlack(!S.black); };
+function renderBlack() {
+  const o = S.owner;
+  const blocked = o && !o.black_ok;
+  $("#fBlack").disabled = !!blocked;
+  if (blocked && S.black) setBlack(false);
+  $("#blackHint").innerHTML = !o ? "เลือกผู้รับงานก่อน จะบอกว่าใครเป็นผู้อนุมัติ"
+    : blocked ? esc(o.black_note || "ส่งเป็นการ์ดดำไม่ได้")
+    : `ผู้อนุมัติ: <b>${esc(o.head?.name || "-")}</b> (หัวหน้าของ${esc(o.name)})<br>1. ส่งให้${esc(o.head?.name)}อนุมัติ → 2. ${esc(o.name)}เห็นว่ามีการ์ดดำรอ (ยังไม่เริ่ม) → 3. อนุมัติแล้วจึงเริ่มทำ และแจ้งท่านทุกครั้งที่อัปเดต`;
+  $("#fNext").textContent = S.black ? "ดูตัวอย่างการ์ดดำ" : "ดูตัวอย่างก่อนส่ง";
+}
+
+// ===== ตัวอย่าง + ส่ง =====
+function body() {
+  return { owner_id: S.owner?.id, title: $("#fTitle").value.trim(), detail: $("#fDetail").value.trim() || null, due: `${$("#fDate").value}T${$("#fTime").value}`, black: S.black };
+}
+const stepsHtml = (steps) => steps.map((s) => `<div class="step"><i class="${esc(s.k)}"></i><div>${esc(s.main)}${s.sub ? `<small>${esc(s.sub)}</small>` : ""}</div></div>`).join("");
+$("#form").onsubmit = async (e) => {
+  e.preventDefault();
+  const err = (t, el) => { $("#formMsg").innerHTML = `<div class="errbox" role="alert">${esc(t)}</div>`; el?.focus(); window.scrollTo(0, 0); };
+  const b = body();
+  if (!b.owner_id) return err("เลือกผู้รับงาน", $("#fSearch"));
+  if (!b.title) return err("กรุณาใส่ชื่องาน", $("#fTitle"));
+  if (!$("#fDate").value || !$("#fTime").value) return err("เลือกกำหนดส่ง", $("#fDate"));
+  $("#formMsg").innerHTML = "";
+  await busy($("#fNext"), async () => {
+    try {
+      const r = await api("assign", { ...b, dry_run: true });
+      const p = r.plan, o = S.owner;
+      $("#pvTitle").textContent = p.special ? "ยืนยันการ์ดดำ" : "ยืนยันมอบหมายงาน";
+      $("#pvBody").innerHTML = `<div class="fx ${p.special ? "black" : ""}"><div class="h">${p.special ? "■ " : ""}${p.special ? "ยืนยันการ์ดดำ" : "ยืนยันมอบหมายงาน"}</div><div class="b">
+        <dl class="kv" style="margin:0"><dt>ผู้รับงาน</dt><dd>${esc(o.name)} · ${esc(o.title)}</dd><dt>งาน</dt><dd>${esc(b.title)}</dd>${b.detail ? `<dt>รายละเอียด</dt><dd style="font-weight:400">${esc(b.detail)}</dd>` : ""}<dt>กำหนดส่ง</dt><dd>${esc(when(r.due))} น.</dd>
+        ${p.special ? `<dt>ประเภท</dt><dd>การ์ดดำ</dd><dt>ผู้อนุมัติ</dt><dd>${esc(p.head)}</dd>` : `<dt>หัวหน้าฝ่าย</dt><dd>${esc(p.head)}</dd>`}</dl>
+        ${p.note ? `<div class="warnbox" style="margin:0">${esc(p.note)}</div>` : ""}<div class="lbl" style="margin:4px 0 0">ลำดับขั้น</div>${stepsHtml(p.steps)}</div></div>
+        ${o.linked ? "" : `<div class="warnbox" style="margin-top:10px">${esc(o.name)}ยังไม่ผูก LINE จะยังไม่ได้รับแจ้ง</div>`}`;
+      $("#pvSend").textContent = p.special ? "ส่งขออนุมัติ" : "ยืนยันมอบงาน";
+      $("#pvSend").className = "btn " + (p.special ? "dark" : "primary");
+      $("#pvMsg").innerHTML = "";
+      openSheet("#pvSheet");
+    } catch (x) { err(x.message); }
+  }, "กำลังตรวจ…");
+};
+$("#pvSend").onclick = (e) => busy(e.target, async () => {
+  try {
+    const r = await api("assign", body());
+    closeSheets(); showDone(r);
+  } catch (x) { $("#pvMsg").innerHTML = `<div class="errbox" role="alert">${esc(x.message)}</div>`; }
+});
+function showDone(r) {
+  const t = r.task;
+  $("#form").hidden = true;
+  $("#done").innerHTML = `<div class="state" style="padding:24px 8px 12px"><div class="big">${t.special ? "■" : "✅"}</div><b>${t.special ? "ส่งการ์ดดำให้" + esc(r.plan.head) + "อนุมัติแล้ว" : "มอบงานให้" + esc(t.owner.name) + "แล้ว"}</b>${esc(r.messages[0] || "")}</div>
+    <div class="card"><div class="lbl">สิ่งที่เกิดขึ้น</div>${stepsHtml(r.plan.steps)}
+    ${deliveredText(r) ? `<div class="okbox" style="margin:12px 0 0">${esc(deliveredText(r))}</div>` : ""}</div>
+    <div class="actions" style="margin-top:14px"><a class="btn" href="${esc(link("../"))}">หน้าหลัก</a><button class="btn primary" id="again">${t.special ? "การ์ดดำอีกใบ" : "มอบงานอีก"}</button></div>`;
+  $("#done").hidden = false; window.scrollTo(0, 0);
+  $("#again").onclick = () => { $("#fTitle").value = ""; $("#fDetail").value = ""; $("#done").hidden = true; $("#form").hidden = false; };
+  toast(t.special ? "ส่งขออนุมัติแล้ว" : "มอบงานแล้ว");
+}
+</script>
+</body>
+</html>
