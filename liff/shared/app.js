@@ -171,14 +171,18 @@
   }
 
   // ===== sheet / toast =====
-  let lastFocus = null;
+  let lastFocus = null, openRaf = 0;
   function openSheet(id) {
     lastFocus = document.activeElement;
     const s = $(id); s.hidden = false;
-    requestAnimationFrame(() => { s.classList.add("on"); $("#scrim").classList.add("on"); });
+    cancelAnimationFrame(openRaf);
+    openRaf = requestAnimationFrame(() => { s.classList.add("on"); $("#scrim").classList.add("on"); });
     setTimeout(() => (s.querySelector("input,textarea,select,button:not([data-close])") || s.querySelector("button"))?.focus(), 260);
   }
   function closeSheets() {
+    // sheet ที่เพิ่งสั่งเปิดแต่ยังไม่ทันแสดง (เช่น หน้าอยู่เบื้องหลัง) ต้องไม่เด้งขึ้นมาทีหลัง
+    cancelAnimationFrame(openRaf);
+    for (const s of $$(".sheet:not(.on)")) s.hidden = true;
     for (const s of $$(".sheet.on")) { s.classList.remove("on"); setTimeout(() => (s.hidden = true), 260); }
     $("#scrim")?.classList.remove("on");
     lastFocus?.focus?.();
@@ -202,6 +206,105 @@
     return parts.join(" · ");
   }
 
+  // ===== ฟอร์มของเจ้าของงาน: อัปเดตงาน (ต้องแนบรูป ยกเว้นติดปัญหา) + ขอเลื่อน · ใช้ร่วมกันหลายหน้า (followup / mytasks) =====
+  // ownerSheets({ after(result) }) → { openUpdate(task), openRequest(task) } · ใส่ sheet ลงหน้าให้เอง (ต้องมี #scrim)
+  function ownerSheets({ after }) {
+    if (!$("#scrim")) document.body.insertAdjacentHTML("beforeend", `<div class="scrim" id="scrim"></div>`);
+    document.body.insertAdjacentHTML("beforeend", `
+<div class="sheet" id="upSheet" role="dialog" aria-modal="true" aria-labelledby="upTitle" hidden>
+  <div class="grab"></div>
+  <h3><span id="upTitle">อัปเดตงาน</span><button class="close" data-close aria-label="ปิด">×</button></h3>
+  <div class="field"><span class="lbl" id="stLbl">สถานะ</span>
+    <div class="seg" role="group" aria-labelledby="stLbl" id="uState"><button type="button" data-s="work" aria-pressed="true">กำลังทำ</button><button type="button" data-s="block" aria-pressed="false">ติดปัญหา</button><button type="button" data-s="done" aria-pressed="false">เสร็จแล้ว</button></div>
+  </div>
+  <div class="field" id="pField"><label for="uP">ความคืบหน้า <b id="uPv">0%</b></label><input type="range" id="uP" min="0" max="100" step="10" style="width:100%;height:44px;accent-color:var(--green)">
+    <div class="chiprow" id="uChips"></div></div>
+  <div class="field"><span class="lbl" id="phLbl">รูปงานที่ทำ <small id="phHint">(บังคับ · สูงสุด 4 รูป)</small></span>
+    <div class="phgrid" id="uPhotos" role="group" aria-labelledby="phLbl"></div>
+    <div class="phneed" id="phNeed">แนบรูปอย่างน้อย 1 รูป ให้เห็นว่าทำถึงไหนแล้ว</div></div>
+  <div class="field"><label for="uNote">หมายเหตุ <small id="noteHint">(ไม่บังคับ)</small></label><textarea class="inp" id="uNote" maxlength="500" placeholder="เช่น รอราคาจากซัพพลายเออร์"></textarea></div>
+  <div id="upMsg"></div>
+  <div class="actions"><button class="btn primary" id="upGo">บันทึก</button></div>
+</div>
+<div class="sheet" id="rqSheet" role="dialog" aria-modal="true" aria-labelledby="rqTitle" hidden>
+  <div class="grab"></div>
+  <h3><span id="rqTitle">ขอเลื่อนกำหนดส่ง</span><button class="close" data-close aria-label="ปิด">×</button></h3>
+  <p class="me" id="rqSub" style="white-space:normal;margin:0 0 12px"></p>
+  <div class="field"><label for="rDate">อยากเลื่อนเป็นวัน</label><input class="inp" type="date" id="rDate"><div class="chiprow" id="rChips"></div></div>
+  <div class="field"><label for="rReason">เหตุผล</label><textarea class="inp" id="rReason" maxlength="300" placeholder="เช่น ลูกค้ายังไม่ส่งสเปก"></textarea></div>
+  <div class="okbox" style="font-size:13px">ระหว่างรอ กำหนดส่งยังเป็นวันเดิม และเลขาเป็ดจะหยุดตามงานนี้ไว้ก่อน</div>
+  <div id="rqMsg"></div>
+  <div class="actions"><button class="btn primary" id="rqGo">ส่งคำขอ</button></div>
+</div>`);
+    const errIn = (id, er) => { $(id).innerHTML = `<div class="errbox" role="alert">${esc(er.message)}</div>`; };
+    let cur = null, uState = "work", photos = [];   // photos = [{ type, data, url, size }] ย่อแล้ว
+    const MAX_PH = 4, MAX_BODY = 5.8e6;             // base64 รวมทุกรูป (server รับ ~6.5 MB)
+    function setU(s) {
+      uState = s;
+      for (const b of $("#uState").children) b.setAttribute("aria-pressed", String(b.dataset.s === s));
+      $("#pField").hidden = s === "done";
+      $("#noteHint").textContent = s === "block" ? "(ติดอะไร · แจ้งหัวหน้าให้ช่วยดู)" : "(ไม่บังคับ)";
+      renderPhotos();
+    }
+    function renderPhotos() {
+      const need = uState !== "block";
+      $("#phHint").textContent = need ? `(บังคับ · สูงสุด ${MAX_PH} รูป)` : `(ไม่บังคับเมื่อติดปัญหา · สูงสุด ${MAX_PH} รูป)`;
+      $("#uPhotos").innerHTML = photos.map((p, i) => `<div class="ph"><img src="${p.url}" alt="รูปที่ ${i + 1}" data-view="${i}"><button type="button" data-del="${i}" aria-label="ลบรูปที่ ${i + 1}">×</button></div>`).join("") +
+        (photos.length < MAX_PH ? `<label class="phadd"><b aria-hidden="true">＋</b>${photos.length ? "เพิ่มรูป" : "ถ่าย / เลือกรูป"}<input type="file" id="uFile" accept="image/*" capture="environment" multiple></label>` : "");
+      $("#phNeed").hidden = !need || photos.length > 0;
+      $("#upGo").disabled = need && !photos.length;
+    }
+    $("#uPhotos").onchange = async (e) => {
+      if (e.target.id !== "uFile") return;
+      const files = [...e.target.files].slice(0, MAX_PH - photos.length);
+      if (e.target.files.length > files.length) toast(`แนบได้สูงสุด ${MAX_PH} รูป`);
+      $("#upMsg").innerHTML = "";
+      for (const f of files) {
+        try { photos.push(await shrinkPhoto(f)); } catch (er) { errIn("#upMsg", er); }
+      }
+      renderPhotos();
+    };
+    $("#uPhotos").onclick = (e) => {
+      const d = e.target.closest("[data-del]"); if (d) { photos.splice(+d.dataset.del, 1); renderPhotos(); return; }
+      const v = e.target.closest("[data-view]"); if (v) viewPhotos(photos.map((p) => p.url), +v.dataset.view);
+    };
+    const setP = (v) => { $("#uP").value = v; $("#uPv").textContent = v + "%"; };
+    $("#uState").onclick = (e) => { const b = e.target.closest("[data-s]"); if (b) setU(b.dataset.s); };
+    $("#uP").oninput = () => setP(+$("#uP").value);
+    $("#uChips").onclick = (e) => { const b = e.target.closest("[data-v]"); if (b) setP(+b.dataset.v); };
+    $("#upGo").onclick = (e) => {
+      const note = $("#uNote").value.trim();
+      if (uState !== "block" && !photos.length) { $("#phNeed").hidden = false; return; }
+      const body = uState === "done" ? { done: true } : uState === "block" ? { blocked: true, progress: +$("#uP").value } : { progress: +$("#uP").value, blocked: false };
+      const ph = photos.map((p) => ({ type: p.type, data: p.data }));
+      if (ph.reduce((a, p) => a + p.data.length, 0) > MAX_BODY) { errIn("#upMsg", new Error("รูปรวมกันใหญ่เกินไป ลองลดจำนวนรูป")); return; }
+      return busy(e.target, () => api("update", { task_id: cur.id, ...body, note, photos: ph }).then(after).catch((er) => errIn("#upMsg", er)), "กำลังส่งรูป…")
+        .finally(() => renderPhotos());
+    };
+    function openUpdate(x) {
+      cur = x;
+      $("#upTitle").textContent = x.title;
+      setU(x.status === "blocked" ? "block" : "work"); setP(Math.min(100, x.progress));
+      $("#uChips").innerHTML = [x.progress + 20, 50, 80].filter((v, i, a) => v <= 90 && v > x.progress && a.indexOf(v) === i).map((v) => `<button type="button" data-v="${v}">${v === x.progress + 20 ? "+20%" : v + "%"}</button>`).join("");
+      photos = [];
+      $("#uNote").value = ""; $("#upMsg").innerHTML = ""; renderPhotos(); openSheet("#upSheet");
+    }
+    function openRequest(x) {
+      cur = x;
+      const d0 = x.due.slice(0, 10) > todayStr() ? x.due.slice(0, 10) : todayStr();
+      $("#rqSub").textContent = `“${x.title}” กำหนดเดิม ${when(x.due)}`;
+      $("#rDate").min = addDays(x.due.slice(0, 10), 1); $("#rDate").value = addDays(d0, 1);
+      $("#rChips").innerHTML = [1, 2, 3, 7].map((n) => `<button type="button" data-n="${n}">+${n} วัน</button>`).join("");
+      $("#rChips").onclick = (e) => { const b = e.target.closest("[data-n]"); if (b) $("#rDate").value = addDays(d0, +b.dataset.n); };
+      $("#rReason").value = x.status === "blocked" && x.last?.note ? x.last.note : ""; $("#rqMsg").innerHTML = ""; openSheet("#rqSheet");
+    }
+    $("#rqGo").onclick = (e) => {
+      if (!$("#rReason").value.trim()) { $("#rqMsg").innerHTML = `<div class="errbox" role="alert">กรุณาบอกเหตุผล</div>`; $("#rReason").focus(); return; }
+      return busy(e.target, () => api("ext/request", { task_id: cur.id, due: $("#rDate").value, reason: $("#rReason").value.trim() }).then(after).catch((er) => errIn("#rqMsg", er)));
+    };
+    return { openUpdate, openRequest };
+  }
+
   window.Duck = { LIFF_ID, DEV_USER, S, $, $$, esc, link, fixLinks, pad, bkkNow, todayStr, addDays, dow, when, ago, api, boot, state, fail, showPending,
-    avatar, initial, pbar, taskItem, photoThumb, viewPhotos, shrinkPhoto, openSheet, closeSheets, toast, busy, deliveredText, MONTHS };
+    avatar, initial, pbar, taskItem, photoThumb, viewPhotos, shrinkPhoto, openSheet, closeSheets, toast, busy, deliveredText, ownerSheets, MONTHS };
 })();

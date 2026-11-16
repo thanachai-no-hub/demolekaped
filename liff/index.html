@@ -37,10 +37,11 @@
 <script>
 const { $, esc, link, boot, fail, avatar } = Duck;
 const PAGES = [
+  { href: "mytasks/", ic: "✅", bg: "#0d9488", t: "งานของฉัน", s: "งานที่ได้รับมอบ · อัปเดต % / ขอเลื่อน", roles: ["ceo", "head", "staff"] },
   { href: "calendar/", ic: "📅", bg: "#ea580c", t: "ปฏิทิน", s: "นัดประชุม เตือนความจำ กำหนดส่ง", roles: ["ceo", "head", "staff"] },
   { href: "assign/", ic: "📝", bg: "#16a34a", t: "มอบงาน", s: "เลือกคน กำหนดส่ง แล้วเลขาเป็ดตามให้", roles: ["ceo", "head"] },
   { href: "black/", ic: "■", bg: "#0b0b0d", t: "การ์ดดำ", s: "งานพิเศษจาก CEO · อนุมัติ / ตาม / ขอเลื่อน", roles: ["ceo", "head", "staff"], badge: (c) => c.black_awaiting + c.ext_waiting },
-  { href: "followup/", ic: "⏰", bg: "#dc2626", t: "ตามงาน", s: "เลยกำหนด ติดปัญหา ใกล้ครบ · ตามทีเดียว", sStaff: "งานของฉัน อัปเดต % / ขอเลื่อน", roles: ["ceo", "head", "staff"], badge: (c, r) => r === "staff" ? 0 : c.overdue },
+  { href: "followup/", ic: "⏰", bg: "#dc2626", t: "ตามงาน", s: "เลยกำหนด ติดปัญหา ใกล้ครบ · ตามทีเดียว", roles: ["ceo", "head"], badge: (c, r) => r === "staff" ? 0 : c.overdue },
   { href: "register/", ic: "👤", bg: "#2563eb", t: "โปรไฟล์ของฉัน", s: "ชื่อ แผนก ตำแหน่ง", roles: ["ceo", "head", "staff"], badge: (c) => c.registrations, sBadge: "มีคำขอลงทะเบียนรออนุมัติ" },
 ];
 

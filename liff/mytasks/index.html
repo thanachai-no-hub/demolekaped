@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>งานของฉัน · เลขาเป็ด</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/app.css">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
+<script src="../shared/app.js"></script>
+<!--
+  เลขาเป็ด · งานของฉัน (ทุกตำแหน่งเห็นงานที่ตัวเองเป็นเจ้าของ) · เปิดจากการ์ด "งานของฉัน" ในแชต
+  ?task=<id> = เปิดรายละเอียดงานนั้นทันที (การ์ดในแชตลิงก์มาแบบนี้ · LIFF ส่ง query ผ่าน liff.state)
+  ทดสอบ: http://localhost:8766/mytasks/?dev=<LINE userId>[&task=<id>]
+-->
+<style>
+.hello{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.hello .nm{flex:1;min-width:0}
+.hello .nm b{display:block;font-size:17px}
+.hello .nm small{color:var(--muted);font-size:13px}
+.item.tap{cursor:pointer;text-align:left}
+.item.tap:active{background:var(--surface2)}
+.item .meta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--muted)}
+.item .meta .late{color:var(--bad);font-weight:700}
+.item .meta .soon{color:var(--warn);font-weight:700}
+.item.black{border-left:4px solid var(--black)}
+.wait{font-size:13px;background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:6px 10px}
+details.done{margin-top:14px}
+details.done summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;font-weight:600;color:var(--muted);font-size:14px}
+details.done summary::-webkit-details-marker{display:none}
+details.done summary::after{content:"▾";margin-left:auto;transition:transform .15s}
+details.done[open] summary::after{transform:rotate(180deg)}
+details.done .list{margin-top:6px}
+.hist{display:flex;flex-direction:column;gap:0;margin:0 0 12px;padding:0;list-style:none}
+.hist li{position:relative;padding:0 0 14px 22px}
+.hist li::before{content:"";position:absolute;left:5px;top:7px;width:10px;height:10px;border-radius:99px;background:var(--green)}
+.hist li::after{content:"";position:absolute;left:9px;top:19px;bottom:0;width:2px;background:var(--line)}
+.hist li:last-child::after{display:none}
+.hist li.blk::before{background:var(--amber)}
+.hist .h1{font-size:12px;color:var(--muted)}
+.hist .h1 b{color:var(--fg);font-size:13px}
+.hist .tx{font-size:14px;overflow-wrap:anywhere}
+.hist .phs{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.hist .phs button{width:64px;height:64px;padding:0;border:0;border-radius:10px;overflow:hidden;background:var(--line)}
+.hist .phs img{width:100%;height:100%;object-fit:cover;display:block}
+.desc{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;background:var(--surface2);border-radius:12px;padding:10px 12px;margin:0 0 12px}
+.dtop{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:-4px 0 10px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <a class="iconbtn" href="../" data-page aria-label="หน้าหลัก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+      <div class="brand"><div class="logo" aria-hidden="true"></div><div style="min-width:0"><b>งานของฉัน</b><div class="me" id="me">กำลังโหลด…</div></div></div>
+      <button class="iconbtn" id="refresh" aria-label="โหลดใหม่"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+    </div>
+    <div class="tabs" role="tablist" id="tabs" aria-label="กรองงาน" hidden></div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <div class="state" id="boot"><div class="spin"></div>กำลังโหลด…</div>
+  <div class="hello" id="hello" hidden></div>
+  <div class="list" id="list" role="tabpanel" aria-live="polite"></div>
+  <div id="doneBox"></div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<!-- รายละเอียดงาน -->
+<div class="sheet" id="dSheet" role="dialog" aria-modal="true" aria-labelledby="dTitle" hidden>
+  <div class="grab"></div>
+  <h3><span id="dTitle">งาน</span><button class="close" data-close aria-label="ปิด">×</button></h3>
+  <div id="dBody"></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const { $, esc, api, boot, fail, toast, busy, openSheet, closeSheets, when, ago, pbar, photoThumb, viewPhotos, avatar, deliveredText, bkkNow } = Duck;
+const { openUpdate, openRequest } = Duck.ownerSheets({ after });
+const CHIPS = [
+  { k: "all", t: "ทั้งหมด" }, { k: "overdue", t: "เลยกำหนด" }, { k: "soon", t: "ใกล้ครบ" }, { k: "blocked", t: "ติดปัญหา" },
+  { k: "awaiting", t: "รออนุมัติ" }, { k: "done", t: "เสร็จแล้ว" },
+];
+const EMPTY = { overdue: "ไม่มีงานเลยกำหนด", soon: "ไม่มีงานที่ครบใน 2 วัน", blocked: "ไม่มีงานติดปัญหา", awaiting: "ไม่มีการ์ดดำรออนุมัติ", done: "ยังไม่มีงานที่เสร็จใน 14 วันนี้" };
+const S = { d: null, f: "all", openId: null };
+const deep = new URLSearchParams(location.search).get("task");
+
+(async () => {
+  try {
+    await boot();
+    Duck.fixLinks();
+    await load();
+    $("#boot").hidden = true;
+    if (deep) openDetail(deep);
+  } catch (e) { fail(e); }
+})();
+
+async function load() {
+  S.d = await api("mytasks");
+  render();
+}
+$("#refresh").onclick = (e) => busy(e.currentTarget, () => load().then(() => toast("อัปเดตแล้ว")).catch((er) => toast(er.message)), "…");
+
+// ===== วันครบกำหนดแบบคนพูด: "วันนี้ 17:00" "พรุ่งนี้ 17:00" "เลยมา 2 วัน" =====
+function dueHuman(x) {
+  if (x.group === "done") return { t: "เสร็จแล้ว", c: "" };
+  const today = bkkNow().toISOString().slice(0, 10), d = x.due.slice(0, 10), hm = x.due.slice(11, 16);
+  const days = Math.round((new Date(d + "T00:00:00Z") - new Date(today + "T00:00:00Z")) / 864e5);
+  if (new Date(x.due) < new Date()) return { t: days === 0 ? "เลยกำหนดวันนี้ " + hm : "เลยมา " + -days + " วัน", c: "late" };
+  if (days === 0) return { t: "วันนี้ " + hm, c: "soon" };
+  if (days === 1) return { t: "พรุ่งนี้ " + hm, c: "soon" };
+  if (days === 2) return { t: "มะรืนนี้ " + hm, c: "soon" };
+  return { t: when(x.due), c: "" };
+}
+const waitText = (x) => `รอ${x.approver?.name || "หัวหน้า"}อนุมัติ · ยังไม่ต้องเริ่ม`;
+const pillLabel = (x) => x.status === "awaiting" ? "รออนุมัติ" : x.status_th;
+
+function render() {
+  const items = S.d.items, me = S.d.me, prof = Duck.S.profile;
+  const open = items.filter((x) => x.group !== "done");
+  const n = (k) => k === "all" ? open.length : items.filter((x) => x.group === k).length;
+  // ทักทาย + สรุป
+  const od = n("overdue");
+  $("#hello").hidden = false;
+  $("#hello").innerHTML = `${avatar({ ...me, pic: me.pic || prof?.pictureUrl }, "lg")}<div class="nm"><b>สวัสดี${esc(me.name === "CEO" ? "ครับ CEO" : me.name)}</b><small>${
+    open.length ? `มีงานค้าง ${open.length} งาน${od ? ` · <span style="color:var(--bad);font-weight:700">เลยกำหนด ${od}</span>` : ""}` : "ไม่มีงานค้าง พักได้เลย"}</small></div>`;
+  // ชิปกรอง (ซ่อนชิปที่ไม่มีงาน ยกเว้น ทั้งหมด / ชิปที่เลือกอยู่)
+  const chips = CHIPS.filter((c) => c.k === "all" || c.k === S.f || n(c.k));
+  $("#tabs").hidden = !items.length;
+  $("#tabs").innerHTML = chips.map((c) => `<button role="tab" aria-selected="${S.f === c.k}" data-k="${c.k}">${c.t}<span class="n${c.k === "overdue" && n(c.k) ? " hot" : ""}">${n(c.k)}</span></button>`).join("");
+  // รายการ
+  const list = S.f === "all" ? open : items.filter((x) => x.group === S.f);
+  $("#list").innerHTML = list.length ? list.map(item).join("")
+    : `<div class="empty">${S.f === "all" ? "ไม่มีงานค้าง 🎉" : EMPTY[S.f]}</div>`;
+  const done = items.filter((x) => x.group === "done");
+  $("#doneBox").innerHTML = S.f === "all" && done.length
+    ? `<details class="done"><summary>✓ เสร็จแล้ว ${done.length} งาน (14 วันล่าสุด)</summary><div class="list">${done.map(item).join("")}</div></details>` : "";
+}
+$("#tabs").onclick = (e) => { const b = e.target.closest("[data-k]"); if (b) { S.f = b.dataset.k; render(); window.scrollTo({ top: 0 }); } };
+
+function item(x) {
+  const due = dueHuman(x);
+  const by = x.by ? `มอบโดย ${esc(x.by.name)}` : "";
+  return `<article class="item tap${x.special ? " black" : ""}" data-id="${esc(x.id)}" role="button" tabindex="0" aria-label="${esc(x.title)} · ${esc(pillLabel(x))} · ${esc(due.t)}">
+    <div class="row"><div class="t">${x.special ? '<span class="pill black" style="margin-right:6px">การ์ดดำ</span>' : ""}${esc(x.title)}</div><span class="pill ${esc(x.status)}">${esc(pillLabel(x))}</span></div>
+    ${x.status === "awaiting" ? `<div class="wait">${esc(waitText(x))}</div>` : pbar(x.progress, x.status)}
+    <div class="meta"><span class="${due.c}">${esc(due.t)}</span>${by ? `<span>${by}</span>` : ""}</div>
+    ${x.ext ? `<div class="sub">ขอเลื่อนเป็น ${esc(when(x.ext.new_due))} · รอ${esc(x.ext.approver || "")}พิจารณา</div>` : ""}
+    ${x.last?.note || x.last?.photos?.length ? `<div class="note${x.last.photos?.length ? " hasph" : ""}">${photoThumb(x)}<div><small>อัปเดตล่าสุด · ${esc(ago(x.last.at))}</small>${esc(x.last.note || "")}</div></div>` : ""}
+  </article>`;
+}
+
+const find = (id) => S.d?.items.find((x) => x.id === id);
+$("#main").onclick = (e) => {
+  const card = e.target.closest("[data-id]"); if (!card) return;
+  const x = find(card.dataset.id); if (!x) return;
+  if (e.target.closest("[data-photos]")) return viewPhotos(x.last?.photos || []);
+  openDetail(x.id);
+};
+$("#main").onkeydown = (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches(".item.tap")) { e.preventDefault(); e.target.click(); } };
+
+// ===== รายละเอียดงาน + ประวัติอัปเดต =====
+async function openDetail(id) {
+  S.openId = id;
+  let x = find(id);
+  $("#dTitle").textContent = x ? x.title : "กำลังโหลด…";
+  $("#dBody").innerHTML = x ? detail(x, null) : `<div class="state"><div class="spin"></div></div>`;
+  openSheet("#dSheet");
+  try {
+    const r = await api("history?task=" + encodeURIComponent(id));
+    if (S.openId !== id) return;
+    x = find(id) || { ...r.task, group: r.task.progress >= 100 ? "done" : null };
+    $("#dTitle").textContent = x.title;
+    $("#dBody").innerHTML = detail(x, r.updates);
+  } catch (er) {
+    if (S.openId !== id) return;
+    if (!x) { closeSheets(); toast(er.message); return; }
+    $("#hist").innerHTML = `<div class="errbox" role="alert">โหลดประวัติไม่สำเร็จ: ${esc(er.message)}</div>`;
+  }
+}
+function detail(x, ups) {
+  const due = dueHuman(x.group ? x : { ...x, group: x.status === "done" ? "done" : null });
+  const mine = x.owner?.id === S.d.me.id;
+  const acts = [];
+  if (x.can?.update) acts.push(`<button class="btn primary" data-act="update">อัปเดตงาน</button>`);
+  if (x.can?.ext_request) acts.push(`<button class="btn" data-act="request">ขอเลื่อน</button>`);
+  return `<div class="dtop">${x.special ? '<span class="pill black">การ์ดดำ</span>' : ""}<span class="pill ${esc(x.status)}">${esc(pillLabel(x))}</span></div>
+    ${x.status === "awaiting" ? `<div class="warnbox">${esc(waitText(x))}<br><small>อนุมัติแล้วเลขาเป็ดจะแจ้งในแชต แล้วค่อยเริ่มอัปเดตงาน</small></div>` : `<div style="margin-bottom:12px">${pbar(x.progress, x.status)}</div>`}
+    ${x.detail ? `<p class="desc">${esc(x.detail)}</p>` : ""}
+    <dl class="kv">
+      <dt>กำหนดส่ง</dt><dd>${esc(when(x.due))}${due.t === when(x.due) ? "" : ` <span style="color:var(${due.c === "late" ? "--bad" : due.c === "soon" ? "--warn" : "--muted"});font-weight:600">· ${esc(due.t)}</span>`}</dd>
+      ${x.by ? `<dt>มอบโดย</dt><dd>${esc(x.by.name)}</dd>` : ""}
+      ${x.special && x.approver ? `<dt>ผู้อนุมัติ</dt><dd>${esc(x.approver.name)}${x.approval === "approved" ? " · อนุมัติแล้ว" : x.approval === "pending" ? " · รออนุมัติ" : ""}</dd>` : ""}
+      ${!mine && x.owner ? `<dt>ผู้รับผิดชอบ</dt><dd>${esc(x.owner.name)}</dd>` : ""}
+      ${x.ext_count ? `<dt>เลื่อนแล้ว</dt><dd>${x.ext_count} ครั้ง</dd>` : ""}
+    </dl>
+    ${x.ext ? `<div class="warnbox" style="font-size:13px">ขอเลื่อนเป็น <b>${esc(when(x.ext.new_due))}</b> · รอ${esc(x.ext.approver || "")}พิจารณา<br>เหตุผล: ${esc(x.ext.reason)}</div>` : ""}
+    ${acts.length ? `<div class="actions" style="margin-bottom:16px">${acts.join("")}</div>` : ""}
+    <h2 class="sec" style="margin-top:4px">ประวัติอัปเดต${ups ? ` <small>${ups.length} ครั้ง</small>` : ""}</h2>
+    <div id="hist">${ups == null ? `<div class="state" style="padding:12px"><div class="spin"></div></div>` : ups.length ? `<ol class="hist">${ups.map(hist).join("")}</ol>` : `<div class="empty">ยังไม่มีการอัปเดต</div>`}</div>`;
+}
+function hist(u, i) {
+  const blk = /ติดปัญหา/.test(u.note);
+  return `<li class="${blk ? "blk" : ""}"><div class="h1"><b>${esc(when(u.at))}</b>${u.progress != null ? ` · ${u.progress}%` : ""}${u.by ? ` · ${esc(u.by)}` : ""}</div>
+    ${u.note ? `<div class="tx">${esc(u.note)}</div>` : ""}
+    ${u.photos.length ? `<div class="phs">${u.photos.map((p, j) => `<button type="button" data-hist="${i}" data-j="${j}" aria-label="ดูรูปที่ ${j + 1}"><img src="${esc(p)}" alt="" loading="lazy"></button>`).join("")}</div>` : ""}</li>`;
+}
+$("#dBody").onclick = (e) => {
+  const x = find(S.openId);
+  const ph = e.target.closest("[data-hist]");
+  if (ph) { const li = ph.closest("li"); return viewPhotos([...li.querySelectorAll("img")].map((im) => im.src), +ph.dataset.j); }
+  const b = e.target.closest("[data-act]"); if (!b || !x) return;
+  closeSheets();
+  setTimeout(() => b.dataset.act === "update" ? openUpdate(x) : openRequest(x), 280);
+};
+
+function after(r) {
+  closeSheets();
+  toast([r.messages?.[0], deliveredText(r)].filter(Boolean).join(" · ") || "บันทึกแล้ว");
+  load().catch((e) => toast(e.message));
+}
+</script>
+</body>
+</html>
