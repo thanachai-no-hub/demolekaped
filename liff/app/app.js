@@ -789,7 +789,7 @@
       { id: "g1", name: "ทีมขายภาคกลาง", picture: null, members: 12, joined_at: at(-120, "10:00") },
       { id: "g2", name: "รีโนเวตสาขา 3", picture: null, members: 7, joined_at: at(-21, "14:00") },
     ];
-    const ph = (a, b) => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120"><rect width="160" height="120" fill="${a}"/><circle cx="118" cy="34" r="14" fill="#f5f3f0" opacity=".7"/><path d="M0 120L52 58l34 40 22-22 52 44z" fill="${b}"/></svg>`);
+    const ph = (a, b) => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120"><rect width="160" height="120" fill="${a}"/><circle cx="118" cy="34" r="14" fill="#f3f2ef" opacity=".7"/><path d="M0 120L52 58l34 40 22-22 52 44z" fill="${b}"/></svg>`);
     let seq = 1;
     const I = (o) => ({ id: "m" + seq++, body: null, at: null, all_day: false, repeat: null, importance: 0, scope: "mine", group: null, from: null, done: false, url: null, size: null, mime: null, thumb: null, editable: true, ...o });
     const g = (i) => ({ id: G[i].id, name: G[i].name });
@@ -816,8 +816,8 @@
       I({ source: "note", title: "ของที่ต้องเตรียมก่อนเปิดสาขา", body: "ป้ายหน้าร้าน, เครื่อง POS 2 เครื่อง, ชุดยูนิฟอร์ม 8 ชุด, ประกันอัคคีภัย" }),
       I({ source: "link", title: "เว็บไซต์บริษัท", url: "https://infini-ia.com" }),
       I({ source: "link", title: "ตารางราคาวัสดุ 2569", url: "https://docs.google.com/spreadsheets/d/example" }),
-      I({ source: "photo", title: "หน้างานสาขา 3.jpg", mime: "image/jpeg", size: 842000, thumb: ph("#6b6760", "#3a352e"), url: ph("#6b6760", "#3a352e") }),
-      I({ source: "photo", title: "ใบเสร็จค่าน้ำมัน.jpg", mime: "image/jpeg", size: 356000, thumb: ph("#b2aca5", "#8c8277"), url: ph("#b2aca5", "#8c8277") }),
+      I({ source: "photo", title: "หน้างานสาขา 3.jpg", mime: "image/jpeg", size: 842000, thumb: ph("#615751", "#3a352e"), url: ph("#615751", "#3a352e") }),
+      I({ source: "photo", title: "ใบเสร็จค่าน้ำมัน.jpg", mime: "image/jpeg", size: 356000, thumb: ph("#b5aea6", "#8c8277"), url: ph("#b5aea6", "#8c8277") }),
       I({ source: "file", title: "ใบเสนอราคา_Q4.pdf", mime: "application/pdf", size: 1240000 }),
       I({ source: "file", title: "สรุปยอดขายตุลาคม.xlsx", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", size: 98000 }),
     ];
@@ -962,7 +962,7 @@
       } else {
         await loadLiff();
         const me = await D.boot({ needMember: true });
-        st.me = { name: me?.me?.name || D.S.profile?.displayName || "", title: me?.me?.title || "", pic: D.S.profile?.pictureUrl || null };
+        st.me = { name: me?.me?.real || me?.me?.name || D.S.profile?.displayName || "", title: me?.me?.dev ? "Dev · สิทธิ์เท่า CEO" : (me?.me?.title || ""), pic: D.S.profile?.pictureUrl || null };
         drawMe();
       }
       try { applySettings(await api("app/settings")); } catch {}

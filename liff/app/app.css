@@ -1,29 +1,29 @@
 /* IPED · เว็บแอป · ธีมมืดโทนอุ่น (ค่าเริ่มต้น) + ธีมสว่าง · โทเคนตามพาเลต infini-ia.com */
 :root,[data-theme=dark]{
-  --bg:#1d1b18;--bg2:#24211d;--surface:#2f2b28;--surface2:#3a352e;--line:#47413a;--line2:#5d574f;
-  --fg:#f2efeb;--muted:#b2aca5;--faint:#8c8277;
-  --accent:#d9d4ce;--on-accent:#1d1b18;--taupe:#8c8277;
+  --bg:#2b2722;--bg2:#332e28;--surface:#3a352e;--surface2:#454039;--line:#4f4842;--line2:#615751;
+  --fg:#f1f0ec;--muted:#b5aea6;--faint:#8c8277;
+  --accent:#d6d5d0;--on-accent:#3a352e;--taupe:#8c8277;
   --bad:#c96a5e;--bad-bg:#3a201c;--sage:#8fae86;--sage-bg:#232b20;--amber:#d9a55a;--amber-bg:#3a2d1a;
-  --hero:linear-gradient(180deg,#2f2b28,#24211d);
+  --hero:linear-gradient(180deg,#3a352e,#2b2722);
   --shadow:0 12px 40px rgba(0,0,0,.45);--r:14px;
   color-scheme:dark;
 }
 [data-theme=light]{
-  --bg:#f5f3f0;--bg2:#efebe6;--surface:#ffffff;--surface2:#f2efeb;--line:#e2ddd7;--line2:#d9d4ce;
-  --fg:#2f2b28;--muted:#5d574f;--faint:#8c8277;
-  --accent:#3a352e;--on-accent:#f5f3f0;--taupe:#8c8277;
+  --bg:#f3f2ef;--bg2:#eceae6;--surface:#ffffff;--surface2:#f1f0ec;--line:#e3e2de;--line2:#d6d5d0;
+  --fg:#3a352e;--muted:#615751;--faint:#8c8277;
+  --accent:#3a352e;--on-accent:#f3f2ef;--taupe:#8c8277;
   --bad:#a8443a;--bad-bg:#f4e4e1;--sage:#56704f;--sage-bg:#e6ebe3;--amber:#9a6a26;--amber-bg:#f3eadb;
-  --hero:linear-gradient(180deg,#e9e5df,#f5f3f0);
+  --hero:linear-gradient(180deg,#e6e5e1,#f3f2ef);
   --shadow:0 12px 40px rgba(58,53,46,.16);
   color-scheme:light;
 }
 @media (prefers-color-scheme:light){
   [data-theme=auto]{
-    --bg:#f5f3f0;--bg2:#efebe6;--surface:#ffffff;--surface2:#f2efeb;--line:#e2ddd7;--line2:#d9d4ce;
-    --fg:#2f2b28;--muted:#5d574f;--faint:#8c8277;
-    --accent:#3a352e;--on-accent:#f5f3f0;
+    --bg:#f3f2ef;--bg2:#eceae6;--surface:#ffffff;--surface2:#f1f0ec;--line:#e3e2de;--line2:#d6d5d0;
+    --fg:#3a352e;--muted:#615751;--faint:#8c8277;
+    --accent:#3a352e;--on-accent:#f3f2ef;
     --bad:#a8443a;--bad-bg:#f4e4e1;--sage:#56704f;--sage-bg:#e6ebe3;--amber:#9a6a26;--amber-bg:#f3eadb;
-    --hero:linear-gradient(180deg,#e9e5df,#f5f3f0);
+    --hero:linear-gradient(180deg,#e6e5e1,#f3f2ef);
     --shadow:0 12px 40px rgba(58,53,46,.16);
     color-scheme:light;
   }
@@ -279,7 +279,7 @@ select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradi
 .tile .tb{padding:8px 10px;min-width:0}
 .tile .tb b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tile .tb small{color:var(--faint);font-size:12px}
-.tile .del{position:absolute;top:6px;right:6px;width:36px;height:36px;border-radius:10px;border:0;background:rgba(20,18,16,.7);color:#f2efeb;display:grid;place-items:center}
+.tile .del{position:absolute;top:6px;right:6px;width:36px;height:36px;border-radius:10px;border:0;background:rgba(20,18,16,.7);color:#f1f0ec;display:grid;place-items:center}
 .tile .del svg{width:16px;height:16px}
 .it a.lk{color:var(--muted);font-size:12px;overflow-wrap:anywhere}
 .storage{font-size:12px;color:var(--faint);display:flex;align-items:center;gap:10px}
