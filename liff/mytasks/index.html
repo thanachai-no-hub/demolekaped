@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>งานของฉัน · เลขาเป็ด</title>
+<title>งานของฉัน · IPED</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -12,7 +12,7 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8" defer></script>
 <script src="../shared/app.js"></script>
 <!--
-  เลขาเป็ด · งานของฉัน (ทุกตำแหน่งเห็นงานที่ตัวเองเป็นเจ้าของ) · เปิดจากการ์ด "งานของฉัน" ในแชต
+  IPED · งานของฉัน (ทุกตำแหน่งเห็นงานที่ตัวเองเป็นเจ้าของ) · เปิดจากการ์ด "งานของฉัน" ในแชต
   ?task=<id> = เปิดรายละเอียดงานนั้นทันที (การ์ดในแชตลิงก์มาแบบนี้ · LIFF ส่ง query ผ่าน liff.state)
   ทดสอบ: http://localhost:8766/mytasks/?dev=<LINE userId>[&task=<id>]
 -->
@@ -189,7 +189,7 @@ function detail(x, ups) {
   if (x.can?.update) acts.push(`<button class="btn primary" data-act="update">อัปเดตงาน</button>`);
   if (x.can?.ext_request) acts.push(`<button class="btn" data-act="request">ขอเลื่อน</button>`);
   return `<div class="dtop">${x.special ? '<span class="pill black">การ์ดดำ</span>' : ""}<span class="pill ${esc(x.status)}">${esc(pillLabel(x))}</span></div>
-    ${x.status === "awaiting" ? `<div class="warnbox">${esc(waitText(x))}<br><small>อนุมัติแล้วเลขาเป็ดจะแจ้งในแชต แล้วค่อยเริ่มอัปเดตงาน</small></div>` : `<div style="margin-bottom:12px">${pbar(x.progress, x.status)}</div>`}
+    ${x.status === "awaiting" ? `<div class="warnbox">${esc(waitText(x))}<br><small>อนุมัติแล้ว IPED จะแจ้งในแชต แล้วค่อยเริ่มอัปเดตงาน</small></div>` : `<div style="margin-bottom:12px">${pbar(x.progress, x.status)}</div>`}
     ${x.detail ? `<p class="desc">${esc(x.detail)}</p>` : ""}
     <dl class="kv">
       <dt>กำหนดส่ง</dt><dd>${esc(when(x.due))}${due.t === when(x.due) ? "" : ` <span style="color:var(${due.c === "late" ? "--bad" : due.c === "soon" ? "--warn" : "--muted"});font-weight:600">· ${esc(due.t)}</span>`}</dd>

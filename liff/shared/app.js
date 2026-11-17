@@ -1,4 +1,4 @@
-// เลขาเป็ด · สคริปต์ร่วมของหน้า LIFF (ไม่มี build) · ใช้ผ่าน window.Duck
+// IPED · สคริปต์ร่วมของหน้า LIFF (ไม่มี build) · ใช้ผ่าน window.Duck
 // ทุกหน้าอยู่ใต้ LIFF app เดียว: https://liff.line.me/<LIFF_ID>/<page>/  (Endpoint URL = .../liff/)
 // ทดสอบในเครื่อง: python3 -m http.server 8766 (ในโฟลเดอร์ liff) แล้วเปิด http://localhost:8766/<page>/?dev=<LINE userId>
 //   (ข้าม LIFF และส่ง header x-dev-line-user ไปที่ API ในเครื่อง · ใช้ได้เมื่อเปิดจาก localhost และ API ตั้ง CAL_DEV=1 เท่านั้น)
@@ -75,7 +75,7 @@
       await liff.init({ liffId: LIFF_ID });
       if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return new Promise(() => {}); }
       S.token = liff.getIDToken();
-      if (!S.token) throw new Error("ไม่ได้รับ ID token กรุณาเปิดจากแชตเลขาเป็ดใน LINE");
+      if (!S.token) throw new Error("ไม่ได้รับ ID token กรุณาเปิดจากแชต IPED ใน LINE");
       try { S.profile = await liff.getProfile(); } catch {}
     }
     if (prefetch) { S.pre[prefetch] = api(prefetch); S.pre[prefetch].catch(() => {}); }
@@ -114,7 +114,7 @@
   }
   async function switchView(staffId) { await api("dev/view", { staff_id: staffId }); location.reload(); }
   function showPending(p) {
-    state(`<b>รออนุมัติการลงทะเบียน</b>คำขอของ ${esc(p.full_name)} (${esc(p.role_th)}) รอ <b style="display:inline;font-size:inherit">${esc(p.approver)}</b> อนุมัติอยู่<br>อนุมัติแล้วเลขาเป็ดจะแจ้งในแชตทันที
+    state(`<b>รออนุมัติการลงทะเบียน</b>คำขอของ ${esc(p.full_name)} (${esc(p.role_th)}) รอ <b style="display:inline;font-size:inherit">${esc(p.approver)}</b> อนุมัติอยู่<br>อนุมัติแล้ว IPED จะแจ้งในแชตทันที
       <a class="btn" href="${esc(link("../register/"))}">ดู / แก้ไขคำขอ</a>`);
   }
   // แทนเนื้อหาหลักด้วยข้อความสถานะ
@@ -258,7 +258,7 @@
   <p class="me" id="rqSub" style="white-space:normal;margin:0 0 12px"></p>
   <div class="field"><label for="rDate">อยากเลื่อนเป็นวัน</label><input class="inp" type="date" id="rDate"><div class="chiprow" id="rChips"></div></div>
   <div class="field"><label for="rReason">เหตุผล</label><textarea class="inp" id="rReason" maxlength="300" placeholder="เช่น ลูกค้ายังไม่ส่งสเปก"></textarea></div>
-  <div class="okbox" style="font-size:13px">ระหว่างรอ กำหนดส่งยังเป็นวันเดิม และเลขาเป็ดจะหยุดตามงานนี้ไว้ก่อน</div>
+  <div class="okbox" style="font-size:13px">ระหว่างรอ กำหนดส่งยังเป็นวันเดิม และ IPED จะหยุดตามงานนี้ไว้ก่อน</div>
   <div id="rqMsg"></div>
   <div class="actions"><button class="btn primary" id="rqGo">ส่งคำขอ</button></div>
 </div>`);

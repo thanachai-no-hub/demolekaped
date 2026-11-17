@@ -4,30 +4,30 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>ปฏิทิน · เลขาเป็ด</title>
+<title>ปฏิทิน · IPED</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8"></script>
 <!--
-  เลขาเป็ด · ปฏิทิน (LIFF)  — ไฟล์เดียว ไม่มี build
+  IPED · ปฏิทิน (LIFF)  — ไฟล์เดียว ไม่มี build
   ตั้งค่า: LIFF_ID (จาก LINE Developers > LINE Login channel > LIFF) และ API_URL (Edge Function calendar-api)
   ทดสอบในเครื่อง: python3 -m http.server 8766 (ในโฟลเดอร์ liff) แล้วเปิด http://localhost:8766/calendar/?dev=<LINE userId>
     (ข้าม LIFF และส่ง header x-dev-line-user ไปที่ API ในเครื่อง · ใช้ได้เมื่อเปิดจาก localhost และ API ตั้ง CAL_DEV=1 เท่านั้น)
 -->
 <style>
 :root{
-  --bg:#fafafa;--surface:#fff;--surface2:#f4f4f5;--line:#e4e4e7;--fg:#09090b;--muted:#71717a;--faint:#a1a1aa;
-  --green:#06c755;--green-ink:#067a39;--on-green:#022410;--duck:#f2b705;--duck-ink:#2a1a00;--black:#0b0b0d;--on-black:#fff;
-  --bad:#c2362f;--bad-bg:#fde9e7;--warn:#8a5a00;--warn-bg:#fff3d6;--info:#2f6fde;
-  --duck-soft:#fff4cc;--duck-deep:#8a6400;--ok-bg:#e6f8ee;--info-bg:#e8f0fd;
-  --shadow:0 8px 30px rgba(9,9,11,.12);--r:14px;
+  --bg:#f6f5f2;--surface:#fff;--surface2:#f1f0ec;--line:#e2e0db;--fg:#2b2723;--muted:#615751;--faint:#8c8277;
+  --green:#3a352e;--green-ink:#56704f;--on-green:#ffffff;--duck:#8c8277;--duck-ink:#ffffff;--black:#1f1c18;--on-black:#fff;
+  --bad:#a8443a;--bad-bg:#f4e4e1;--warn:#7a5a2b;--warn-bg:#f1eadf;--info:#4e6a86;--amber:#c08a3e;
+  --duck-soft:#d6d5d0;--duck-deep:#615751;--ok-bg:#e6ebe3;--info-bg:#e5eaef;
+  --shadow:0 8px 30px rgba(58,53,46,.14);--r:14px;
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --bg:#09090b;--surface:#18181b;--surface2:#27272a;--line:#3f3f46;--fg:#fafafa;--muted:#a1a1aa;--faint:#71717a;
-    --green-ink:#3ddc84;--black:#f4f4f5;--on-black:#09090b;--bad:#f87171;--bad-bg:#3b1515;--warn:#fbbf24;--warn-bg:#3a2a05;--info:#7aa7ff;
-    --duck-soft:#2c2406;--duck-deep:#f2c94c;--ok-bg:#0f2a1b;--info-bg:#162238;
+    --bg:#1a1815;--surface:#24211d;--surface2:#2f2b26;--line:#3f3a34;--fg:#f2f1ee;--muted:#b5aca3;--faint:#8c8277;
+    --green:#d6d5d0;--on-green:#1a1815;--green-ink:#9db894;--duck:#8c8277;--black:#f2f1ee;--on-black:#1a1815;--bad:#e08a80;--bad-bg:#3a1e1a;--warn:#d9b27a;--warn-bg:#33291a;--info:#9db4cc;
+    --duck-soft:#3a352e;--duck-deep:#d6d5d0;--ok-bg:#222b1f;--info-bg:#1e2630;
     --shadow:0 8px 30px rgba(0,0,0,.5);
   }
 }
@@ -41,18 +41,18 @@ button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 main.wrap{padding-top:12px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
-/* หัว (เหมือน shared/app.css: แถบเหลืองเป็ด + โลโก้เป็ด + "เลขาเป็ด" เหนือชื่อหน้า) */
+/* หัว (เหมือน shared/app.css: แถบเหลืองเป็ด + โลโก้เป็ด + "IPED" เหนือชื่อหน้า) */
 header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:env(safe-area-inset-top);border-bottom:1px solid var(--line)}
 header::before{content:"";display:block;height:3px;background:var(--duck)}
 /* โหมดสลับ (Dev): แถบติดใต้หัวหน้า (เหมือน shared/app.css) */
-.devview{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 16px;background:var(--warn-bg,#fff3d6);color:var(--warn,#8a5a00);font-size:13px;line-height:1.4;border-top:1px solid var(--line)}
+.devview{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 16px;background:var(--warn-bg,#f1eadf);color:var(--warn,#7a5a2b);font-size:13px;line-height:1.4;border-top:1px solid var(--line)}
 .devview span{min-width:0;overflow-wrap:anywhere}
 .devview button{flex:none;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid currentColor;background:var(--surface);color:var(--fg);font:inherit;font-weight:700}
 .top{display:flex;align-items:center;gap:10px;padding:10px 0 6px}
 .brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
 .logo{width:40px;height:40px;border-radius:50%;background:var(--duck) url(../assets/lekaped-mark.svg) center/cover no-repeat;font-size:0;color:transparent;flex:none}
 .brand b{font-size:18px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
-.brand b::before{content:"เลขาเป็ด";display:block;font-size:11px;font-weight:700;color:var(--duck-deep);letter-spacing:.02em}
+.brand b::before{content:"IPED";display:block;font-size:11px;font-weight:700;color:var(--duck-deep);letter-spacing:.02em}
 .me{font-size:12px;color:var(--muted);white-space:nowrap}
 .iconbtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:none}
 .iconbtn svg{width:20px;height:20px}
@@ -296,7 +296,7 @@ async function boot() {
       await liff.init({ liffId: LIFF_ID });
       if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
       S.token = liff.getIDToken();
-      if (!S.token) throw new Error("ไม่ได้รับ ID token กรุณาเปิดจากแชตเลขาเป็ดใน LINE");
+      if (!S.token) throw new Error("ไม่ได้รับ ID token กรุณาเปิดจากแชต IPED ใน LINE");
     }
     await load();
     $("#boot").hidden = true; $("#app").hidden = false; $("#fab").hidden = false;
