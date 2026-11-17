@@ -125,6 +125,7 @@ $("#selAll").onclick = () => {
 function teamActions(x) {
   const a = [];
   if (x.can.nudge) a.push(`<button class="btn sm" data-act="nudge">ตาม</button>`);
+  else if (!x.owner.linked) a.push(`<span class="sub">${esc(x.owner.name)}ยังไม่ได้แอดเลขาเป็ด · ตามผ่านเลขาเป็ดไม่ได้</span>`);
   if (x.can.extend) a.push(`<button class="btn sm" data-act="extend">ขยายเวลา</button>`);
   if (x.can.ext_forward) a.push(`<button class="btn sm dark" data-act="ext_fwd">ส่งต่อให้ CEO</button>`);
   if (x.can.ext_decide) a.push(`<button class="btn sm primary" data-act="ext_ok">อนุมัติเลื่อน</button>`);

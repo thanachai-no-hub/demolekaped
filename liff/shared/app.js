@@ -147,7 +147,7 @@
     return `<article class="item${o.picked ? " sel" : ""}" data-id="${esc(t.id)}">
       <div class="row">${o.pick ? `<button type="button" class="pick" role="checkbox" aria-checked="${!!o.picked}" aria-label="เลือก ${esc(t.title)}" data-pick><span class="check">✓</span></button>` : ""}
         <div class="t">${t.special ? '<span class="pill black" style="margin-right:6px">การ์ดดำ</span>' : ""}${esc(t.title)}</div><span class="pill ${esc(st)}">${esc(t.status_th)}</span></div>
-      ${o.owner === false ? "" : `<div class="who">${avatar(t.owner)}<span><b>${esc(t.owner.name)}</b> · ${esc(t.dept || "")}${t.approver && t.special ? " · ผู้อนุมัติ " + esc(t.approver.name) : ""}</span></div>`}
+      ${o.owner === false ? "" : `<div class="who">${avatar(t.owner)}<span><b>${esc(t.owner.name)}</b>${t.dept ? " · " + esc(t.dept) : ""}${t.approver && t.special ? " · ผู้อนุมัติ " + esc(t.approver.name) : ""}</span></div>`}
       ${pbar(t.progress, st)}
       <div class="sub">${esc(t.due_text)} · กำหนด ${esc(when(t.due))}${o.nudgeInfo === false ? "" : " · " + esc(nud)}</div>
       ${t.detail ? `<div class="sub">${esc(t.detail)}</div>` : ""}

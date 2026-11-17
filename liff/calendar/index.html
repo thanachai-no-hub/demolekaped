@@ -122,7 +122,15 @@ header::before{content:"";display:block;height:3px;background:var(--duck)}
 .field label,.lbl{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
 .inp{width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:10px 12px;font-size:16px}
 textarea.inp{min-height:72px;resize:vertical}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.row2>*{min-width:0}
+/* วันที่/เวลา: WebKit (iPhone) ให้ช่อง date/time มีความกว้างขั้นต่ำของตัวเอง ทำให้ล้นขอบการ์ด/ชีต → ปิด appearance เดิม บังคับกว้างไม่เกินช่อง แล้ววาดไอคอนเอง */
+.inp[type=date],.inp[type=time],.inp[type=datetime-local]{display:block;width:100%;max-width:100%;min-width:0;-webkit-appearance:none;appearance:none;position:relative;text-align:left;line-height:22px;padding-left:10px;padding-right:34px;background-repeat:no-repeat;background-position:right 10px center;background-size:18px 18px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M16 3v4M8 3v4M3 10h18'/%3E%3C/svg%3E")}
+.inp[type=time]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E")}
+.inp::-webkit-date-and-time-value{text-align:left;margin:0;min-height:22px}
+.inp::-webkit-datetime-edit{padding:0}
+/* Chrome/Android: ปุ่มเปิดตัวเลือกของเบราว์เซอร์ล่องหนแต่คลุมทั้งช่อง (แตะตรงไหนก็เปิด · ไม่กินที่ข้อความ) */
+.inp::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:auto;height:auto;margin:0;padding:0;opacity:0;cursor:pointer}
 .seg{display:flex;gap:8px}
 .seg button{flex:1;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-weight:600}
 .seg button[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
@@ -443,9 +451,11 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet
 $("#fab").onclick = async () => {
   $("#form").reset(); S.picked.clear(); S.dur = 60; S.force = false; $("#formMsg").innerHTML = "";
   setDur(60);
-  const now = bkkNow(); const sel = S.sel < todayStr() ? todayStr() : S.sel;
+  const now = bkkNow(); let sel = S.sel < todayStr() ? todayStr() : S.sel;
+  // หลัง 23:00 ไม่มีชั่วโมงถัดไปในวันนี้แล้ว (เดิมได้ 23:00 ซึ่งผ่านไปแล้ว) → เริ่มที่พรุ่งนี้ 10:00
+  if (sel === todayStr() && now.getUTCHours() >= 23) sel = new Date(Date.parse(sel + "T00:00:00Z") + 864e5).toISOString().slice(0, 10);
   $("#fDate").value = sel; $("#fDate").min = todayStr();
-  const h = sel === todayStr() ? Math.min(23, now.getUTCHours() + 1) : 10;
+  const h = sel === todayStr() ? now.getUTCHours() + 1 : 10;
   $("#fTime").value = pad(h) + ":00";
   renderPicked(); openSheet("#newSheet");
   if (!S.people) {
