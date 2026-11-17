@@ -20,7 +20,7 @@
 .cmd .ex{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .cmd .ex a{display:inline-flex;align-items:center;min-height:40px;padding:8px 12px;border-radius:99px;border:1px solid var(--line);
   background:var(--surface-2,transparent);color:var(--fg);font-size:14px;line-height:1.3;text-decoration:none}
-.cmd .ex a:focus-visible{outline:3px solid #3a352e;outline-offset:2px}
+.cmd .ex a:focus-visible{outline:3px solid #2f2b28;outline-offset:2px}
 .cmd .ex a::before{content:"💬";margin-right:6px}
 .dvlist{display:grid;gap:8px;margin-top:10px}
 .dvlist button{display:flex;flex-direction:column;align-items:flex-start;width:100%;min-height:48px;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;text-align:left}
@@ -128,7 +128,7 @@ function render(me) {
   const cmds = CHAT.filter((x) => x.roles.includes(m.role) && (!x.show || x.show(c)));
   // Dev (ไม่ได้ดูแบบใครอยู่): ไทล์โหมดสลับ → เลือกหัวหน้า/พนักงานที่จะดูแบบ
   if (me.dev && me.view_switch && !me.viewing_as) {
-    $("#tiles").insertAdjacentHTML("beforeend", `<a class="tile wide" href="#" id="dvTile"><span class="ic" style="background:#615751;color:#fff" aria-hidden="true">🛠</span><span style="min-width:0"><b style="display:block">โหมดสลับ (Dev)</b><small>ดูแบบหัวหน้า / พนักงาน · อ่านอย่างเดียว</small></span></a>`);
+    $("#tiles").insertAdjacentHTML("beforeend", `<a class="tile wide" href="#" id="dvTile"><span class="ic" style="background:#5d574f;color:#fff" aria-hidden="true">🛠</span><span style="min-width:0"><b style="display:block">โหมดสลับ (Dev)</b><small>ดูแบบหัวหน้า / พนักงาน · อ่านอย่างเดียว</small></span></a>`);
     $("#devSec").hidden = false;
     $("#dvTile").onclick = async (e) => {
       e.preventDefault();
