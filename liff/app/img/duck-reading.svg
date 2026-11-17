@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="เป็ด IPED อ่านหนังสือ">
+  <ellipse cx="120" cy="226" rx="70" ry="7" fill="#000" opacity=".12"/>
+  <ellipse cx="96" cy="216" rx="17" ry="7.5" fill="#8c8277"/>
+  <ellipse cx="144" cy="216" rx="17" ry="7.5" fill="#8c8277"/>
+  <path d="M120 98C170 98 196 134 196 168C196 200 162 216 120 216C78 216 44 200 44 168C44 134 70 98 120 98Z" fill="#f3f1ec"/>
+  <ellipse cx="120" cy="178" rx="46" ry="32" fill="#e9e6e0"/>
+  <circle cx="120" cy="80" r="54" fill="#f3f1ec"/>
+  <path d="M110 31C104 17 117 9 124 19C130 9 145 15 136 31Z" fill="#f3f1ec"/>
+  <ellipse cx="98" cy="54" rx="18" ry="9" fill="#fff" opacity=".85" transform="rotate(-22 98 54)"/>
+  <ellipse cx="82" cy="99" rx="9" ry="5" fill="#c9a99a" opacity=".5"/>
+  <ellipse cx="158" cy="99" rx="9" ry="5" fill="#c9a99a" opacity=".5"/>
+  <path d="M95 97C95 88 145 88 145 97C145 110 133 116 120 116C107 116 95 110 95 97Z" fill="#8c8277"/>
+  <path d="M100 99C112 105 128 105 140 99" stroke="#5d574f" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <path d="M96 126L120 139L107 151Z" fill="#fff"/>
+  <path d="M144 126L120 139L133 151Z" fill="#fff"/>
+  <path d="M113 136H127L129 145L120 150L111 145Z" fill="#2f2b28"/>
+  <path d="M115.5 149H124.5L131 184L120 195L109 184Z" fill="#2f2b28"/>
+  <path d="M90 82C94 86 102 86 106 82" stroke="#2f2b28" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  <path d="M134 82C138 86 146 86 150 82" stroke="#2f2b28" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  <g>
+    <path d="M120 152C104 144 82 142 64 146V200C82 196 104 198 120 206Z" fill="#f5f3f0" stroke="#5d574f" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M120 152C136 144 158 142 176 146V200C158 196 136 198 120 206Z" fill="#fff" stroke="#5d574f" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M76 160C88 158 100 159 110 163M76 172C88 170 100 171 110 175M76 184C88 182 100 183 110 187" stroke="#b2aca5" stroke-width="3" stroke-linecap="round"/>
+    <path d="M130 163C140 159 152 158 164 160M130 175C140 171 152 170 164 172" stroke="#b2aca5" stroke-width="3" stroke-linecap="round"/>
+    <path d="M60 168C50 166 46 182 56 188L68 186V168Z" fill="#c2bcb2"/>
+    <path d="M180 168C190 166 194 182 184 188L172 186V168Z" fill="#c2bcb2"/>
+  </g>
+  <path d="M186 40l3 8 8 3-8 3-3 8-3-8-8-3 8-3Z" fill="#c08a3e"/>
+  <path d="M206 70l2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#b2aca5"/>
+</svg>

@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="th" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#1d1b18">
+<title>IPED · เลขาของคุณ</title>
+<link rel="icon" href="../assets/lekaped-mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<script>try{var t=localStorage.getItem("iped.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<!--
+  IPED · เว็บแอป (แจ้งเตือน · To Do · คลัง · ตั้งค่า) — ไม่มี build
+  สัญญา API: docs/app-contract.md (prefix app/) · เรียกผ่าน Duck.api จาก ../shared/app.js
+  ทดสอบแบบไม่ต่อเน็ต: http://localhost:<port>/app/?mock=1  (ข้อมูลปลอมในหน่วยความจำ ไม่โหลด LIFF)
+  ทดสอบกับ API ในเครื่อง: http://localhost:<port>/app/?dev=<LINE userId>
+-->
+</head>
+<body>
+<a class="skip" href="#main">ข้ามไปเนื้อหา</a>
+<div class="shell">
+  <aside class="side" id="side" aria-label="เมนูหลัก">
+    <div class="side-in">
+      <div class="me-row">
+        <span class="me-av" id="meAv" aria-hidden="true"></span>
+        <div class="me-tx"><b id="meName">IPED</b><small id="meSub">เลขาของคุณใน LINE</small></div>
+        <button class="ib side-close" type="button" data-drawer-close aria-label="ปิดเมนู">✕</button>
+      </div>
+      <button class="new-btn" type="button" data-act="create"><span aria-hidden="true">＋</span> สร้างใหม่ <kbd>N</kbd></button>
+      <button class="search-btn" type="button" data-act="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>ค้นหา</span><kbd class="mod">⌘K</kbd></button>
+      <nav class="nav">
+        <div class="nav-h">แจ้งเตือน</div>
+        <a href="#today" data-r="today"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-5h4v5"/></svg>วันนี้</a>
+        <a href="#groups" data-r="groups"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="8" r="2.5"/><path d="M16 13.5c2.8 0 5 2 5 5"/></svg>กลุ่ม</a>
+        <a href="#todo" data-r="todo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6h9M11 12h9M11 18h9"/></svg>To Do</a>
+        <a href="#repeat" data-r="repeat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg>เตือนซ้ำ</a>
+        <div class="nav-h">คลัง</div>
+        <a href="#library/all" data-r="library/all"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/></svg>ทั้งหมด</a>
+        <a href="#library/note" data-r="library/note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7"/></svg>โน้ต</a>
+        <a href="#library/link" data-r="library/link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 006 0l3-3a4 4 0 00-6-6l-1 1M14 10a4 4 0 00-6 0l-3 3a4 4 0 006 6l1-1"/></svg>ลิงก์</a>
+        <a href="#library/photo" data-r="library/photo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>รูป</a>
+        <a href="#library/file" data-r="library/file"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>ไฟล์</a>
+      </nav>
+      <div class="side-foot">
+        <a href="#integrations" data-r="integrations"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v4M15 3v4M7 7h10v4a5 5 0 01-10 0zM12 16v5"/></svg>เชื่อมต่อแอป</a>
+        <a href="#settings" data-r="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>ตั้งค่า</a>
+        <button type="button" data-act="keys"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>คีย์ลัด</button>
+      </div>
+    </div>
+  </aside>
+  <div class="drawer-scrim" data-drawer-close></div>
+
+  <main id="main" tabindex="-1">
+    <div class="boot" id="boot"><img src="../assets/lekaped-mascot.svg" alt="" width="112" height="112"><p>IPED กำลังเปิดสมุด…</p></div>
+  </main>
+</div>
+
+<!-- แถบล่าง (มือถือ) -->
+<nav class="tabbar" aria-label="เมนูลัด">
+  <a href="#today" data-r="today"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9H4z"/></svg><span>วันนี้</span></a>
+  <a href="#todo" data-r="todo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6h9M11 12h9M11 18h9"/></svg><span>To Do</span></a>
+  <button type="button" class="tab-new" data-act="create" aria-label="สร้างใหม่"><span aria-hidden="true">＋</span></button>
+  <a href="#library/all" data-r="library"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9"/></svg><span>คลัง</span></a>
+  <button type="button" data-act="drawer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>เมนู</span></button>
+</nav>
+
+<!-- ปุ่มแชต -->
+<button class="chat-fab" type="button" data-act="chat" aria-label="คุยกับ IPED (⌘J)"><img src="../assets/lekaped-mark.svg" alt=""><span class="dot" aria-hidden="true"></span></button>
+<section class="chat" id="chat" role="dialog" aria-modal="false" aria-labelledby="chatT" hidden>
+  <header class="chat-h"><img src="../assets/lekaped-mark.svg" alt=""><div><b id="chatT">คุยกับ IPED</b><small>สั่งงานเหมือนพิมพ์ใน LINE</small></div><button class="ib" type="button" data-act="chat-close" aria-label="ปิดแชต">✕</button></header>
+  <div class="chat-log" id="chatLog" aria-live="polite"></div>
+  <form class="chat-in" id="chatForm"><input class="inp" id="chatText" autocomplete="off" placeholder="เช่น เตือนส่งรายงานศุกร์นี้ 4 โมงเย็น" aria-label="ข้อความถึง IPED"><button class="btn primary" type="submit" aria-label="ส่ง">ส่ง</button></form>
+</section>
+
+<!-- dialogs -->
+<dialog class="dlg" id="dlgCreate" aria-labelledby="crT">
+  <form method="dialog" class="dlg-in" id="crForm">
+    <h2 id="crT">บอก IPED ว่าจะให้จำอะไร</h2>
+    <textarea class="inp big-inp" id="crText" rows="2" placeholder="พรุ่งนี้ 9 โมง โทรหาลูกค้า · ทุกวันที่ 25 จ่ายค่าเช่า"></textarea>
+    <p class="hint">พิมพ์เป็นภาษาคนได้เลย IPED จะแยกวัน เวลา และการเตือนซ้ำให้เอง</p>
+    <details id="crMore">
+      <summary>กรอกเองทีละช่อง</summary>
+      <div class="field"><label for="crTitle">ชื่อเรื่อง</label><input class="inp" id="crTitle" maxlength="200" placeholder="เช่น ส่งใบเสนอราคา"></div>
+      <div class="field"><span class="lbl" id="crKindL">ประเภท</span>
+        <div class="seg" role="group" aria-labelledby="crKindL" id="crKind"><button type="button" data-v="todo" aria-pressed="true">เตือน / To Do</button><button type="button" data-v="note" aria-pressed="false">โน้ต</button><button type="button" data-v="link" aria-pressed="false">ลิงก์</button></div></div>
+      <div class="field" id="crUrlF" hidden><label for="crUrl">ลิงก์</label><input class="inp" id="crUrl" type="url" inputmode="url" placeholder="https://"></div>
+      <div class="field" id="crBodyF" hidden><label for="crBody">รายละเอียด</label><textarea class="inp" id="crBody" rows="3"></textarea></div>
+      <div id="crTimeF">
+        <div class="row2">
+          <div class="field"><label for="crDate">วันที่</label><input class="inp" id="crDate" type="date"></div>
+          <div class="field"><label for="crTime">เวลา</label><input class="inp" id="crTime" type="time"></div>
+        </div>
+        <div class="field"><label for="crRepeat">เตือนซ้ำ</label>
+          <select class="inp" id="crRepeat"><option value="">ไม่ซ้ำ</option><option>ทุกวัน</option><option>ทุกวันทำงาน</option><option>ทุกสัปดาห์</option><option>ทุกเดือน</option></select></div>
+        <div class="field"><span class="lbl" id="crImpL">ความสำคัญ</span>
+          <div class="seg" role="group" aria-labelledby="crImpL" id="crImp"><button type="button" data-v="0" aria-pressed="true">ปกติ</button><button type="button" data-v="1" aria-pressed="false">สำคัญ</button><button type="button" data-v="2" aria-pressed="false">ห้ามพลาด</button></div>
+          <p class="hint" id="crImpHint">ห้ามพลาด = IPED จะทักซ้ำจนกว่าจะกดรับรู้</p></div>
+      </div>
+    </details>
+    <div class="msg" id="crMsg"></div>
+    <div class="dlg-act"><button class="btn" type="button" data-dlg-close>ยกเลิก</button><button class="btn primary" type="submit" id="crGo">บันทึก</button></div>
+  </form>
+</dialog>
+
+<dialog class="dlg" id="dlgItem" aria-labelledby="itT">
+  <form method="dialog" class="dlg-in" id="itForm">
+    <h2 id="itT">แก้ไขรายการ</h2>
+    <p class="hint" id="itMeta"></p>
+    <div class="field"><label for="itTitle">ชื่อเรื่อง</label><input class="inp" id="itTitle" maxlength="200"></div>
+    <div id="itTimeF" class="row2">
+      <div class="field"><label for="itDate">วันที่</label><input class="inp" id="itDate" type="date"></div>
+      <div class="field"><label for="itTime">เวลา</label><input class="inp" id="itTime" type="time"></div>
+    </div>
+    <div class="field" id="itImpF"><span class="lbl" id="itImpL">ความสำคัญ</span>
+      <div class="seg" role="group" aria-labelledby="itImpL" id="itImp"><button type="button" data-v="0" aria-pressed="true">ปกติ</button><button type="button" data-v="1" aria-pressed="false">สำคัญ</button><button type="button" data-v="2" aria-pressed="false">ห้ามพลาด</button></div></div>
+    <div class="msg" id="itMsg"></div>
+    <div class="dlg-act"><button class="btn danger" type="button" id="itDel">ลบ</button><span class="sp"></span><button class="btn" type="button" data-dlg-close>ยกเลิก</button><button class="btn primary" type="submit" id="itGo">บันทึก</button></div>
+  </form>
+</dialog>
+
+<dialog class="dlg" id="dlgSearch" aria-labelledby="seT">
+  <div class="dlg-in">
+    <h2 id="seT" class="sr">ค้นหา</h2>
+    <div class="search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input class="inp" id="seQ" type="search" placeholder="ค้นหาเตือน โน้ต ลิงก์ ไฟล์…" autocomplete="off" aria-label="คำค้น"></div>
+    <div class="se-res" id="seRes" aria-live="polite"></div>
+  </div>
+</dialog>
+
+<dialog class="dlg" id="dlgKeys" aria-labelledby="kyT">
+  <div class="dlg-in">
+    <h2 id="kyT">คีย์ลัด</h2>
+    <dl class="keys">
+      <dt><kbd>N</kbd></dt><dd>สร้างรายการใหม่</dd>
+      <dt><kbd class="mod">⌘K</kbd></dt><dd>ค้นหา</dd>
+      <dt><kbd class="mod">⌘J</kbd></dt><dd>เปิด/ปิดแชตกับ IPED</dd>
+      <dt><kbd>G</kbd> <kbd>T</kbd></dt><dd>ไปหน้าวันนี้</dd>
+      <dt><kbd>G</kbd> <kbd>G</kbd></dt><dd>ไปหน้ากลุ่ม</dd>
+      <dt><kbd>G</kbd> <kbd>D</kbd></dt><dd>ไปหน้า To Do</dd>
+      <dt><kbd>G</kbd> <kbd>L</kbd></dt><dd>ไปคลัง</dd>
+      <dt><kbd>?</kbd></dt><dd>เปิดหน้านี้</dd>
+      <dt><kbd>Esc</kbd></dt><dd>ปิดหน้าต่าง</dd>
+    </dl>
+    <div class="dlg-act"><button class="btn primary" type="button" data-dlg-close>เข้าใจแล้ว</button></div>
+  </div>
+</dialog>
+
+<dialog class="dlg" id="dlgWipe" aria-labelledby="wpT">
+  <form method="dialog" class="dlg-in" id="wpForm">
+    <h2 id="wpT">ลบข้อมูลทั้งหมดของฉัน</h2>
+    <p>IPED จะลบแจ้งเตือน To Do โน้ต ลิงก์ รูป ไฟล์ ความจำ และสไตล์การคุยที่ตั้งไว้ของคุณทั้งหมด <b>กู้คืนไม่ได้</b></p>
+    <p class="hint">งานของบริษัทที่หัวหน้ามอบหมายจะไม่ถูกลบ</p>
+    <div class="field"><label for="wpIn">พิมพ์คำว่า <b>ลบ</b> เพื่อยืนยัน</label><input class="inp" id="wpIn" autocomplete="off"></div>
+    <div class="msg" id="wpMsg"></div>
+    <div class="dlg-act"><button class="btn" type="button" data-dlg-close>ยกเลิก</button><button class="btn danger-fill" type="submit" id="wpGo" disabled>ลบถาวร</button></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="upFile" multiple hidden>
+
+<script src="../shared/app.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

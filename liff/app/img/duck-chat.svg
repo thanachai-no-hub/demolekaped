@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="เป็ด IPED กับกลุ่มแชต">
+  <ellipse cx="120" cy="226" rx="70" ry="7" fill="#000" opacity=".12"/>
+  <ellipse cx="96" cy="216" rx="17" ry="7.5" fill="#8c8277"/>
+  <ellipse cx="144" cy="216" rx="17" ry="7.5" fill="#8c8277"/>
+  <path d="M120 98C170 98 196 134 196 168C196 200 162 216 120 216C78 216 44 200 44 168C44 134 70 98 120 98Z" fill="#f3f1ec"/>
+  <ellipse cx="120" cy="178" rx="46" ry="32" fill="#e9e6e0"/>
+  <circle cx="120" cy="80" r="54" fill="#f3f1ec"/>
+  <path d="M110 31C104 17 117 9 124 19C130 9 145 15 136 31Z" fill="#f3f1ec"/>
+  <ellipse cx="98" cy="54" rx="18" ry="9" fill="#fff" opacity=".85" transform="rotate(-22 98 54)"/>
+  <ellipse cx="82" cy="99" rx="9" ry="5" fill="#c9a99a" opacity=".5"/>
+  <ellipse cx="158" cy="99" rx="9" ry="5" fill="#c9a99a" opacity=".5"/>
+  <path d="M95 97C95 88 145 88 145 97C145 110 133 116 120 116C107 116 95 110 95 97Z" fill="#8c8277"/>
+  <path d="M100 99C112 105 128 105 140 99" stroke="#5d574f" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <path d="M96 126L120 139L107 151Z" fill="#fff"/>
+  <path d="M144 126L120 139L133 151Z" fill="#fff"/>
+  <path d="M113 136H127L129 145L120 150L111 145Z" fill="#2f2b28"/>
+  <path d="M115.5 149H124.5L131 184L120 195L109 184Z" fill="#2f2b28"/>
+  <ellipse cx="98" cy="79" rx="7" ry="8.5" fill="#2f2b28"/>
+  <ellipse cx="142" cy="79" rx="7" ry="8.5" fill="#2f2b28"/>
+  <circle cx="100.6" cy="75.8" r="2.5" fill="#fff"/>
+  <circle cx="144.6" cy="75.8" r="2.5" fill="#fff"/>
+  <path d="M60 140C42 148 36 176 50 194C62 197 73 183 73 162C73 152 69 144 60 140Z" fill="#c2bcb2"/>
+  <path d="M180 140C198 148 204 176 190 194C178 197 167 183 167 162C167 152 171 144 180 140Z" fill="#c2bcb2"/>
+  <rect x="160" y="14" width="68" height="40" rx="14" fill="#56704f"/>
+  <path d="M172 52L166 66L184 54Z" fill="#56704f"/>
+  <circle cx="180" cy="34" r="4" fill="#f5f3f0"/><circle cx="194" cy="34" r="4" fill="#f5f3f0"/><circle cx="208" cy="34" r="4" fill="#f5f3f0"/>
+  <rect x="8" y="34" width="52" height="32" rx="12" fill="#6b6760"/>
+  <path d="M48 64L56 76L40 66Z" fill="#6b6760"/>
+  <path d="M20 46H48M20 55H38" stroke="#d9d4ce" stroke-width="3.5" stroke-linecap="round"/>
+</svg>
