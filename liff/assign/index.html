@@ -150,10 +150,10 @@ $("#form").onsubmit = async (e) => {
       $("#pvBody").innerHTML = `<div class="fx ${p.special ? "black" : ""}"><div class="h">${p.special ? "ยืนยันการ์ดดำ" : "ยืนยันมอบหมายงาน"}</div><div class="b">
         <div><div style="font-size:20px;font-weight:700;line-height:1.3">${p.special ? "การ์ดดำถึง" : "มอบงานให้"}${esc(o.name)}</div><div class="sub" style="color:var(--muted);font-size:14px">${esc(o.title)}</div></div>
         <dl class="kv" style="margin:0"><dt>งาน</dt><dd>${esc(b.title)}</dd>${b.detail ? `<dt>รายละเอียด</dt><dd style="font-weight:400">${esc(b.detail)}</dd>` : ""}<dt>กำหนดส่ง</dt><dd>${esc(when(r.due))} น.</dd>
-        ${p.special ? `<dt>ประเภท</dt><dd>การ์ดดำ</dd><dt>ผู้อนุมัติ</dt><dd>${esc(p.head)}</dd>` : `<dt>หัวหน้าฝ่าย</dt><dd>${esc(p.head)}</dd>`}</dl>
+        ${p.special ? `<dt>ประเภท</dt><dd>การ์ดดำ · fast track</dd><dt>หัวหน้าฝ่าย</dt><dd>${esc(p.head || "—")}</dd>` : `<dt>หัวหน้าฝ่าย</dt><dd>${esc(p.head)}</dd>`}</dl>
         ${p.note ? `<div class="warnbox" style="margin:0">${esc(p.note)}</div>` : ""}<div class="lbl" style="margin:4px 0 0">ลำดับขั้น</div>${stepsHtml(p.steps)}</div></div>
         ${o.linked ? "" : `<div class="warnbox" style="margin-top:10px">${esc(o.name)}ยังไม่ผูก LINE จะยังไม่ได้รับแจ้ง</div>`}`;
-      $("#pvSend").textContent = p.special ? "ส่งขออนุมัติ" : "ยืนยันมอบงาน";
+      $("#pvSend").textContent = p.special ? "ส่งการ์ดดำ" : "ยืนยันมอบงาน";
       $("#pvSend").className = "btn " + (p.special ? "dark" : "primary");
       $("#pvMsg").innerHTML = "";
       openSheet("#pvSheet");
@@ -169,13 +169,13 @@ $("#pvSend").onclick = (e) => busy(e.target, async () => {
 function showDone(r) {
   const t = r.task;
   $("#form").hidden = true;
-  $("#done").innerHTML = `<div class="state" style="padding:24px 8px 12px"><div class="big">${t.special ? "■" : "✅"}</div><b>${t.special ? "ส่งการ์ดดำให้" + esc(r.plan.head) + "อนุมัติแล้ว" : "มอบงานให้" + esc(t.owner.name) + "แล้ว"}</b>${esc(r.messages[0] || "")}</div>
+  $("#done").innerHTML = `<div class="state" style="padding:24px 8px 12px"><div class="big">${t.special ? "■" : "✅"}</div><b>${t.special ? "ส่งการ์ดดำให้" + esc(t.owner.name) + "แล้ว" : "มอบงานให้" + esc(t.owner.name) + "แล้ว"}</b>${esc(r.messages[0] || "")}</div>
     <div class="card"><div class="lbl">สิ่งที่เกิดขึ้น</div>${stepsHtml(r.plan.steps)}
     ${deliveredText(r) ? `<div class="okbox" style="margin:12px 0 0">${esc(deliveredText(r))}</div>` : ""}</div>
     <div class="actions" style="margin-top:14px"><a class="btn" href="${esc(link("../"))}">หน้าหลัก</a><button class="btn primary" id="again">${t.special ? "การ์ดดำอีกใบ" : "มอบงานอีก"}</button></div>`;
   $("#done").hidden = false; window.scrollTo(0, 0);
   $("#again").onclick = () => { $("#fTitle").value = ""; $("#fDetail").value = ""; $("#done").hidden = true; $("#form").hidden = false; };
-  toast(t.special ? "ส่งขออนุมัติแล้ว" : "มอบงานแล้ว");
+  toast(t.special ? "ส่งการ์ดดำแล้ว" : "มอบงานแล้ว");
 }
 </script>
 </body>

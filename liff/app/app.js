@@ -117,12 +117,12 @@
 
   // ===== แผงขวา: Inbox / เกิดขึ้นวันนี้ =====
   function rpShell() {
-    return `<aside class="rp" aria-label="Inbox และเรื่องของวันนี้">
+    return `<aside class="rp" aria-label="Memo และเรื่องของวันนี้">
       <div class="rp-tabs" role="tablist">
-        <button role="tab" type="button" data-rp="inbox" aria-selected="${st.rpTab === "inbox"}">${svg("inbox").replace("<svg", '<svg width="16" height="16"')} Inbox <span class="n" id="nInbox">·</span></button>
+        <button role="tab" type="button" data-rp="inbox" aria-selected="${st.rpTab === "inbox"}">${svg("inbox").replace("<svg", '<svg width="16" height="16"')} Memo <span class="n" id="nInbox">·</span></button>
         <button role="tab" type="button" data-rp="events" aria-selected="${st.rpTab === "events"}">${svg("meeting").replace("<svg", '<svg width="16" height="16"')} เกิดขึ้นวันนี้ <span class="n" id="nEv">·</span></button>
       </div>
-      <label class="quick" id="quickL" ${st.rpTab === "inbox" ? "" : "hidden"}><span aria-hidden="true">＋</span><span class="sr">เพิ่มเข้า Inbox</span><input id="quick" placeholder="พิมพ์แล้วกด Enter เก็บเข้า Inbox" enterkeyhint="done" autocomplete="off" maxlength="200"></label>
+      <label class="quick" id="quickL" ${st.rpTab === "inbox" ? "" : "hidden"}><span aria-hidden="true">＋</span><span class="sr">จดเข้า Memo</span><input id="quick" placeholder="จดไว้ก่อน แล้วกด Enter (Memo ยังไม่มีเวลา)" enterkeyhint="done" autocomplete="off" maxlength="200"></label>
       <div id="rpBody" role="tabpanel">${loading()}</div>
     </aside>`;
   }
@@ -209,7 +209,7 @@
   }
 
   // ===== หน้า: To Do =====
-  const TODO_F = [["all", "ทั้งหมด"], ["timed", "มีเวลา"], ["untimed", "ยังไม่มีเวลา"], ["done", "เสร็จแล้ว"]];
+  const TODO_F = [["all", "ทั้งหมด"], ["timed", "มีเวลา"], ["untimed", "Memo (ยังไม่มีเวลา)"], ["done", "เสร็จแล้ว"]];
   function pageTodo() {
     main.innerHTML = `
       <section class="hero"><div class="hero-row"><div><p class="kick">เรื่องที่ต้องทำ</p><h1>To Do</h1><p class="sub">ติ๊กเมื่อทำเสร็จ IPED จะเลิกตามให้</p></div>${newBtn("เพิ่ม To Do")}</div></section>
@@ -229,7 +229,7 @@
   }
 
   // ===== หน้า: เตือนซ้ำ / ที่ตั้งไว้ =====
-  const REP_T = [["once", "ครั้งเดียว"], ["repeat", "เตือนซ้ำ"], ["untimed", "ยังไม่มีเวลา"]];
+  const REP_T = [["once", "เตือนครั้งเดียว"], ["repeat", "เตือนประจำ"], ["untimed", "Memo (ยังไม่มีเวลา)"]];
   const repKind = (i) => (!i.at && !i.repeat ? "untimed" : i.repeat ? "repeat" : "once");
   function pageRepeat() {
     main.innerHTML = `
@@ -738,7 +738,7 @@
     if (e.target.id === "quick" && e.key === "Enter" && !e.isComposing) {
       const inp = e.target, title = inp.value.trim(); if (!title) return;
       inp.disabled = true;
-      try { const r = await api("app/items", { title, kind: "todo" }); inp.value = ""; toast(r.said || "เก็บเข้า Inbox แล้ว"); st.rpTab = "inbox"; await loadRp(); st.reload === loadTodo && loadTodo(); }
+      try { const r = await api("app/items", { title, kind: "todo" }); inp.value = ""; toast(r.said || "จดเข้า Memo แล้ว"); st.rpTab = "inbox"; await loadRp(); st.reload === loadTodo && loadTodo(); }
       catch (er) { toast(errText(er)); }
       inp.disabled = false; $("#quick")?.focus();
     }
