@@ -3,7 +3,7 @@
 // ทดสอบในเครื่อง: python3 -m http.server 8766 (ในโฟลเดอร์ liff) แล้วเปิด http://localhost:8766/<page>/?dev=<LINE userId>
 //   (ข้าม LIFF และส่ง header x-dev-line-user ไปที่ API ในเครื่อง · ใช้ได้เมื่อเปิดจาก localhost และ API ตั้ง CAL_DEV=1 เท่านั้น)
 (function () {
-  const LIFF_ID = "2012641821-Ehk4gcXO";
+  const LIFF_ID = "2012655292-tfV5PFvh";
   const API_URL = "https://rysgdortwddldmjhtfnw.supabase.co/functions/v1/app-api/";
   const DEV_API_URL = "http://127.0.0.1:54321/functions/v1/app-api/"; // supabase functions serve
 
