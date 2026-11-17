@@ -127,7 +127,7 @@ function render(me) {
   }).join("");
   const cmds = CHAT.filter((x) => x.roles.includes(m.role) && (!x.show || x.show(c)));
   // Dev (ไม่ได้ดูแบบใครอยู่): ไทล์โหมดสลับ → เลือกหัวหน้า/พนักงานที่จะดูแบบ
-  if (me.dev && !me.viewing_as) {
+  if (me.dev && me.view_switch && !me.viewing_as) {
     $("#tiles").insertAdjacentHTML("beforeend", `<a class="tile wide" href="#" id="dvTile"><span class="ic" style="background:#52525b;color:#fff" aria-hidden="true">🛠</span><span style="min-width:0"><b style="display:block">โหมดสลับ (Dev)</b><small>ดูแบบหัวหน้า / พนักงาน · อ่านอย่างเดียว</small></span></a>`);
     $("#devSec").hidden = false;
     $("#dvTile").onclick = async (e) => {
