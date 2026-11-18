@@ -191,6 +191,19 @@ select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradi
 .dlg p{margin:0 0 10px;font-size:14px;color:var(--muted)}
 .dlg-act{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
 .dlg-act .sp{flex:1}
+/* รายละเอียด (แตะรายการ) */
+.it[data-id]{cursor:pointer}
+.it[data-id]:hover{border-color:var(--line2)}
+.it[data-id]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.vw-img{display:block;margin:-20px -20px 14px;border-radius:18px 18px 0 0;overflow:hidden;background:var(--line)}
+.vw-img img{display:block;width:100%;max-height:300px;object-fit:cover}
+.vw-kind{font-size:12px!important;letter-spacing:.06em;color:var(--faint)!important;margin:0 0 4px!important}
+.dlg .vw-when{color:var(--fg);font-weight:600;font-size:15px}
+.vw-dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin:6px 0 0;font-size:14px}
+.vw-dl dt{color:var(--faint)} .vw-dl dd{margin:0;overflow-wrap:anywhere}
+.vw-body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.6;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:12px;max-height:40dvh;overflow:auto}
+.vw-meet{margin-top:12px;font-size:14px} .vw-meet b{display:block;font-size:12px;color:var(--faint);font-weight:600;margin-bottom:4px}
+@media (max-width:600px){.vw-img{margin:-18px -16px 14px}}
 .dlg details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
 .dlg summary{cursor:pointer;color:var(--muted);font-weight:600;font-size:14px;min-height:36px;display:flex;align-items:center}
 .dlg summary::marker{color:var(--faint)}

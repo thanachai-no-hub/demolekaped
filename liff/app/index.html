@@ -122,6 +122,20 @@
   </form>
 </dialog>
 
+<dialog class="dlg" id="dlgView" aria-labelledby="vwT">
+  <div class="dlg-in">
+    <a id="vwImgA" class="vw-img" target="_blank" rel="noopener noreferrer" hidden><img id="vwImg" alt=""></a>
+    <p class="vw-kind" id="vwKind"></p>
+    <h2 id="vwT">รายละเอียด</h2>
+    <p class="vw-when" id="vwWhen" hidden></p>
+    <div id="vwState" aria-live="polite"></div>
+    <dl class="vw-dl" id="vwDl"></dl>
+    <div class="vw-body" id="vwBody" hidden></div>
+    <div id="vwMeet"></div>
+    <div class="dlg-act"><a class="btn" id="vwOpen" target="_blank" rel="noopener noreferrer" hidden>เปิดรูป</a><span class="sp"></span><button class="btn" type="button" id="vwEdit" hidden>แก้ไข</button><button class="btn primary" type="button" data-dlg-close>ปิด</button></div>
+  </div>
+</dialog>
+
 <dialog class="dlg" id="dlgSearch" aria-labelledby="seT">
   <div class="dlg-in">
     <h2 id="seT" class="sr">ค้นหา</h2>

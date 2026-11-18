@@ -110,7 +110,7 @@
     if (it.url && it.source === "link") meta.push(`<a class="lk" href="${esc(it.url)}" target="_blank" rel="noopener noreferrer">${esc(it.url.replace(/^https?:\/\//, "").slice(0, 48))}</a>`);
     if (it.size && (it.source === "file" || it.source === "photo")) meta.push(`<span>${bytes(it.size)}</span>`);
     const more = it.editable ? `<button class="ib more" type="button" data-edit="${esc(it.id)}" aria-label="แก้ไข ${esc(it.title)}">${svg("dots")}</button>` : "";
-    return `<article class="it imp${it.importance || 0}${it.done ? " done" : ""}" data-id="${esc(it.id)}">${tm}${lead}<div class="bd"><div class="ttl">${esc(it.title)}</div>${meta.length ? `<div class="meta">${meta.join("")}</div>` : ""}${it.body && o.body ? `<div class="meta">${esc(it.body.slice(0, 140))}</div>` : ""}</div>${o.right || ""}${more}</article>`;
+    return `<article class="it imp${it.importance || 0}${it.done ? " done" : ""}" data-id="${esc(it.id)}" tabindex="0" aria-label="ดูรายละเอียด ${esc(it.title)}">${tm}${lead}<div class="bd"><div class="ttl">${esc(it.title)}</div>${meta.length ? `<div class="meta">${meta.join("")}</div>` : ""}${it.body && o.body ? `<div class="meta">${esc(it.body.slice(0, 140))}</div>` : ""}</div>${o.right || ""}${more}</article>`;
   }
   const loading = () => `<div class="empty sm" aria-busy="true"><img src="../assets/lekaped-mascot.svg" alt="" class="bob" width="96" height="96"><p>กำลังโหลด…</p></div>`;
   const failBox = (e) => `<div class="err" role="alert">${esc(errText(e))} <button class="btn" type="button" data-act="retry" style="min-height:36px;margin-left:8px">ลองใหม่</button></div>`;
@@ -325,6 +325,7 @@
   }
   const delBtn = (i) => i.editable ? `<button class="ib" type="button" data-del="${esc(i.id)}" aria-label="ลบ ${esc(i.title)}">${svg("trash")}</button>` : "";
   function libRow(i) {
+    st.cache.set(i.id, i);
     const thumb = i.thumb ? `<span class="ico-src" style="overflow:hidden;padding:0"><img src="${esc(i.thumb)}" alt="" style="width:100%;height:100%;object-fit:cover"></span>` : `<span class="ico-src">${svg(i.source)}</span>`;
     const title = i.url && i.source !== "note" ? `<a href="${esc(i.url)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none">${esc(i.title)}</a>` : esc(i.title);
     const meta = [SRC[i.source]];
@@ -695,6 +696,36 @@
     catch (e) { btn.setAttribute("aria-checked", String(!done)); btn.closest(".it")?.classList.toggle("done", !done); toast(errText(e)); }
   }
 
+  // ===== หน้าต่าง: รายละเอียด (แตะรายการ) =====
+  const dlgV = $("#dlgView");
+  let viewSeq = 0, viewIt = null;
+  async function openView(it) {
+    const my = ++viewSeq; viewIt = it;
+    $("#vwKind").textContent = SRC[it.source] || "";
+    $("#vwT").textContent = it.title;
+    $("#vwWhen").hidden = !it.at; $("#vwWhen").textContent = it.at ? `${thaiDate(it.at)} · ${parts(it.at).hm} น.${it.repeat ? " · " + it.repeat : ""}` : "";
+    for (const id of ["vwImgA", "vwBody", "vwOpen"]) $("#" + id).hidden = true;
+    $("#vwDl").innerHTML = ""; $("#vwMeet").innerHTML = "";
+    $("#vwEdit").hidden = !it.editable;
+    $("#vwState").innerHTML = `<p class="hint">กำลังโหลด…</p>`;
+    openDlg(dlgV);
+    try {
+      const d = await api(`app/detail?source=${encodeURIComponent(it.source)}&id=${encodeURIComponent(it.id)}`);
+      if (my !== viewSeq) return;
+      $("#vwState").innerHTML = "";
+      $("#vwT").textContent = d.title || it.title;
+      if (d.at) { $("#vwWhen").hidden = false; $("#vwWhen").textContent = `${thaiDate(d.at)} · ${parts(d.at).hm} น.${it.repeat ? " · " + it.repeat : ""}`; }
+      if (d.photo) { $("#vwImg").src = d.photo; $("#vwImgA").href = d.photo; $("#vwImgA").hidden = false; }
+      if (d.url) { $("#vwOpen").href = d.url; $("#vwOpen").textContent = d.photo ? "เปิดรูปเต็ม" : "เปิดไฟล์"; $("#vwOpen").hidden = false; }
+      $("#vwDl").innerHTML = (d.lines || []).map((l) => `<dt>${esc(l.k)}</dt><dd>${esc([l.v, l.at && `${thaiDate(l.at)} ${parts(l.at).hm} น.`].filter(Boolean).join(" · ") || "-")}</dd>`).join("");
+      if (d.body) { $("#vwBody").textContent = d.body; $("#vwBody").hidden = false; }
+      if (d.meetings?.length) $("#vwMeet").innerHTML = `<div class="vw-meet"><b>นัดประชุมเรื่องนี้</b>${d.meetings.map((m) => `<div>${esc(m.title)} · ${esc(whenText(m.at))}</div>`).join("")}</div>`;
+      $("#vwEdit").hidden = !(it.editable && d.editable !== false);
+    } catch (e) { if (my === viewSeq) $("#vwState").innerHTML = `<div class="err" role="alert">${esc(errText(e))}</div>`; }
+  }
+  $("#vwEdit").onclick = () => { const it = viewIt; closeDlg(dlgV); if (it) openItem(it); };
+  dlgV.addEventListener("close", () => { viewSeq++; $("#vwImg").removeAttribute("src"); });
+
   // ===== หน้าต่าง: ค้นหา =====
   const dlgS = $("#dlgSearch");
   let seT, sePool = null;
@@ -812,6 +843,8 @@
       else { b.dataset.armed = "1"; b.style.color = "var(--bad)"; b.setAttribute("aria-label", "กดอีกครั้งเพื่อยืนยันการลบ"); toast("กดถังขยะอีกครั้งเพื่อยืนยันการลบ"); setTimeout(() => { delete b.dataset.armed; b.style.color = ""; }, 3000); }
       return;
     }
+    // แตะรายการ (ที่ไม่ใช่ปุ่ม/ลิงก์) → รายละเอียด
+    if ((b = t.closest(".it[data-id]")) && !t.closest("button, a, input, label")) { const it = st.cache.get(b.dataset.id); if (it) openView(it); return; }
     if ((b = t.closest("[data-rp]"))) { st.rpTab = b.dataset.rp; drawRp(); return; }
     if ((b = t.closest("[data-range]"))) { st.today.range = b.dataset.range; st.today.data = null; pageToday(); return; }
     if ((b = t.closest("[data-day]"))) { st.today.date = b.dataset.day; pageToday(); return; }
@@ -852,6 +885,7 @@
     if (e.target.id === "upFile") { const f = [...e.target.files]; e.target.value = ""; if (f.length) upload(f); }
   });
   document.addEventListener("keydown", async (e) => {
+    if ((e.key === "Enter" || e.key === " ") && e.target.matches?.(".it[data-id]")) { e.preventDefault(); const it = st.cache.get(e.target.dataset.id); if (it) openView(it); return; }
     if (e.target.id === "quick" && e.key === "Enter" && !e.isComposing) {
       const inp = e.target, title = inp.value.trim(); if (!title) return;
       inp.disabled = true;
