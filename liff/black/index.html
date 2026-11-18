@@ -46,7 +46,7 @@
 const { $, $$, esc, api, boot, fail, toast, busy, openSheet, closeSheets, link, when, todayStr, taskItem, deliveredText } = Duck;
 const TABS = [
   { k: "pending", t: "รออนุมัติ", f: (x) => x.status === "awaiting" },
-  { k: "active", t: "กำลังทำ", f: (x) => ["in_progress", "not_started", "overdue", "blocked"].includes(x.status) },
+  { k: "active", t: "กำลังทำ", f: (x) => ["in_progress", "not_started", "overdue", "blocked", "review", "revise"].includes(x.status) },
   { k: "ext", t: "ขอเลื่อน", f: (x) => x.status === "extpend" },
   { k: "done", t: "เสร็จแล้ว", f: (x) => x.status === "done" || x.status === "rejected" },
 ];

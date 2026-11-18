@@ -459,8 +459,123 @@
       </div></div>`;
   }
 
+  // ===== หน้า: หลังบ้าน (บริษัท · แผนก · โปรเจกต์ · ประเภท · ทีม) · ช่องว่าง = Unknown อัตโนมัติ =====
+  const ADM = { tab: "company", d: null, edit: null, q: "", proj: "" };
+  const ADM_TABS = [["company", "บริษัท & แผนก"], ["project", "โปรเจกต์"], ["type", "ประเภท"], ["team", "ทีม"]];
+  function pageAdmin(tab) {
+    if (ADM_TABS.some(([k]) => k === tab)) ADM.tab = tab;
+    main.innerHTML = `<section class="hero"><p class="kick">หลังบ้าน</p><h1>ข้อมูลบริษัท</h1><p class="sub">เพิ่ม/แก้ได้เอง · ช่องที่ไม่กรอกหรือไม่เลือก IPED ใส่ <b>Unknown</b> ให้อัตโนมัติ</p></section>
+      <div class="chips" role="tablist" id="admTabs">${ADM_TABS.map(([k, t]) => `<button type="button" role="tab" data-adm-tab="${k}" aria-pressed="${ADM.tab === k}">${t}</button>`).join("")}</div>
+      <div class="page adm" id="admP" style="max-width:1000px">${loading()}</div>`;
+    st.reload = loadAdmin; loadAdmin();
+  }
+  async function loadAdmin() {
+    if (MOCK) { $("#admP").innerHTML = `<div class="err">หลังบ้านต้องต่อ API จริง (เปิดด้วย ?dev=… หรือผ่าน LINE)</div>`; return; }
+    try { ADM.d = await api("app/admin"); drawAdmin(); }
+    catch (e) { $("#admP").innerHTML = failBox(e); }
+  }
+  const coName = (id) => ADM.d.companies.find((c) => c.id === id)?.name ?? "Unknown";
+  const coOpts = (sel, blank = true) => (blank ? `<option value="">— ไม่ระบุ (Unknown) —</option>` : "") + ADM.d.companies.filter((c) => c.id !== "unknown").map((c) => `<option value="${esc(c.id)}" ${c.id === sel ? "selected" : ""}>${esc(c.name)}</option>`).join("");
+  const deptList = (co) => ADM.d.departments.filter((x) => x.company_id === (co || "unknown")).map((x) => x.name);
+  const dl = (id, xs) => `<datalist id="${id}">${[...new Set(xs)].map((x) => `<option value="${esc(x)}">`).join("")}</datalist>`;
+  const unk = (v) => !v || v === "Unknown" ? `<span class="tag" style="background:var(--amber-bg);color:var(--amber)">Unknown</span>` : esc(v);
+  const xBtn = (attrs, label) => `<button class="btn" type="button" style="min-height:32px;padding:0 10px" ${attrs} aria-label="${esc(label)}">✕</button>`;
+  function drawAdmin() {
+    for (const b of $$("[data-adm-tab]")) b.setAttribute("aria-pressed", String(b.dataset.admTab === ADM.tab));
+    const el = $("#admP"), d = ADM.d;
+    if (ADM.tab === "company") {
+      el.innerHTML = `<form class="card" data-adm-form="company">
+          <div class="sec-t" style="margin-top:0">เพิ่มบริษัท</div>
+          <div class="row2"><div class="field"><label for="acName">ชื่อบริษัท</label><input class="inp" id="acName" name="name" maxlength="60" placeholder="เว้นว่าง = Unknown"></div>
+          <div class="field"><label for="acAl">ชื่อเรียกอื่น (คั่นด้วย ,)</label><input class="inp" id="acAl" name="aliases" placeholder="เช่น ia, ไอเอ"></div></div>
+          <button class="btn primary" type="submit">เพิ่มบริษัท</button></form>
+        ${d.companies.map((c) => { const ds = deptList(c.id); return `<div class="sec-t">${esc(c.name)} <small style="font-weight:400">· ${ds.length} แผนก · ${d.projects.filter((p) => p.company_id === c.id).length} โปรเจกต์</small></div>
+          <div class="card"><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${ds.map((n) => `<span class="tag" style="font-size:13px;padding:4px 4px 4px 10px;display:inline-flex;align-items:center;gap:4px">${esc(n)}${n === "Unknown" ? "&nbsp;" : `<button type="button" data-adm-del="department" data-co="${esc(c.id)}" data-name="${esc(n)}" aria-label="ลบแผนก ${esc(n)}" style="border:0;background:none;color:var(--faint);padding:0 6px">✕</button>`}</span>`).join("")}</div>
+          <form data-adm-form="department" style="display:flex;gap:8px"><input type="hidden" name="company_id" value="${esc(c.id)}"><input class="inp" name="name" maxlength="60" placeholder="แผนกใหม่ (เว้นว่าง = Unknown)" aria-label="แผนกใหม่ของ ${esc(c.name)}"><button class="btn" type="submit">เพิ่มแผนก</button></form></div>`; }).join("")}`;
+    } else if (ADM.tab === "project") {
+      const p = ADM.edit ? d.projects.find((x) => x.id === ADM.edit) : null;
+      el.innerHTML = `<form class="card" data-adm-form="project">
+          <div class="sec-t" style="margin-top:0">${p ? "แก้โปรเจกต์ " + esc(p.code) : "เพิ่มโปรเจกต์"}</div>
+          ${p ? `<input type="hidden" name="id" value="${esc(p.id)}">` : ""}
+          <div class="row2"><div class="field"><label for="apCode">รหัส</label><input class="inp" id="apCode" name="code" maxlength="30" value="${esc(p?.code ?? "")}" placeholder="เช่น 2625 · เว้นว่าง = UNKNOWN-xxxx"></div>
+          <div class="field"><label for="apName">ชื่อโปรเจกต์</label><input class="inp" id="apName" name="name" maxlength="120" value="${esc(p && p.name !== "Unknown" ? p.name : "")}" placeholder="เว้นว่าง = Unknown"></div></div>
+          <div class="row2"><div class="field"><label for="apCo">บริษัท</label><select class="inp" id="apCo" name="company_id">${coOpts(p?.company_id)}</select></div>
+          <div class="field"><label for="apDept">แผนก</label><input class="inp" id="apDept" name="department" list="apDeptL" maxlength="60" value="${esc(p && p.department !== "Unknown" ? p.department ?? "" : "")}" placeholder="เลือกหรือพิมพ์ · เว้นว่าง = Unknown">${dl("apDeptL", deptList(p?.company_id))}</div></div>
+          <div class="row2"><div class="field"><label for="apType">ประเภท</label><select class="inp" id="apType" name="project_type"><option value="">— ไม่ระบุ (Unknown) —</option>${d.types.filter((t) => t.name !== "Unknown").map((t) => `<option ${t.name === p?.project_type ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></div>
+          <div class="field"><label for="apSt">สถานะ</label><select class="inp" id="apSt" name="mgmt_status"><option value="">— ไม่ระบุ (Unknown) —</option>${d.statuses.filter((s) => s !== "Unknown").map((s) => `<option ${s === p?.mgmt_status ? "selected" : ""}>${s}</option>`).join("")}</select></div></div>
+          <div class="field"><label for="apAl">ชื่อเรียกในแชต (คั่นด้วย ,)</label><input class="inp" id="apAl" name="aliases" value="${esc((p?.aliases ?? []).join(", "))}" placeholder="เช่น cinq, ซิงก์"><p class="hint">IPED ใช้จับชื่อโปรเจกต์ตอนสั่งงานในแชต</p></div>
+          <div style="display:flex;gap:8px"><button class="btn primary" type="submit">${p ? "บันทึก" : "เพิ่มโปรเจกต์"}</button>${p ? `<button class="btn" type="button" data-adm-cancel>ยกเลิก</button>` : ""}</div></form>
+        <div class="sec-t">ค้นหาโปรเจกต์</div>
+        <input class="inp" id="admQ" value="${esc(ADM.q)}" placeholder="ค้นหารหัส ชื่อ ประเภท บริษัท แผนก หรือ Unknown" aria-label="ค้นหาโปรเจกต์" style="margin-bottom:10px">
+        <div id="admList">${projList()}</div>`;
+    } else if (ADM.tab === "type") {
+      el.innerHTML = `<form class="card" data-adm-form="type" style="display:flex;gap:8px"><input class="inp" name="name" maxlength="40" placeholder="ประเภทใหม่ เช่น Clinic (เว้นว่าง = Unknown)" aria-label="ประเภทใหม่"><button class="btn primary" type="submit">เพิ่ม</button></form>
+        <div class="sec-t">ประเภทโปรเจกต์ · ลบแล้วโปรเจกต์ในประเภทนั้นจะเป็น Unknown</div>
+        <div class="card rows">${d.types.map((t) => `<div><span class="rt">${unk(t.name)}<small>${t.n} โปรเจกต์</small></span>${t.name === "Unknown" ? "" : xBtn(`data-adm-del="type" data-name="${esc(t.name)}"`, "ลบประเภท " + t.name)}</div>`).join("")}</div>`;
+    } else {
+      const p = d.projects.find((x) => x.id === ADM.proj);
+      const tm = p ? d.team.filter((t) => t.project_id === p.id) : [];
+      const SIDE = { IN: "Interior", EX: "Exterior", Unknown: "Unknown" };
+      el.innerHTML = `<div class="sec-t" style="margin-top:0">ทีมโปรเจกต์ (IN / EX · หลัก / ผู้ช่วย)</div>
+        <form class="card" data-adm-form="team">
+          <div class="field"><label for="atP">โปรเจกต์</label><select class="inp" id="atP" name="project_id"><option value="">— เลือกโปรเจกต์ —</option>${d.projects.map((x) => `<option value="${esc(x.id)}" ${x.id === ADM.proj ? "selected" : ""}>${esc(x.code + " " + x.name)}</option>`).join("")}</select></div>
+          ${p ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${tm.map((t) => `<span class="tag" style="font-size:13px;padding:4px 4px 4px 10px;display:inline-flex;align-items:center;gap:4px">${esc(SIDE[t.side])} · ${t.slot === "main" ? "หลัก" : "ผู้ช่วย"} · <b>${esc(t.nickname)}</b><button type="button" data-adm-del="team" data-pid="${esc(t.project_id)}" data-side="${esc(t.side)}" data-slot="${esc(t.slot)}" data-nick="${esc(t.nickname)}" aria-label="เอา ${esc(t.nickname)} ออก" style="border:0;background:none;color:var(--faint);padding:0 6px">✕</button></span>`).join("") || `<span class="hint">ยังไม่มีทีม</span>`}</div>` : ""}
+          <div class="row2"><div class="field"><label for="atSide">ฝั่ง</label><select class="inp" id="atSide" name="side"><option value="">— ไม่ระบุ (Unknown) —</option><option value="IN">Interior (IN)</option><option value="EX">Exterior (EX)</option></select></div>
+          <div class="field"><label for="atSlot">ตำแหน่ง</label><select class="inp" id="atSlot" name="slot"><option value="main">หลัก (Main)</option><option value="assist">ผู้ช่วย (Assist)</option></select></div></div>
+          <div class="field"><label for="atNick">ชื่อเล่น</label><input class="inp" id="atNick" name="nickname" list="atNickL" maxlength="40" placeholder="เลือกจากสมาชิก · เว้นว่าง = Unknown">${dl("atNickL", d.roster.map((r) => r.nickname))}</div>
+          <button class="btn primary" type="submit">เพิ่มเข้าทีม</button></form>
+        <div class="sec-t">สมาชิก · ${d.roster.length} คน (✓ = ใช้ IPED แล้ว)</div>
+        <form class="card" data-adm-form="member">
+          <div class="row2"><div class="field"><label for="amNick">ชื่อเล่น</label><input class="inp" id="amNick" name="nickname" maxlength="40" placeholder="เว้นว่าง = Unknown"></div>
+          <div class="field"><label for="amFull">ชื่อ-นามสกุล</label><input class="inp" id="amFull" name="full_name" maxlength="120" placeholder="เว้นว่าง = Unknown"></div></div>
+          <div class="row2"><div class="field"><label for="amCo">บริษัท</label><select class="inp" id="amCo" name="company_id">${coOpts("")}</select></div>
+          <div class="field"><label for="amDept">แผนก</label><input class="inp" id="amDept" name="department" list="amDeptL" maxlength="60" placeholder="เว้นว่าง = Unknown">${dl("amDeptL", d.departments.map((x) => x.name))}</div></div>
+          <div class="field"><label for="amRole">บทบาท</label><select class="inp" id="amRole" name="mgmt_role"><option value="">— ไม่ระบุ (Unknown) —</option>${d.roles.filter((r) => r !== "Unknown").map((r) => `<option ${r === "Member" ? "selected" : ""}>${r}</option>`).join("")}</select></div>
+          <button class="btn primary" type="submit">เพิ่มสมาชิก</button></form>
+        <div class="card rows" style="margin-top:10px">${d.roster.map((r) => `<div><span class="rt"><b>${esc(r.nickname)}</b>${r.on_line ? " ✓" : ""} <span style="color:var(--faint)">${esc(r.full_name)}</span><small>${esc(coName(r.company_id))} › ${esc(r.department ?? "Unknown")} · ${esc(r.mgmt_role)}</small></span>${xBtn(`data-adm-del="member" data-co="${esc(r.company_id)}" data-nick="${esc(r.nickname)}"`, "ลบ " + r.nickname)}</div>`).join("")}</div>`;
+    }
+  }
+  // รายการโปรเจกต์ (วาดแยกจากฟอร์ม · พิมพ์ค้นหาแล้วฟอร์มที่กรอกค้างไม่หาย)
+  function projList() {
+    const d = ADM.d, q = ADM.q.toLowerCase();
+    const list = d.projects.filter((x) => !q || [x.code, x.name, x.project_type, coName(x.company_id), x.department, x.mgmt_status].join(" ").toLowerCase().includes(q));
+    return `<div class="sec-t" style="margin-top:0">${list.length} โปรเจกต์</div>
+      <div class="card rows">${list.map((x) => `<button type="button" data-adm-edit="${esc(x.id)}"><span class="rt"><b>${esc(x.code)}</b> ${esc(x.name)}<small>${esc(coName(x.company_id))} › ${esc(x.department ?? "Unknown")} · ${esc(x.project_type)} · ${esc(x.mgmt_status ?? "Unknown")} · ทีม ${d.team.filter((t) => t.project_id === x.id).length} คน</small></span>${x.company_id === "unknown" || x.project_type === "Unknown" || x.department === "Unknown" || x.mgmt_status === "Unknown" ? unk("") : ""}</button>`).join("") || `<div><span class="rt">ไม่พบ</span></div>`}</div>`;
+  }
+  async function admSave(kind, body) {
+    try {
+      const r = await api("app/admin/save", { kind, ...body });
+      toast(kind === "project" && r.code ? "บันทึกโปรเจกต์ " + r.code + " แล้ว" : "บันทึกแล้ว");
+      if (kind === "project") ADM.edit = null;
+      await loadAdmin();
+    } catch (e) { toast(errText(e)); }
+  }
+  main.addEventListener("click", async (ev) => {
+    if (!st.route.startsWith("admin")) return;
+    const t = ev.target.closest("[data-adm-tab],[data-adm-edit],[data-adm-del],[data-adm-cancel]"); if (!t) return;
+    if (t.dataset.admTab) { ADM.tab = t.dataset.admTab; ADM.edit = null; history.replaceState(null, "", "#admin/" + ADM.tab); st.route = "admin/" + ADM.tab; drawAdmin(); return; }
+    if (t.dataset.admEdit) { ADM.edit = t.dataset.admEdit; drawAdmin(); window.scrollTo(0, 0); $("#apName")?.focus(); return; }
+    if (t.hasAttribute("data-adm-cancel")) { ADM.edit = null; drawAdmin(); return; }
+    const k = t.dataset.admDel, b = t.dataset;
+    const body = k === "team" ? { project_id: b.pid, side: b.side, slot: b.slot, nickname: b.nick } : k === "member" ? { company_id: b.co, nickname: b.nick } : k === "department" ? { company_id: b.co, name: b.name } : { name: b.name };
+    if (!confirm("ลบ " + (b.name || b.nick) + " ?")) return;
+    try { await api("app/admin/delete", { kind: k, ...body }); toast("ลบแล้ว"); await loadAdmin(); } catch (e) { toast(errText(e)); }
+  });
+  main.addEventListener("submit", (ev) => {
+    const f = ev.target.closest("[data-adm-form]"); if (!f) return;
+    ev.preventDefault();
+    admSave(f.dataset.admForm, Object.fromEntries(new FormData(f)));
+  });
+  main.addEventListener("input", (ev) => {
+    if (ev.target.id === "admQ") { ADM.q = ev.target.value; $("#admList").innerHTML = projList(); }
+  });
+  main.addEventListener("change", (ev) => {
+    if (ev.target.id === "atP") { ADM.proj = ev.target.value; drawAdmin(); }
+    if (ev.target.id === "apCo") $("#apDeptL").outerHTML = dl("apDeptL", deptList(ev.target.value));
+  });
+
   // ===== ตัวนำทาง (hash) =====
-  const ROUTES = { today: pageToday, todo: pageTodo, repeat: pageRepeat, groups: pageGroups, settings: pageSettings, integrations: pageIntegrations };
+  const ROUTES = { today: pageToday, todo: pageTodo, repeat: pageRepeat, groups: pageGroups, settings: pageSettings, integrations: pageIntegrations, admin: pageAdmin };
   function route() {
     const h = (location.hash || "#today").slice(1);
     const [name, arg] = h.split("/");
@@ -472,8 +587,8 @@
     }
     st.cache.clear();
     if (name === "library") pageLibrary(arg || "all");
-    else (ROUTES[name] || pageToday)();
-    const titles = { today: "วันนี้", todo: "To Do", repeat: "เตือน & Memo", groups: "กลุ่ม", library: "คลัง", settings: "ตั้งค่า", integrations: "เชื่อมต่อแอป" };
+    else (ROUTES[name] || pageToday)(arg);
+    const titles = { today: "วันนี้", todo: "To Do", repeat: "เตือน & Memo", groups: "กลุ่ม", library: "คลัง", settings: "ตั้งค่า", integrations: "เชื่อมต่อแอป", admin: "หลังบ้าน" };
     document.title = `${titles[name] || "วันนี้"} · IPED`;
     window.scrollTo(0, 0);
   }
@@ -483,6 +598,7 @@
   function drawMe() {
     $("#meName").textContent = st.me.name || "IPED";
     $("#meSub").innerHTML = esc(st.me.title || "เลขาของคุณใน LINE") + (MOCK ? ' <span class="tag" style="background:var(--amber-bg);color:var(--amber)">MOCK</span>' : "");
+    const ad = $("#navAdmin"); if (ad) ad.hidden = !st.me.admin;
     $("#meAv").innerHTML = st.me.pic ? `<img src="${esc(st.me.pic)}" alt="" referrerpolicy="no-referrer">` : "";
   }
 

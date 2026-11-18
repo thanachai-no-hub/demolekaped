@@ -237,3 +237,5 @@ textarea.inp{min-height:72px;resize:vertical}
 .devview{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 16px;background:var(--warn-bg);color:var(--warn);font-size:13px;line-height:1.4;border-top:1px solid var(--line)}
 .devview span{min-width:0;overflow-wrap:anywhere}
 .devview button{flex:none;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid currentColor;background:var(--surface);color:var(--fg);font:inherit;font-weight:700}
+.pill.review{background:var(--info-bg,#e8eef5);color:var(--info,#3f6a8c)} .pill.review::before{content:"🔍"}
+.pill.revise{background:var(--warn-bg);color:var(--warn)} .pill.revise::before{content:"↺"} .pb.revise i{background:var(--amber,#c08a3e)}
