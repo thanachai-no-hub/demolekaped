@@ -233,7 +233,7 @@
   const repKind = (i) => (!i.at && !i.repeat ? "untimed" : i.repeat ? "repeat" : "once");
   function pageRepeat() {
     main.innerHTML = `
-      <section class="hero"><div class="hero-row"><div><p class="kick">ที่ตั้งไว้</p><h1>เตือนซ้ำ</h1><p class="sub">ทุกเรื่องที่ IPED รับปากว่าจะเตือนคุณ</p></div>${newBtn()}</div></section>
+      <section class="hero"><div class="hero-row"><div><p class="kick">ที่ตั้งไว้</p><h1>เตือน &amp; Memo</h1><p class="sub">เตือนครั้งเดียว · เตือนประจำ · Memo ที่จดไว้ยังไม่มีเวลา</p></div>${newBtn()}</div></section>
       <div class="page"><div class="toolbar"><div class="seg" role="tablist" aria-label="ประเภทการเตือน" id="repT"></div></div><div id="repL">${loading()}</div><div class="quota" id="repQ"></div></div>`;
     st.reload = loadRepeat; loadRepeat();
   }
@@ -241,7 +241,8 @@
     try {
       const r = await api("app/repeat"), c = r.counts || {};
       $("#repT").innerHTML = REP_T.map(([k, l]) => `<button type="button" role="tab" data-rep="${k}" aria-selected="${st.repeatTab === k}">${l} <span style="opacity:.6">${c[k] ?? 0}</span></button>`).join("");
-      const items = (r.items || []).filter((i) => repKind(i) === st.repeatTab);
+      // Memo (ยังไม่มีเวลา) มาจากรายการแยก r.untimed · เตือนครั้งเดียว/ประจำ มาจาก r.items
+      const items = st.repeatTab === "untimed" ? (r.untimed || (r.items || []).filter((i) => repKind(i) === "untimed")) : (r.items || []).filter((i) => repKind(i) === st.repeatTab);
       $("#repL").innerHTML = items.length ? `<div class="list">${items.map((i) => row(i, { right: i.at ? `<div class="next">${st.repeatTab === "repeat" ? "ครั้งถัดไป" : "เตือน"}<b>${esc(whenText(i.at))}</b></div>` : "" })).join("")}</div>`
         : empty("bell", st.repeatTab === "repeat" ? "ยังไม่มีเตือนซ้ำ" : st.repeatTab === "once" ? "ยังไม่มีเตือนครั้งเดียว" : "ทุกเรื่องมีเวลาแล้ว",
           st.repeatTab === "repeat" ? "ลองพิมพ์ “ทุกวันที่ 25 เตือนจ่ายค่าเช่า” ในแชต หรือกด N" : "กด N เพื่อตั้งเตือนใหม่", st.repeatTab === "untimed" ? "" : newBtn());
@@ -472,7 +473,7 @@
     st.cache.clear();
     if (name === "library") pageLibrary(arg || "all");
     else (ROUTES[name] || pageToday)();
-    const titles = { today: "วันนี้", todo: "To Do", repeat: "เตือนซ้ำ", groups: "กลุ่ม", library: "คลัง", settings: "ตั้งค่า", integrations: "เชื่อมต่อแอป" };
+    const titles = { today: "วันนี้", todo: "To Do", repeat: "เตือน & Memo", groups: "กลุ่ม", library: "คลัง", settings: "ตั้งค่า", integrations: "เชื่อมต่อแอป" };
     document.title = `${titles[name] || "วันนี้"} · IPED`;
     window.scrollTo(0, 0);
   }
