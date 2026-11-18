@@ -79,7 +79,7 @@
     out: '<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>',
   };
   const svg = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k] || ICON.todo}</svg>`;
-  const SRC = { reminder: "เตือน", meeting: "ประชุม", task: "งานบริษัท", todo: "To Do", note: "โน้ต", link: "ลิงก์", photo: "รูป", file: "ไฟล์" };
+  const SRC = { reminder: "เตือน", meeting: "ประชุม", task: "งานบริษัท", todo: "To Do", note: "Memo", link: "ลิงก์", photo: "รูป", file: "ไฟล์" };
   const IMP = ["ปกติ", "สำคัญ", "ห้ามพลาด"];
   const img = (n) => `img/duck-${n}.svg`;
   const main = $("#main");
@@ -122,7 +122,7 @@
         <button role="tab" type="button" data-rp="inbox" aria-selected="${st.rpTab === "inbox"}">${svg("inbox").replace("<svg", '<svg width="16" height="16"')} Memo <span class="n" id="nInbox">·</span></button>
         <button role="tab" type="button" data-rp="events" aria-selected="${st.rpTab === "events"}">${svg("meeting").replace("<svg", '<svg width="16" height="16"')} เกิดขึ้นวันนี้ <span class="n" id="nEv">·</span></button>
       </div>
-      <label class="quick" id="quickL" ${st.rpTab === "inbox" ? "" : "hidden"}><span aria-hidden="true">＋</span><span class="sr">จดเข้า Memo</span><input id="quick" placeholder="จดไว้ก่อน แล้วกด Enter (Memo ยังไม่มีเวลา)" enterkeyhint="done" autocomplete="off" maxlength="200"></label>
+      <label class="quick" id="quickL" ${st.rpTab === "inbox" ? "" : "hidden"}><span aria-hidden="true">＋</span><span class="sr">จดเข้า Memo</span><input id="quick" placeholder="จดไว้ แล้วกด Enter (Memo · เรื่องที่ต้องทำไปที่ To Do)" enterkeyhint="done" autocomplete="off" maxlength="200"></label>
       <div id="rpBody" role="tabpanel">${loading()}</div>
     </aside>`;
   }
@@ -139,7 +139,7 @@
     $("#quickL").hidden = st.rpTab !== "inbox";
     if (st.rpTab === "inbox") {
       body.innerHTML = inbox.length ? `<div class="list">${inbox.map((i) => row(i)).join("")}</div>`
-        : empty("laptop", "ไม่มีเรื่องค้าง", "เรื่องที่ยังไม่มีวันเวลา ทั้งที่พิมพ์ตรงนี้และที่ฝาก IPED ในแชต จะมารอตรงนี้", newBtn("เพิ่มเรื่อง"), "sm");
+        : empty("laptop", "ยังไม่มี Memo", "ข้อมูล ไอเดีย หรือสรุปจากรูปที่จดไว้ ทั้งที่พิมพ์ตรงนี้และ “จด …” ในแชต LINE จะมาอยู่ตรงนี้", "", "sm");
     } else {
       body.innerHTML = ev.length ? `<div class="list">${ev.map((i) => row(i, { time: true })).join("")}</div>`
         : empty("reading", "วันนี้ไม่มีประชุมหรืองานถึงกำหนด", "ประชุมและงานบริษัทที่ถึงกำหนดวันนี้จะขึ้นตรงนี้", "", "sm");
@@ -209,7 +209,7 @@
   }
 
   // ===== หน้า: To Do =====
-  const TODO_F = [["all", "ทั้งหมด"], ["timed", "มีเวลา"], ["untimed", "Memo (ยังไม่มีเวลา)"], ["done", "เสร็จแล้ว"]];
+  const TODO_F = [["all", "ทั้งหมด"], ["timed", "มีเวลา"], ["untimed", "ยังไม่มีเวลา"], ["done", "เสร็จแล้ว"]];
   function pageTodo() {
     main.innerHTML = `
       <section class="hero"><div class="hero-row"><div><p class="kick">เรื่องที่ต้องทำ</p><h1>To Do</h1><p class="sub">ติ๊กเมื่อทำเสร็จ IPED จะเลิกตามให้</p></div>${newBtn("เพิ่ม To Do")}</div></section>
@@ -229,11 +229,11 @@
   }
 
   // ===== หน้า: เตือนซ้ำ / ที่ตั้งไว้ =====
-  const REP_T = [["once", "เตือนครั้งเดียว"], ["repeat", "เตือนประจำ"], ["untimed", "Memo (ยังไม่มีเวลา)"]];
+  const REP_T = [["once", "เตือนครั้งเดียว"], ["repeat", "เตือนประจำ"], ["untimed", "Memo"]];
   const repKind = (i) => (!i.at && !i.repeat ? "untimed" : i.repeat ? "repeat" : "once");
   function pageRepeat() {
     main.innerHTML = `
-      <section class="hero"><div class="hero-row"><div><p class="kick">ที่ตั้งไว้</p><h1>เตือน &amp; Memo</h1><p class="sub">เตือนครั้งเดียว · เตือนประจำ · Memo ที่จดไว้ยังไม่มีเวลา</p></div>${newBtn()}</div></section>
+      <section class="hero"><div class="hero-row"><div><p class="kick">ที่ตั้งไว้</p><h1>เตือน &amp; Memo</h1><p class="sub">เตือนครั้งเดียว · เตือนประจำ · Memo ที่จดไว้</p></div>${newBtn()}</div></section>
       <div class="page"><div class="toolbar"><div class="seg" role="tablist" aria-label="ประเภทการเตือน" id="repT"></div></div><div id="repL">${loading()}</div><div class="quota" id="repQ"></div></div>`;
     st.reload = loadRepeat; loadRepeat();
   }
@@ -241,10 +241,10 @@
     try {
       const r = await api("app/repeat"), c = r.counts || {};
       $("#repT").innerHTML = REP_T.map(([k, l]) => `<button type="button" role="tab" data-rep="${k}" aria-selected="${st.repeatTab === k}">${l} <span style="opacity:.6">${c[k] ?? 0}</span></button>`).join("");
-      // Memo (ยังไม่มีเวลา) มาจากรายการแยก r.untimed · เตือนครั้งเดียว/ประจำ มาจาก r.items
+      // Memo มาจากรายการแยก r.untimed (kind note) · เตือนครั้งเดียว/ประจำ มาจาก r.items
       const items = st.repeatTab === "untimed" ? (r.untimed || (r.items || []).filter((i) => repKind(i) === "untimed")) : (r.items || []).filter((i) => repKind(i) === st.repeatTab);
-      $("#repL").innerHTML = items.length ? `<div class="list">${items.map((i) => row(i, { right: i.at ? `<div class="next">${st.repeatTab === "repeat" ? "ครั้งถัดไป" : "เตือน"}<b>${esc(whenText(i.at))}</b></div>` : "" })).join("")}</div>`
-        : empty("bell", st.repeatTab === "repeat" ? "ยังไม่มีเตือนซ้ำ" : st.repeatTab === "once" ? "ยังไม่มีเตือนครั้งเดียว" : "ทุกเรื่องมีเวลาแล้ว",
+      $("#repL").innerHTML = items.length ? `<div class="list">${items.map((i) => row(i, { body: st.repeatTab === "untimed", right: i.at ? `<div class="next">${st.repeatTab === "repeat" ? "ครั้งถัดไป" : "เตือน"}<b>${esc(whenText(i.at))}</b></div>` : "" })).join("")}</div>`
+        : empty("bell", st.repeatTab === "repeat" ? "ยังไม่มีเตือนซ้ำ" : st.repeatTab === "once" ? "ยังไม่มีเตือนครั้งเดียว" : "ยังไม่มี Memo",
           st.repeatTab === "repeat" ? "ลองพิมพ์ “ทุกวันที่ 25 เตือนจ่ายค่าเช่า” ในแชต หรือกด N" : "กด N เพื่อตั้งเตือนใหม่", st.repeatTab === "untimed" ? "" : newBtn());
       const q = r.quota || { used: 0, max: 0 }, pct = q.max ? Math.round((q.used / q.max) * 100) : 0;
       $("#repQ").innerHTML = q.max ? `ใช้เตือนซ้ำไป ${q.used} จาก ${q.max} รายการ<div class="pb ${pct >= 100 ? "full" : pct >= 80 ? "warn" : ""}" role="progressbar" aria-valuenow="${q.used}" aria-valuemin="0" aria-valuemax="${q.max}" aria-label="โควตาเตือนซ้ำ"><i style="width:${Math.min(100, Math.max(2, pct))}%"></i></div>` : "";
@@ -283,8 +283,8 @@
   }
 
   // ===== หน้า: คลัง =====
-  const LIB_T = [["all", "ทั้งหมด"], ["note", "โน้ต"], ["link", "ลิงก์"], ["photo", "รูป"], ["file", "ไฟล์"]];
-  const LIB_EMPTY = { all: "ยังไม่มีอะไรในคลัง", note: "ยังไม่มีโน้ต", link: "ยังไม่มีลิงก์", photo: "ยังไม่มีรูป", file: "ยังไม่มีไฟล์" };
+  const LIB_T = [["all", "ทั้งหมด"], ["note", "Memo"], ["link", "ลิงก์"], ["photo", "รูป"], ["file", "ไฟล์"]];
+  const LIB_EMPTY = { all: "ยังไม่มีอะไรในคลัง", note: "ยังไม่มี Memo", link: "ยังไม่มีลิงก์", photo: "ยังไม่มีรูป", file: "ยังไม่มีไฟล์" };
   function pageLibrary(type) {
     if (!LIB_T.some(([k]) => k === type)) type = "all";
     st.lib.type = type;
@@ -855,7 +855,7 @@
     if (e.target.id === "quick" && e.key === "Enter" && !e.isComposing) {
       const inp = e.target, title = inp.value.trim(); if (!title) return;
       inp.disabled = true;
-      try { const r = await api("app/items", { title, kind: "todo" }); inp.value = ""; toast(r.said || "จดเข้า Memo แล้ว"); st.rpTab = "inbox"; await loadRp(); st.reload === loadTodo && loadTodo(); }
+      try { const r = await api("app/items", { title, kind: "note" }); inp.value = ""; toast(r.said || "จดเข้า Memo แล้ว"); st.rpTab = "inbox"; await loadRp(); st.reload === loadTodo && loadTodo(); }
       catch (er) { toast(errText(er)); }
       inp.disabled = false; $("#quick")?.focus();
     }
@@ -978,7 +978,7 @@
           scope: b.group_id ? "group" : "mine", group: b.group_id ? groups.find((x) => x.id === b.group_id) && { id: b.group_id, name: groups.find((x) => x.id === b.group_id).name } : null });
       }
       items.push(it);
-      const said = LIB.includes(it.source) ? `เก็บ “${it.title}” เข้าคลังแล้ว` : it.at ? `จดแล้ว จะเตือน “${it.title}” ${whenText(it.at)}${it.repeat ? ` (${it.repeat})` : ""}` : `เก็บ “${it.title}” เข้า Inbox แล้ว`;
+      const said = LIB.includes(it.source) ? `เก็บ “${it.title}” เข้าคลังแล้ว` : it.at ? `จดแล้ว จะเตือน “${it.title}” ${whenText(it.at)}${it.repeat ? ` (${it.repeat})` : ""}` : it.source === "note" ? `จด “${it.title}” เข้า Memo แล้ว` : `เพิ่ม “${it.title}” ใน To Do แล้ว`;
       return { item: it, said };
     }
     const find = (b) => { const it = items.find((i) => i.id === b.id && i.source === b.source); if (!it) throw Object.assign(new Error("ไม่พบรายการนี้"), { status: 404 }); return it; };
