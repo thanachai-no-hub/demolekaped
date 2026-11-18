@@ -191,6 +191,8 @@ select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradi
 .dlg p{margin:0 0 10px;font-size:14px;color:var(--muted)}
 .dlg-act{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
 .dlg-act .sp{flex:1}
+.bub.card .cc{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 12px}
+.bub.card .cc .chip{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:99px;padding:6px 12px;font-size:13px;cursor:pointer}
 /* รายละเอียด (แตะรายการ) */
 .it[data-id]{cursor:pointer}
 .it[data-id]:hover{border-color:var(--line2)}

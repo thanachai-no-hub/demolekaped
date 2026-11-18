@@ -327,16 +327,17 @@
   function libRow(i) {
     st.cache.set(i.id, i);
     const thumb = i.thumb ? `<span class="ico-src" style="overflow:hidden;padding:0"><img src="${esc(i.thumb)}" alt="" style="width:100%;height:100%;object-fit:cover"></span>` : `<span class="ico-src">${svg(i.source)}</span>`;
-    const title = i.url && i.source !== "note" ? `<a href="${esc(i.url)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none">${esc(i.title)}</a>` : esc(i.title);
+    const title = esc(i.title);   // แตะทั้งแถว → รายละเอียด (เปิดไฟล์ · แจ้งเตือน · นัดประชุม)
     const meta = [SRC[i.source]];
     if (i.size) meta.push(bytes(i.size));
     if (i.source === "link" && i.url) meta.push(esc(i.url.replace(/^https?:\/\//, "").slice(0, 60)));
-    return `<article class="it" data-id="${esc(i.id)}">${thumb}<div class="bd"><div class="ttl">${title}</div><div class="meta"><span>${meta.join(" · ")}</span></div>${i.body ? `<div class="meta">${esc(i.body.slice(0, 160))}</div>` : ""}</div>${delBtn(i)}</article>`;
+    return `<article class="it" data-id="${esc(i.id)}" tabindex="0" aria-label="ดูรายละเอียด ${esc(i.title)}">${thumb}<div class="bd"><div class="ttl">${title}</div><div class="meta"><span>${meta.join(" · ")}</span></div>${i.body ? `<div class="meta">${esc(i.body.slice(0, 160))}</div>` : ""}</div>${delBtn(i)}</article>`;
   }
   function tile(i) {
+    st.cache.set(i.id, i);
     const pv = i.thumb ? `<img src="${esc(i.thumb)}" alt="" loading="lazy">` : i.source === "note" && i.body ? `<span class="nt">${esc(i.body)}</span>` : svg(i.source);
     const inner = `<div class="pv">${pv}</div><div class="tb"><b>${esc(i.title)}</b><small>${SRC[i.source]}${i.size ? " · " + bytes(i.size) : ""}</small></div>`;
-    return `<article class="tile" data-id="${esc(i.id)}">${i.url ? `<a href="${esc(i.url)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:contents">${inner}</a>` : inner}${delBtn(i).replace('class="ib"', 'class="del"')}</article>`;
+    return `<article class="tile" data-id="${esc(i.id)}" tabindex="0" aria-label="ดูรายละเอียด ${esc(i.title)}">${inner}${delBtn(i).replace('class="ib"', 'class="del"')}</article>`;
   }
   const MAX_UP = 10 * 1024 * 1024;
   async function upload(files) {
@@ -732,7 +733,7 @@
   const dlgA = $("#dlgAct");
   let act = null, acLen = 60, pplCache = null;
   async function openAct(it, kind) {
-    act = { it, kind };
+    act = { it, kind, force: false };
     const meet = kind === "meet";
     $("#acT").textContent = meet ? "นัดประชุมเรื่องนี้" : "ตั้งเตือน";
     $("#acFrom").textContent = `${SRC[it.source] || ""} · ${it.title}`;
@@ -764,14 +765,21 @@
     if (meet && !people.length) return bad("เลือกผู้เข้าร่วมอย่างน้อย 1 คน");
     await D.busy($("#acGo"), async () => {
       try {
-        const r = meet ? await api("app/items/meet", { id: act.it.id, title, at, minutes: acLen, people })
+        const r = meet ? await api("app/items/meet", { id: act.it.id, title, at, minutes: acLen, people, force: act.force })
           : await api("app/items/remind", { id: act.it.id, title, at, to: $("#acWho").value || null });
         closeDlg(dlgA);
         toast((r.said || "บันทึกแล้ว") + (r.not_linked?.length ? ` · ${r.not_linked.join(", ")} ยังไม่ผูก LINE จึงยังไม่ได้รับแจ้ง` : ""));
         refresh();
-      } catch (er) { bad(errText(er)); }
+      } catch (er) {
+        // มีคนติดนัดอื่น → บอกชื่อ แล้วให้กดยืนยันอีกครั้งถ้าจะนัดต่อ
+        if (er.body?.code === "clash") { act.force = true; return bad(errText(er) + " · ถ้าจะนัดเวลานี้ต่อ กด “นัดต่อเลย”"); }
+        bad(errText(er));
+      }
     }, "กำลังบันทึก…");
+    if (act?.force && dlgA.open) $("#acGo").textContent = "นัดต่อเลย";   // busy() คืนชื่อปุ่มเดิมหลังทำเสร็จ จึงเปลี่ยนตรงนี้
   };
+  // เปลี่ยนเวลา/ผู้เข้าร่วมหลังเจอนัดชน → ตรวจชนใหม่
+  $("#acForm").addEventListener("change", () => { if (act?.force) { act.force = false; $("#acGo").textContent = "นัดและแจ้งผู้เข้าร่วม"; } });
   dlgV.addEventListener("close", () => { viewSeq++; $("#vwImg").removeAttribute("src"); });
 
   // ===== หน้าต่าง: ค้นหา =====
@@ -835,14 +843,34 @@
       return;
     }
     log.innerHTML = st.chat.map((m) => m.who === "me" ? `<div class="bub me">${esc(m.text)}</div>`
-      : m.kind === "card" ? `<div class="bub card"><div class="ch"><img src="../assets/lekaped-mark.svg" alt="">IPED · การ์ด</div><div class="cb">${esc(m.text)}</div></div>`
+      : m.kind === "card" ? `<div class="bub card"><div class="ch"><img src="../assets/lekaped-mark.svg" alt="">${esc(m.title || "IPED · การ์ด")}</div><div class="cb">${(m.lines?.length ? m.lines : [m.text]).map(esc).join("<br>")}</div>${m.chips?.length ? `<div class="cc">${m.chips.map((c) => `<button type="button" class="chip" data-sugg="${esc(c)}">${esc(c)}</button>`).join("")}</div>` : ""}</div>`
       : `<div class="bub bot${m.typing ? " typing" : ""}">${esc(m.text)}</div>`).join("");
     log.scrollTop = log.scrollHeight;
+  }
+  // การ์ด Flex → ข้อความอ่านได้ในแชตหน้าเว็บ: หัวการ์ด + ทุกบรรทัดในเนื้อหา (แถวแนวนอนรวมเป็นบรรทัดเดียว) + ปุ่มถามต่อ
+  function flexLines(node) {
+    if (!node || typeof node !== "object") return [];
+    if (node.type === "text") { const t = (node.contents?.length ? node.contents.map((s) => s.text || "").join("") : node.text || "").trim(); return t ? [t] : []; }
+    if (node.type === "box") {
+      const parts = (node.contents || []).map(flexLines).filter((l) => l.length);
+      if (node.layout !== "horizontal" && node.layout !== "baseline") return parts.flat();
+      // แถวแนวนอน: บรรทัดแรกของแต่ละช่องต่อกัน ("•" + ข้อความ) · บรรทัดรองของช่องขึ้นบรรทัดใหม่
+      return parts.length ? [parts.map((l) => l[0]).join(" "), ...parts.flatMap((l) => l.slice(1))] : [];
+    }
+    return [];
+  }
+  function flexBubble(m) {
+    const bubbles = m.contents?.type === "carousel" ? m.contents.contents || [] : [m.contents || {}];
+    const head = flexLines(bubbles[0]?.header).map((t) => t.replace(/^IPED\s*/, "")).filter(Boolean);
+    const lines = bubbles.flatMap((b) => flexLines(b.body));
+    const chips = (m.quickReply?.items || []).map((q) => q.action).filter((a) => a?.type === "message" && a.text).map((a) => a.text).slice(0, 6);
+    return { who: "bot", kind: "card", title: head.join(" · ") || "IPED", lines: lines.length ? lines : [m.altText || "การ์ด"], text: m.altText || "การ์ด", chips };
   }
   function toBubbles(msgs) {
     return (msgs || []).map((m) => {
       if (m.type === "text") return { who: "bot", text: m.text };
-      if (m.type === "flex" || m.type === "template") return { who: "bot", kind: "card", text: m.altText || "การ์ด" };
+      if (m.type === "flex") return flexBubble(m);
+      if (m.type === "template") return { who: "bot", kind: "card", text: m.altText || "การ์ด" };
       if (m.type === "image") return { who: "bot", text: "[รูปภาพ]" };
       if (m.type === "sticker") return { who: "bot", text: "[สติกเกอร์]" };
       return { who: "bot", text: m.altText || m.text || "[ข้อความ]" };
@@ -892,7 +920,7 @@
       return;
     }
     // แตะรายการ (ที่ไม่ใช่ปุ่ม/ลิงก์) → รายละเอียด
-    if ((b = t.closest(".it[data-id]")) && !t.closest("button, a, input, label")) { const it = st.cache.get(b.dataset.id); if (it) openView(it); return; }
+    if ((b = t.closest(".it[data-id], .tile[data-id]")) && !t.closest("button, a, input, label")) { const it = st.cache.get(b.dataset.id); if (it) openView(it); return; }
     if ((b = t.closest("[data-rp]"))) { st.rpTab = b.dataset.rp; drawRp(); return; }
     if ((b = t.closest("[data-range]"))) { st.today.range = b.dataset.range; st.today.data = null; pageToday(); return; }
     if ((b = t.closest("[data-day]"))) { st.today.date = b.dataset.day; pageToday(); return; }
@@ -933,7 +961,7 @@
     if (e.target.id === "upFile") { const f = [...e.target.files]; e.target.value = ""; if (f.length) upload(f); }
   });
   document.addEventListener("keydown", async (e) => {
-    if ((e.key === "Enter" || e.key === " ") && e.target.matches?.(".it[data-id]")) { e.preventDefault(); const it = st.cache.get(e.target.dataset.id); if (it) openView(it); return; }
+    if ((e.key === "Enter" || e.key === " ") && e.target.matches?.(".it[data-id], .tile[data-id]")) { e.preventDefault(); const it = st.cache.get(e.target.dataset.id); if (it) openView(it); return; }
     if (e.target.id === "quick" && e.key === "Enter" && !e.isComposing) {
       const inp = e.target, title = inp.value.trim(); if (!title) return;
       inp.disabled = true;
