@@ -310,7 +310,7 @@
       const r = await api(`app/library?type=${L.type}&q=${encodeURIComponent(L.q)}`);
       if (my !== libSeq || !$("#libL")) return;
       const c = r.counts || {};
-      $("#libSub").textContent = `${c.all ?? 0} รายการ`;
+      $("#libSub").textContent = `${c.all ?? 0} รายการ · แตะรายการเพื่อดู ตั้งเตือน หรือนัดประชุม`;
       $("#libT").innerHTML = LIB_T.map(([k, l]) => `<button type="button" role="tab" data-lib="${k}" aria-selected="${L.type === k}">${l} <span style="opacity:.6">${c[k] ?? 0}</span></button>`).join("");
       const s = r.storage || { used: 0, max: 0 }, pct = s.max ? Math.round((s.used / s.max) * 100) : 0;
       $("#libS").innerHTML = s.max ? `<span>${bytes(s.used)} / ${bytes(s.max)}</span><span class="pb" role="progressbar" aria-label="พื้นที่ที่ใช้" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${Math.max(2, pct)}%"></i></span>` : "";
@@ -698,6 +698,7 @@
 
   // ===== หน้าต่าง: รายละเอียด (แตะรายการ) =====
   const dlgV = $("#dlgView");
+  const LIB_KINDS = ["photo", "file", "link", "note", "todo"];   // ของในคลัง/Memo/To Do → ตั้งเตือน นัดประชุม ได้
   let viewSeq = 0, viewIt = null;
   async function openView(it) {
     const my = ++viewSeq; viewIt = it;
@@ -706,7 +707,7 @@
     $("#vwWhen").hidden = !it.at; $("#vwWhen").textContent = it.at ? `${thaiDate(it.at)} · ${parts(it.at).hm} น.${it.repeat ? " · " + it.repeat : ""}` : "";
     for (const id of ["vwImgA", "vwBody", "vwOpen"]) $("#" + id).hidden = true;
     $("#vwDl").innerHTML = ""; $("#vwMeet").innerHTML = "";
-    $("#vwEdit").hidden = !it.editable;
+    $("#vwEdit").hidden = !it.editable; $("#vwActs").hidden = true;
     $("#vwState").innerHTML = `<p class="hint">กำลังโหลด…</p>`;
     openDlg(dlgV);
     try {
@@ -721,9 +722,56 @@
       if (d.body) { $("#vwBody").textContent = d.body; $("#vwBody").hidden = false; }
       if (d.meetings?.length) $("#vwMeet").innerHTML = `<div class="vw-meet"><b>นัดประชุมเรื่องนี้</b>${d.meetings.map((m) => `<div>${esc(m.title)} · ${esc(whenText(m.at))}</div>`).join("")}</div>`;
       $("#vwEdit").hidden = !(it.editable && d.editable !== false);
+      $("#vwActs").hidden = !LIB_KINDS.includes(it.source);
     } catch (e) { if (my === viewSeq) $("#vwState").innerHTML = `<div class="err" role="alert">${esc(errText(e))}</div>`; }
   }
   $("#vwEdit").onclick = () => { const it = viewIt; closeDlg(dlgV); if (it) openItem(it); };
+  $("#vwActs").onclick = (e) => { const b = e.target.closest("[data-vw-act]"); if (!b || !viewIt) return; const it = viewIt; closeDlg(dlgV); openAct(it, b.dataset.vwAct); };
+
+  // ===== หน้าต่าง: ตั้งเตือน / นัดประชุม จากของในคลัง (ตั้งหัวข้อเรื่องเองได้) =====
+  const dlgA = $("#dlgAct");
+  let act = null, acLen = 60, pplCache = null;
+  async function openAct(it, kind) {
+    act = { it, kind };
+    const meet = kind === "meet";
+    $("#acT").textContent = meet ? "นัดประชุมเรื่องนี้" : "ตั้งเตือน";
+    $("#acFrom").textContent = `${SRC[it.source] || ""} · ${it.title}`;
+    $("#acTitle").value = meet || it.source === "note" || it.source === "todo" ? it.title : `ตรวจ · ${it.title}`;
+    const next = new Date(Math.ceil((Date.now() + 60000) / 3600000) * 3600000).toISOString(), p = parts(next);
+    $("#acDate").value = p.ymd; $("#acDate").min = todayYmd(); $("#acTime").value = p.hm;
+    $("#acWhoF").hidden = meet; $("#acLenF").hidden = !meet; $("#acPplF").hidden = !meet;
+    acLen = 60; segSet($("#acLen"), acLen);
+    $("#acMsg").innerHTML = ""; $("#acGo").textContent = meet ? "นัดและแจ้งผู้เข้าร่วม" : "ตั้งเตือน";
+    openDlg(dlgA); setTimeout(() => $("#acTitle").select(), 30);
+    try {
+      pplCache = pplCache || (await api("app/people")).people || [];
+      $("#acWho").innerHTML = `<option value="">ไม่มี</option>` + pplCache.map((x) => `<option value="${esc(x.id)}">${esc(x.name)}${x.line ? "" : " (ยังไม่ผูก LINE)"}</option>`).join("");
+      $("#acPpl").innerHTML = pplCache.length ? pplCache.map((x) => `<label><input type="checkbox" value="${esc(x.id)}"> ${esc(x.name)}<small>${esc(x.line ? x.dept || "" : "ยังไม่ผูก LINE")}</small></label>`).join("")
+        : `<p class="hint">ยังไม่มีคนอื่นในทีมที่ลงทะเบียน IPED</p>`;
+    } catch (e) { $("#acMsg").innerHTML = `<div class="err" role="alert">${esc(errText(e))}</div>`; }
+  }
+  $("#acLen").onclick = (e) => { const b = e.target.closest("[data-v]"); if (!b) return; acLen = +b.dataset.v; segSet($("#acLen"), acLen); };
+  $("#acForm").onsubmit = async (e) => {
+    e.preventDefault(); if (!act) return;
+    const title = $("#acTitle").value.trim(), d = $("#acDate").value, t = $("#acTime").value;
+    const bad = (m) => { $("#acMsg").innerHTML = `<div class="err" role="alert">${esc(m)}</div>`; };
+    if (!title) return bad("ตั้งหัวข้อเรื่องก่อนครับ");
+    if (!d || !t) return bad("เลือกวันและเวลาก่อนครับ");
+    const at = toIso(d, t);
+    if (Date.parse(at) <= Date.now()) return bad("เวลานี้ผ่านไปแล้ว เลือกใหม่ครับ");
+    const meet = act.kind === "meet";
+    const people = [...document.querySelectorAll("#acPpl input:checked")].map((x) => x.value);
+    if (meet && !people.length) return bad("เลือกผู้เข้าร่วมอย่างน้อย 1 คน");
+    await D.busy($("#acGo"), async () => {
+      try {
+        const r = meet ? await api("app/items/meet", { id: act.it.id, title, at, minutes: acLen, people })
+          : await api("app/items/remind", { id: act.it.id, title, at, to: $("#acWho").value || null });
+        closeDlg(dlgA);
+        toast((r.said || "บันทึกแล้ว") + (r.not_linked?.length ? ` · ${r.not_linked.join(", ")} ยังไม่ผูก LINE จึงยังไม่ได้รับแจ้ง` : ""));
+        refresh();
+      } catch (er) { bad(errText(er)); }
+    }, "กำลังบันทึก…");
+  };
   dlgV.addEventListener("close", () => { viewSeq++; $("#vwImg").removeAttribute("src"); });
 
   // ===== หน้าต่าง: ค้นหา =====

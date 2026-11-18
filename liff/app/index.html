@@ -132,8 +132,27 @@
     <dl class="vw-dl" id="vwDl"></dl>
     <div class="vw-body" id="vwBody" hidden></div>
     <div id="vwMeet"></div>
+    <div class="vw-acts" id="vwActs" hidden><button class="btn" type="button" data-vw-act="remind">📅 แจ้งเตือน</button><button class="btn" type="button" data-vw-act="meet">🗓 นัดประชุม</button></div>
     <div class="dlg-act"><a class="btn" id="vwOpen" target="_blank" rel="noopener noreferrer" hidden>เปิดรูป</a><span class="sp"></span><button class="btn" type="button" id="vwEdit" hidden>แก้ไข</button><button class="btn primary" type="button" data-dlg-close>ปิด</button></div>
   </div>
+</dialog>
+
+<dialog class="dlg" id="dlgAct" aria-labelledby="acT">
+  <form method="dialog" class="dlg-in" id="acForm">
+    <h2 id="acT">ตั้งเตือน</h2>
+    <p class="hint" id="acFrom"></p>
+    <div class="field"><label for="acTitle">หัวข้อเรื่อง</label><input class="inp" id="acTitle" maxlength="100" placeholder="เช่น ตรวจใบเสร็จค่าวัสดุ CINQ" autocomplete="off"></div>
+    <div class="row2">
+      <div class="field"><label for="acDate">วันที่</label><input class="inp" id="acDate" type="date"></div>
+      <div class="field"><label for="acTime">เวลา</label><input class="inp" id="acTime" type="time"></div>
+    </div>
+    <div class="field" id="acWhoF"><label for="acWho">คนติดตาม (ถ้ามี)</label><select class="inp" id="acWho"><option value="">ไม่มี</option></select></div>
+    <div class="field" id="acLenF"><span class="lbl" id="acLenL">ความยาว</span>
+      <div class="seg" role="group" aria-labelledby="acLenL" id="acLen"><button type="button" data-v="30" aria-pressed="false">30 นาที</button><button type="button" data-v="60" aria-pressed="true">1 ชม.</button><button type="button" data-v="90" aria-pressed="false">1.5 ชม.</button><button type="button" data-v="120" aria-pressed="false">2 ชม.</button></div></div>
+    <fieldset class="field ac-ppl" id="acPplF"><legend class="lbl">ผู้เข้าร่วม</legend><div id="acPpl"></div></fieldset>
+    <div class="msg" id="acMsg"></div>
+    <div class="dlg-act"><button class="btn" type="button" data-dlg-close>ยกเลิก</button><button class="btn primary" type="submit" id="acGo">บันทึก</button></div>
+  </form>
 </dialog>
 
 <dialog class="dlg" id="dlgSearch" aria-labelledby="seT">
