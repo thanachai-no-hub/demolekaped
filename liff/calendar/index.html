@@ -398,6 +398,7 @@ function renderDay(evs) {
     } else if (e.type === "reminder") {
       sub = e.repeatLabel || "ครั้งเดียว";
       if (e.status === "done") chips += `<span class="chip done">เตือนแล้ว</span>`;
+      else if (e.status === "pending") chips += `<span class="chip pending">⏳ รอลงเวลาใหม่</span>`;
     } else {
       sub = e.owner.name + " · " + e.progress + "%";
       chips += `<span class="chip ${e.status}">${ST_TH[e.status] || e.status}</span>`;

@@ -229,7 +229,7 @@
   }
 
   // ===== หน้า: เตือนซ้ำ / ที่ตั้งไว้ =====
-  const REP_T = [["once", "เตือนครั้งเดียว"], ["repeat", "เตือนประจำ"], ["untimed", "Memo"]];
+  const REP_T = [["pending", "⏳ รอลงเวลาใหม่"], ["once", "เตือนครั้งเดียว"], ["repeat", "เตือนประจำ"], ["untimed", "Memo"]];
   const repKind = (i) => (!i.at && !i.repeat ? "untimed" : i.repeat ? "repeat" : "once");
   function pageRepeat() {
     main.innerHTML = `
@@ -240,11 +240,12 @@
   async function loadRepeat() {
     try {
       const r = await api("app/repeat"), c = r.counts || {};
+      if (c.pending && !st.repPicked) st.repeatTab = "pending";   // มีเรื่องรอลงเวลาใหม่ → เปิดแท็บนั้นก่อน
       $("#repT").innerHTML = REP_T.map(([k, l]) => `<button type="button" role="tab" data-rep="${k}" aria-selected="${st.repeatTab === k}">${l} <span style="opacity:.6">${c[k] ?? 0}</span></button>`).join("");
       // Memo มาจากรายการแยก r.untimed (kind note) · เตือนครั้งเดียว/ประจำ มาจาก r.items
-      const items = st.repeatTab === "untimed" ? (r.untimed || (r.items || []).filter((i) => repKind(i) === "untimed")) : (r.items || []).filter((i) => repKind(i) === st.repeatTab);
-      $("#repL").innerHTML = items.length ? `<div class="list">${items.map((i) => row(i, { body: st.repeatTab === "untimed", right: i.at ? `<div class="next">${st.repeatTab === "repeat" ? "ครั้งถัดไป" : "เตือน"}<b>${esc(whenText(i.at))}</b></div>` : "" })).join("")}</div>`
-        : empty("bell", st.repeatTab === "repeat" ? "ยังไม่มีเตือนซ้ำ" : st.repeatTab === "once" ? "ยังไม่มีเตือนครั้งเดียว" : "ยังไม่มี Memo",
+      const items = st.repeatTab === "pending" ? r.pending || [] : st.repeatTab === "untimed" ? (r.untimed || (r.items || []).filter((i) => repKind(i) === "untimed")) : (r.items || []).filter((i) => repKind(i) === st.repeatTab);
+      $("#repL").innerHTML = items.length ? `<div class="list">${items.map((i) => row(i, { body: st.repeatTab === "untimed", right: i.at ? `<div class="next">${st.repeatTab === "repeat" ? "ครั้งถัดไป" : st.repeatTab === "pending" ? "เตือนไปเมื่อ" : "เตือน"}<b>${esc(whenText(i.at))}</b></div>` : "" })).join("")}</div>`
+        : empty("bell", st.repeatTab === "pending" ? "ไม่มีเรื่องรอลงเวลาใหม่ ✓" : st.repeatTab === "repeat" ? "ยังไม่มีเตือนซ้ำ" : st.repeatTab === "once" ? "ยังไม่มีเตือนครั้งเดียว" : "ยังไม่มี Memo",
           st.repeatTab === "repeat" ? "ลองพิมพ์ “ทุกวันที่ 25 เตือนจ่ายค่าเช่า” ในแชต หรือกด N" : "กด N เพื่อตั้งเตือนใหม่", st.repeatTab === "untimed" ? "" : newBtn());
       const q = r.quota || { used: 0, max: 0 }, pct = q.max ? Math.round((q.used / q.max) * 100) : 0;
       $("#repQ").innerHTML = q.max ? `ใช้เตือนซ้ำไป ${q.used} จาก ${q.max} รายการ<div class="pb ${pct >= 100 ? "full" : pct >= 80 ? "warn" : ""}" role="progressbar" aria-valuenow="${q.used}" aria-valuemin="0" aria-valuemax="${q.max}" aria-label="โควตาเตือนซ้ำ"><i style="width:${Math.min(100, Math.max(2, pct))}%"></i></div>` : "";
@@ -723,7 +724,8 @@
       if (d.body) { $("#vwBody").textContent = d.body; $("#vwBody").hidden = false; }
       if (d.meetings?.length) $("#vwMeet").innerHTML = `<div class="vw-meet"><b>นัดประชุมเรื่องนี้</b>${d.meetings.map((m) => `<div>${esc(m.title)} · ${esc(whenText(m.at))}</div>`).join("")}</div>`;
       $("#vwEdit").hidden = !(it.editable && d.editable !== false);
-      $("#vwActs").hidden = !LIB_KINDS.includes(it.source);
+      $("#vwActs").hidden = !LIB_KINDS.includes(it.source) && !d.pending;
+      for (const x of $$("[data-vw-act]")) x.hidden = d.pending ? x.dataset.vwAct !== "resched" : x.dataset.vwAct === "resched";
     } catch (e) { if (my === viewSeq) $("#vwState").innerHTML = `<div class="err" role="alert">${esc(errText(e))}</div>`; }
   }
   $("#vwEdit").onclick = () => { const it = viewIt; closeDlg(dlgV); if (it) openItem(it); };
@@ -734,15 +736,16 @@
   let act = null, acLen = 60, pplCache = null;
   async function openAct(it, kind) {
     act = { it, kind, force: false };
-    const meet = kind === "meet";
-    $("#acT").textContent = meet ? "นัดประชุมเรื่องนี้" : "ตั้งเตือน";
+    const meet = kind === "meet", resched = kind === "resched";
+    $("#acT").textContent = meet ? "นัดประชุมเรื่องนี้" : resched ? "ลงเวลาใหม่" : "ตั้งเตือน";
     $("#acFrom").textContent = `${SRC[it.source] || ""} · ${it.title}`;
-    $("#acTitle").value = meet || it.source === "note" || it.source === "todo" ? it.title : `ตรวจ · ${it.title}`;
+    $("#acTitle").value = meet || resched || it.source === "note" || it.source === "todo" ? it.title : `ตรวจ · ${it.title}`;
     const next = new Date(Math.ceil((Date.now() + 60000) / 3600000) * 3600000).toISOString(), p = parts(next);
     $("#acDate").value = p.ymd; $("#acDate").min = todayYmd(); $("#acTime").value = p.hm;
-    $("#acWhoF").hidden = meet; $("#acLenF").hidden = !meet; $("#acPplF").hidden = !meet;
+    $("#acWhoF").hidden = meet || resched; $("#acLenF").hidden = !meet; $("#acPplF").hidden = !meet;
+    if (resched) $("#acFrom").textContent = `เตือนไปแล้วแต่ยังไม่ได้กดเรียบร้อย · ${it.title}`;
     acLen = 60; segSet($("#acLen"), acLen);
-    $("#acMsg").innerHTML = ""; $("#acGo").textContent = meet ? "นัดและแจ้งผู้เข้าร่วม" : "ตั้งเตือน";
+    $("#acMsg").innerHTML = ""; $("#acGo").textContent = meet ? "นัดและแจ้งผู้เข้าร่วม" : resched ? "ลงเวลาใหม่" : "ตั้งเตือน";
     openDlg(dlgA); setTimeout(() => $("#acTitle").select(), 30);
     try {
       pplCache = pplCache || (await api("app/people")).people || [];
@@ -766,6 +769,7 @@
     await D.busy($("#acGo"), async () => {
       try {
         const r = meet ? await api("app/items/meet", { id: act.it.id, title, at, minutes: acLen, people, force: act.force })
+          : act.kind === "resched" ? await api("app/items/update", { id: act.it.id, source: "reminder", title, at }).then(() => ({ said: `ลงเวลาใหม่แล้ว · ${whenText(at)}` }))
           : await api("app/items/remind", { id: act.it.id, title, at, to: $("#acWho").value || null });
         closeDlg(dlgA);
         toast((r.said || "บันทึกแล้ว") + (r.not_linked?.length ? ` · ${r.not_linked.join(", ")} ยังไม่ผูก LINE จึงยังไม่ได้รับแจ้ง` : ""));
@@ -927,7 +931,7 @@
     if ((b = t.closest("[data-shift]"))) { st.today.date = addDays(st.today.date, +b.dataset.shift); pageToday(); return; }
     if ((b = t.closest("[data-filter]"))) { st.today.filter = b.dataset.filter; drawToday(); return; }
     if ((b = t.closest("[data-todo]"))) { st.todoFilter = b.dataset.todo; loadTodo(); return; }
-    if ((b = t.closest("[data-rep]"))) { st.repeatTab = b.dataset.rep; loadRepeat(); return; }
+    if ((b = t.closest("[data-rep]"))) { st.repeatTab = b.dataset.rep; st.repPicked = true; loadRepeat(); return; }
     if ((b = t.closest("[data-group]"))) { st.groupSel = b.dataset.group || null; loadGroups(); return; }
     if ((b = t.closest("[data-lib]"))) { location.hash = "#library/" + b.dataset.lib; return; }
     if ((b = t.closest("[data-view]"))) { st.lib.view = b.dataset.view; try { localStorage.setItem("iped.libview", st.lib.view); } catch {} for (const x of $$("[data-view]")) x.setAttribute("aria-pressed", String(x === b)); loadLibrary(); return; }
