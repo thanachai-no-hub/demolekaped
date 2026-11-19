@@ -331,7 +331,9 @@
     const title = esc(i.title);   // แตะทั้งแถว → รายละเอียด (เปิดไฟล์ · แจ้งเตือน · นัดประชุม)
     const meta = [SRC[i.source]];
     if (i.size) meta.push(bytes(i.size));
+    if (i.source === "note" && i.repeat) meta.push(esc(i.repeat));   // Memo: "ใช้ 5 ครั้ง"
     if (i.source === "link" && i.url) meta.push(esc(i.url.replace(/^https?:\/\//, "").slice(0, 60)));
+    if (i.body && i.body.trim() === i.title.trim()) i = { ...i, body: null };   // Memo บรรทัดเดียว ไม่ต้องแสดงซ้ำ
     return `<article class="it" data-id="${esc(i.id)}" tabindex="0" aria-label="ดูรายละเอียด ${esc(i.title)}">${thumb}<div class="bd"><div class="ttl">${title}</div><div class="meta"><span>${meta.join(" · ")}</span></div>${i.body ? `<div class="meta">${esc(i.body.slice(0, 160))}</div>` : ""}</div>${delBtn(i)}</article>`;
   }
   function tile(i) {
