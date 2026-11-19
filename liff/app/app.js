@@ -342,11 +342,11 @@
     const inner = `<div class="pv">${pv}</div><div class="tb"><b>${esc(i.title)}</b><small>${SRC[i.source]}${i.size ? " · " + bytes(i.size) : ""}</small></div>`;
     return `<article class="tile" data-id="${esc(i.id)}" tabindex="0" aria-label="ดูรายละเอียด ${esc(i.title)}">${inner}${delBtn(i).replace('class="ib"', 'class="del"')}</article>`;
   }
-  const MAX_UP = 10 * 1024 * 1024;
+  const MAX_UP = 50 * 1024 * 1024;
   async function upload(files) {
     const prog = $("#upProg");
     for (const f of files) {
-      if (f.size > MAX_UP) { toast(`“${f.name}” ใหญ่เกิน 10 MB`); continue; }
+      if (f.size > MAX_UP) { toast(`“${f.name}” ใหญ่เกิน 50 MB`); continue; }
       if (prog) prog.textContent = `กำลังอัปโหลด ${f.name}…`;
       try {
         const data = await new Promise((ok, no) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(",")[1] || ""); fr.onerror = () => no(new Error("อ่านไฟล์ไม่ได้")); fr.readAsDataURL(f); });
@@ -1144,7 +1144,7 @@
         }
         case "app/library/upload": {
           const size = Math.floor((b.data_base64 || "").length * 3 / 4);
-          if (size > 10 * 1024 * 1024) throw Object.assign(new Error("ไฟล์ใหญ่เกิน 10 MB"), { status: 413 });
+          if (size > 50 * 1024 * 1024) throw Object.assign(new Error("ไฟล์ใหญ่เกิน 50 MB"), { status: 413 });
           const isImg = /^image\//.test(b.mime), url = `data:${b.mime};base64,${b.data_base64}`;
           const it = I({ source: isImg ? "photo" : "file", title: b.name, mime: b.mime, size, url: size < 4e6 ? url : null, thumb: isImg && size < 4e6 ? url : null });
           items.push(it); return { item: it };
