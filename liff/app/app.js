@@ -80,6 +80,9 @@
   };
   const svg = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k] || ICON.todo}</svg>`;
   const SRC = { reminder: "เตือน", meeting: "ประชุม", task: "งานบริษัท", todo: "To Do", note: "Memo", link: "ลิงก์", photo: "รูป", file: "ไฟล์" };
+  // สูตร CEO: ข้อความ/ลิงก์/รูป/ไฟล์ = Memo · Memo + กำหนดเวลา = To Do · To Do + มอบหมาย = Task
+  const MEMO_TH = { note: "ข้อความ", link: "ลิงก์", photo: "รูป", file: "ไฟล์" };
+  const kindTh = (it) => it.task ? "Task" : it.todo || it.source === "todo" ? "To Do" : MEMO_TH[it.source] ? "Memo" + (it.source === "note" ? "" : " · " + MEMO_TH[it.source]) : SRC[it.source] || "";
   const IMP = ["ปกติ", "สำคัญ", "ห้ามพลาด"];
   const img = (n) => `img/duck-${n}.svg`;
   const main = $("#main");
@@ -95,7 +98,7 @@
   function row(it, o = {}) {
     st.cache.set(it.id, it);
     const p = it.at ? parts(it.at) : null;
-    const canCheck = it.editable && (it.source === "reminder" || it.source === "todo");
+    const canCheck = it.editable && (it.source === "reminder" || it.source === "todo" || it.todo);   // todo = Memo ที่มีกำหนด
     const lead = canCheck
       ? `<button class="chk" type="button" role="checkbox" aria-checked="${!!it.done}" aria-label="ทำเสร็จแล้ว: ${esc(it.title)}" data-chk="${esc(it.id)}"><i>✓</i></button>`
       : `<span class="ico-src" title="${esc(SRC[it.source] || "")}">${svg(it.source)}</span>`;
@@ -105,6 +108,8 @@
     if (it.repeat) meta.push(`<span>${svg("repeat")}${esc(it.repeat)}</span>`);
     if (it.group) meta.push(`<span>${svg("group")}${esc(it.group.name)}</span>`);
     if (it.from) meta.push(`<span>${svg("user")}จาก ${esc(it.from)}</span>`);
+    if (it.long_term) meta.push(`<span class="tag src">📌 ระยะยาว</span>`);
+    if (it.todo && it.source !== "todo") meta.push(`<span>${svg(it.source)}${esc(MEMO_TH[it.source] || "")}</span>`);
     if (it.source === "meeting" || it.source === "task") meta.push(`<span class="tag src">${SRC[it.source]}</span>`);
     if (it.importance > 0) meta.push(`<span class="tag imp${it.importance}">${IMP[it.importance]}</span>`);
     if (it.url && it.source === "link") meta.push(`<a class="lk" href="${esc(it.url)}" target="_blank" rel="noopener noreferrer">${esc(it.url.replace(/^https?:\/\//, "").slice(0, 48))}</a>`);
@@ -284,14 +289,14 @@
   }
 
   // ===== หน้า: คลัง =====
-  const LIB_T = [["all", "ทั้งหมด"], ["note", "Memo"], ["link", "ลิงก์"], ["photo", "รูป"], ["file", "ไฟล์"]];
-  const LIB_EMPTY = { all: "ยังไม่มีอะไรในคลัง", note: "ยังไม่มี Memo", link: "ยังไม่มีลิงก์", photo: "ยังไม่มีรูป", file: "ยังไม่มีไฟล์" };
+  const LIB_T = [["all", "ทั้งหมด"], ["long", "📌 ระยะยาว"], ["note", "ข้อความ"], ["link", "ลิงก์"], ["photo", "รูป"], ["file", "ไฟล์"]];
+  const LIB_EMPTY = { all: "ยังไม่มี Memo", long: "ยังไม่มี Memo ระยะยาว", note: "ยังไม่มีข้อความ", link: "ยังไม่มีลิงก์", photo: "ยังไม่มีรูป", file: "ยังไม่มีไฟล์" };
   function pageLibrary(type) {
     if (!LIB_T.some(([k]) => k === type)) type = "all";
     st.lib.type = type;
     try { st.lib.view = localStorage.getItem("iped.libview") || st.lib.view; } catch {}
     main.innerHTML = `
-      <section class="hero"><div class="hero-row"><div><p class="kick">ทุกอย่างที่ฝาก IPED ไว้</p><h1>คลัง</h1><p class="sub" id="libSub">กำลังโหลด…</p></div>
+      <section class="hero"><div class="hero-row"><div><p class="kick">ทุกอย่างที่ฝาก IPED ไว้</p><h1>Memo</h1><p class="sub" id="libSub">กำลังโหลด…</p></div>
         <label class="lib-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span class="sr">ค้นหาในคลัง</span><input class="inp" id="libQ" type="search" placeholder="ค้นชื่อ หรือสิ่งที่จำได้ เช่น ใบเสนอราคา" value="${esc(st.lib.q)}" autocomplete="off"></label></div></section>
       <div class="page" style="max-width:1100px">
         <div class="toolbar">
@@ -299,7 +304,7 @@
           <span class="storage" id="libS"></span>
           <div class="seg" role="group" aria-label="มุมมอง"><button type="button" data-view="list" aria-pressed="${st.lib.view === "list"}" aria-label="แบบรายการ" style="padding:0 10px">${svg("list").replace("<svg", '<svg width="18" height="18"')}</button><button type="button" data-view="grid" aria-pressed="${st.lib.view === "grid"}" aria-label="แบบตาราง" style="padding:0 10px">${svg("grid").replace("<svg", '<svg width="18" height="18"')}</button></div>
         </div>
-        <div class="drop" id="drop">${svg("upload").replace("<svg", '<svg width="18" height="18" style="vertical-align:-3px"')} ลากไฟล์หรือรูปมาวางตรงนี้ เพื่อฝากไว้ในคลัง · <button type="button" data-act="pick">เลือกไฟล์</button><div class="prog" id="upProg" aria-live="polite"></div></div>
+        <div class="drop" id="drop">${svg("upload").replace("<svg", '<svg width="18" height="18" style="vertical-align:-3px"')} ลากไฟล์หรือรูปมาวางตรงนี้ เก็บเป็น Memo · <button type="button" data-act="pick">เลือกไฟล์</button><div class="prog" id="upProg" aria-live="polite"></div></div>
         <div id="libL">${loading()}</div>
       </div>`;
     st.reload = loadLibrary; loadLibrary();
@@ -311,7 +316,7 @@
       const r = await api(`app/library?type=${L.type}&q=${encodeURIComponent(L.q)}`);
       if (my !== libSeq || !$("#libL")) return;
       const c = r.counts || {};
-      $("#libSub").textContent = `${c.all ?? 0} รายการ · แตะรายการเพื่อดู ตั้งเตือน หรือนัดประชุม`;
+      $("#libSub").textContent = `${c.all ?? 0} รายการ · ใส่กำหนดเวลา = ไปอยู่ใน To Do`;
       $("#libT").innerHTML = LIB_T.map(([k, l]) => `<button type="button" role="tab" data-lib="${k}" aria-selected="${L.type === k}">${l} <span style="opacity:.6">${c[k] ?? 0}</span></button>`).join("");
       const s = r.storage || { used: 0, max: 0 }, pct = s.max ? Math.round((s.used / s.max) * 100) : 0;
       $("#libS").innerHTML = s.max ? `<span>${bytes(s.used)} / ${bytes(s.max)}</span><span class="pb" role="progressbar" aria-label="พื้นที่ที่ใช้" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${Math.max(2, pct)}%"></i></span>` : "";
@@ -329,7 +334,9 @@
     st.cache.set(i.id, i);
     const thumb = i.thumb ? `<span class="ico-src" style="overflow:hidden;padding:0"><img src="${esc(i.thumb)}" alt="" style="width:100%;height:100%;object-fit:cover"></span>` : `<span class="ico-src">${svg(i.source)}</span>`;
     const title = esc(i.title);   // แตะทั้งแถว → รายละเอียด (เปิดไฟล์ · แจ้งเตือน · นัดประชุม)
-    const meta = [SRC[i.source]];
+    const meta = [kindTh(i)];
+    if (i.long_term) meta.push("📌 ระยะยาว");
+    if (i.todo && i.at) meta.push("⏰ " + esc(whenText(i.at)));
     if (i.size) meta.push(bytes(i.size));
     if (i.source === "note" && i.repeat) meta.push(esc(i.repeat));   // Memo: "ใช้ 5 ครั้ง"
     if (i.source === "link" && i.url) meta.push(esc(i.url.replace(/^https?:\/\//, "").slice(0, 60)));
@@ -339,7 +346,7 @@
   function tile(i) {
     st.cache.set(i.id, i);
     const pv = i.thumb ? `<img src="${esc(i.thumb)}" alt="" loading="lazy">` : i.source === "note" && i.body ? `<span class="nt">${esc(i.body)}</span>` : svg(i.source);
-    const inner = `<div class="pv">${pv}</div><div class="tb"><b>${esc(i.title)}</b><small>${SRC[i.source]}${i.size ? " · " + bytes(i.size) : ""}</small></div>`;
+    const inner = `<div class="pv">${pv}</div><div class="tb"><b>${esc(i.title)}</b><small>${kindTh(i)}${i.size ? " · " + bytes(i.size) : ""}</small></div>`;
     return `<article class="tile" data-id="${esc(i.id)}" tabindex="0" aria-label="ดูรายละเอียด ${esc(i.title)}">${inner}${delBtn(i).replace('class="ib"', 'class="del"')}</article>`;
   }
   const MAX_UP = 50 * 1024 * 1024;
@@ -351,7 +358,7 @@
       try {
         const data = await new Promise((ok, no) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(",")[1] || ""); fr.onerror = () => no(new Error("อ่านไฟล์ไม่ได้")); fr.readAsDataURL(f); });
         await api("app/library/upload", { name: f.name, mime: f.type || "application/octet-stream", data_base64: data });
-        toast(`เก็บ “${f.name}” เข้าคลังแล้ว`);
+        toast(`เก็บ “${f.name}” เป็น Memo แล้ว`);
       } catch (e) { toast(errText(e)); }
     }
     if (prog) prog.textContent = "";
@@ -593,7 +600,7 @@
     st.cache.clear();
     if (name === "library") pageLibrary(arg || "all");
     else (ROUTES[name] || pageToday)(arg);
-    const titles = { today: "วันนี้", todo: "To Do", repeat: "เตือน & Memo", groups: "กลุ่ม", library: "คลัง", settings: "ตั้งค่า", integrations: "เชื่อมต่อแอป", admin: "หลังบ้าน" };
+    const titles = { today: "วันนี้", todo: "To Do", repeat: "เตือน & Memo", groups: "กลุ่ม", library: "Memo", settings: "ตั้งค่า", integrations: "เชื่อมต่อแอป", admin: "หลังบ้าน" };
     document.title = `${titles[name] || "วันนี้"} · IPED`;
     window.scrollTo(0, 0);
   }
@@ -658,10 +665,10 @@
   function openItem(it) {
     cur = it; delArmed = false;
     $("#itDel").textContent = "ลบ";
-    $("#itT").textContent = `แก้ไข${SRC[it.source] ? " " + SRC[it.source] : ""}`;
+    $("#itT").textContent = `แก้ไข ${kindTh(it)}`;
     $("#itMeta").textContent = [it.repeat && `เตือนซ้ำ ${it.repeat}`, it.group && `กลุ่ม ${it.group.name}`].filter(Boolean).join(" · ");
     $("#itTitle").value = it.title;
-    const timed = it.source === "reminder" || it.source === "todo";
+    const timed = it.source === "reminder" || LIB_KINDS.includes(it.source);   // Memo ใส่กำหนดได้ (→ To Do) · ล้างกำหนด = กลับเป็น Memo
     $("#itTimeF").hidden = !timed; $("#itImpF").hidden = !timed;
     const p = it.at ? parts(it.at) : null;
     $("#itDate").value = p ? p.ymd : ""; $("#itTime").value = p ? p.hm : "";
@@ -706,7 +713,7 @@
   let viewSeq = 0, viewIt = null;
   async function openView(it) {
     const my = ++viewSeq; viewIt = it;
-    $("#vwKind").textContent = SRC[it.source] || "";
+    $("#vwKind").textContent = kindTh(it);
     $("#vwT").textContent = it.title;
     $("#vwWhen").hidden = !it.at; $("#vwWhen").textContent = it.at ? `${thaiDate(it.at)} · ${parts(it.at).hm} น.${it.repeat ? " · " + it.repeat : ""}` : "";
     for (const id of ["vwImgA", "vwBody", "vwOpen"]) $("#" + id).hidden = true;
@@ -727,11 +734,24 @@
       if (d.meetings?.length) $("#vwMeet").innerHTML = `<div class="vw-meet"><b>นัดประชุมเรื่องนี้</b>${d.meetings.map((m) => `<div>${esc(m.title)} · ${esc(whenText(m.at))}</div>`).join("")}</div>`;
       $("#vwEdit").hidden = !(it.editable && d.editable !== false);
       $("#vwActs").hidden = !LIB_KINDS.includes(it.source) && !d.pending;
-      for (const x of $$("[data-vw-act]")) x.hidden = d.pending ? x.dataset.vwAct !== "resched" : x.dataset.vwAct === "resched";
+      const lib = LIB_KINDS.includes(it.source);
+      const show = { resched: d.pending, remind: !d.pending, meet: !d.pending, assign: lib && d.can_assign, long: lib && it.source !== "todo" && !d.todo && !it.task };
+      for (const x of $$("[data-vw-act]")) x.hidden = !show[x.dataset.vwAct];
+      if (lib) {
+        $('[data-vw-act="remind"]').textContent = d.todo && d.at ? "📅 เปลี่ยนกำหนด" : "📅 ใส่กำหนด → To Do";
+        $('[data-vw-act="long"]').textContent = d.long_term ? "เลิกจำระยะยาว" : "📌 จำระยะยาว";
+        viewIt = { ...it, long_term: d.long_term };
+      }
     } catch (e) { if (my === viewSeq) $("#vwState").innerHTML = `<div class="err" role="alert">${esc(errText(e))}</div>`; }
   }
   $("#vwEdit").onclick = () => { const it = viewIt; closeDlg(dlgV); if (it) openItem(it); };
-  $("#vwActs").onclick = (e) => { const b = e.target.closest("[data-vw-act]"); if (!b || !viewIt) return; const it = viewIt; closeDlg(dlgV); openAct(it, b.dataset.vwAct); };
+  $("#vwActs").onclick = (e) => { const b = e.target.closest("[data-vw-act]"); if (!b || !viewIt) return; const it = viewIt; closeDlg(dlgV);
+    if (b.dataset.vwAct === "assign") { location.href = D.link("../assign/", { item: it.id }); return; }   // To Do + มอบหมาย = Task
+    if (b.dataset.vwAct === "long") {
+      api("app/items/update", { id: it.id, source: it.source, long_term: !it.long_term }).then(() => { toast(it.long_term ? "เลิกจำระยะยาวแล้ว" : "จำระยะยาวแล้ว 📌"); refresh(); }, (e2) => toast(errText(e2)));
+      return;
+    }
+    openAct(it, b.dataset.vwAct); };
 
   // ===== หน้าต่าง: ตั้งเตือน / นัดประชุม จากของในคลัง (ตั้งหัวข้อเรื่องเองได้) =====
   const dlgA = $("#dlgAct");
@@ -739,8 +759,8 @@
   async function openAct(it, kind) {
     act = { it, kind, force: false };
     const meet = kind === "meet", resched = kind === "resched";
-    $("#acT").textContent = meet ? "นัดประชุมเรื่องนี้" : resched ? "ลงเวลาใหม่" : "ตั้งเตือน";
-    $("#acFrom").textContent = `${SRC[it.source] || ""} · ${it.title}`;
+    $("#acT").textContent = meet ? "นัดประชุมเรื่องนี้" : resched ? "ลงเวลาใหม่" : it.todo ? "กำหนดเวลา" : "ใส่กำหนด → To Do";
+    $("#acFrom").textContent = `${kindTh(it)} · ${it.title}`;
     $("#acTitle").value = meet || resched || it.source === "note" || it.source === "todo" ? it.title : `ตรวจ · ${it.title}`;
     const next = new Date(Math.ceil((Date.now() + 60000) / 3600000) * 3600000).toISOString(), p = parts(next);
     $("#acDate").value = p.ymd; $("#acDate").min = todayYmd(); $("#acTime").value = p.hm;
@@ -792,7 +812,7 @@
   const dlgS = $("#dlgSearch");
   let seT, sePool = null;
   async function openSearch() {
-    $("#seQ").value = ""; $("#seRes").innerHTML = `<p class="none">พิมพ์เพื่อค้นหาเตือน To Do และของในคลัง</p>`;
+    $("#seQ").value = ""; $("#seRes").innerHTML = `<p class="none">พิมพ์เพื่อค้นหาเตือน To Do และ Memo</p>`;
     openDlg(dlgS); setTimeout(() => $("#seQ").focus(), 30);
     sePool = Promise.all([api("app/repeat").catch(() => ({ items: [] })), api("app/todo?filter=all").catch(() => ({ items: [] }))])
       .then(([a, b]) => { const m = new Map(); for (const i of [...(a.items || []), ...(b.items || [])]) m.set(i.id, i); return [...m.values()]; });
@@ -801,7 +821,7 @@
     clearTimeout(seT);
     seT = setTimeout(async () => {
       const q = $("#seQ").value.trim(), box = $("#seRes");
-      if (!q) { box.innerHTML = `<p class="none">พิมพ์เพื่อค้นหาเตือน To Do และของในคลัง</p>`; return; }
+      if (!q) { box.innerHTML = `<p class="none">พิมพ์เพื่อค้นหาเตือน To Do และ Memo</p>`; return; }
       const ql = q.toLowerCase();
       const [pool, lib] = await Promise.all([sePool, api(`app/library?type=all&q=${encodeURIComponent(q)}`).catch(() => ({ items: [] }))]);
       if ($("#seQ").value.trim() !== q) return;
@@ -809,7 +829,7 @@
       const li = (lib.items || []).slice(0, 8);
       box.innerHTML = !rem.length && !li.length ? `<p class="none">ไม่เจอ “${esc(q)}”</p>`
         : (rem.length ? `<div class="se-h">แจ้งเตือนและ To Do</div><div class="list">${rem.map((i) => row(i, { date: true })).join("")}</div>` : "")
-        + (li.length ? `<div class="se-h">คลัง</div><div class="list">${li.map((i) => { st.cache.set(i.id, i); return libRow(i); }).join("")}</div>` : "");
+        + (li.length ? `<div class="se-h">Memo</div><div class="list">${li.map((i) => { st.cache.set(i.id, i); return libRow(i); }).join("")}</div>` : "");
     }, 200);
   };
 
@@ -1086,7 +1106,7 @@
       let it;
       if (b.text) {
         const p = parse(b.text);
-        it = I({ source: p.at || p.repeat ? "reminder" : "todo", title: p.title, at: p.at, repeat: p.repeat });
+        it = I({ source: p.at || p.repeat ? "reminder" : "note", title: p.title, at: p.at, repeat: p.repeat });
       } else {
         if (!b.title) throw Object.assign(new Error("ต้องมีชื่อเรื่อง"), { status: 400 });
         const kind = b.kind || (b.at || b.repeat ? "reminder" : "todo");

@@ -66,7 +66,8 @@ const S = { opt: null, owner: null, black: false, chip: null };
   try {
     await boot();
     Duck.fixLinks();
-    S.opt = await api("assign/options");
+    const item = new URLSearchParams(location.search).get("item");   // มาจาก To Do: To Do + มอบหมาย = Task
+    S.opt = await api("assign/options" + (item ? "?item=" + encodeURIComponent(item) : ""));
     $("#boot").hidden = true;
     if (!S.opt.allowed) {
       Duck.state(`<div class="big">🙅</div><b>พนักงานมอบงานไม่ได้</b>${esc(S.opt.reason)}<a class="btn" href="${esc(link("../followup/"))}">ไปที่งานของฉัน</a>`);
@@ -75,6 +76,15 @@ const S = { opt: null, owner: null, black: false, chip: null };
     $("#blackField").hidden = !S.opt.black;
     if (S.opt.black && new URLSearchParams(location.search).get("black") === "1") setBlack(true);
     renderChips(); setDue(addDays(todayStr(), 1), "17:00", "tmr");
+    if (item) {
+      const it = S.opt.item;
+      if (it) {
+        S.item = it.id; $("#fTitle").value = it.title.slice(0, 100); $("#fDetail").value = (it.detail || "").slice(0, 1000);
+        const d = it.at ? it.at.slice(0, 16).split("T") : null;
+        if (d && new Date(it.at) > new Date()) setDue(d[0], d[1], null);
+        $("#pageTitle").textContent = "To Do → Task";
+      } else $("#formMsg").innerHTML = `<div class="warnbox">To Do นี้ทำเสร็จหรือมอบหมายไปแล้ว · มอบงานใหม่ได้ตามปกติ</div>`;
+    }
     renderPeople();
     $("#form").hidden = false;
   } catch (e) { fail(e); }
@@ -131,7 +141,7 @@ function renderBlack() {
 
 // ===== ตัวอย่าง + ส่ง =====
 function body() {
-  return { owner_id: S.owner?.id, title: $("#fTitle").value.trim(), detail: $("#fDetail").value.trim() || null, due: `${$("#fDate").value}T${$("#fTime").value}`, black: S.black };
+  return { owner_id: S.owner?.id, title: $("#fTitle").value.trim(), detail: $("#fDetail").value.trim() || null, due: `${$("#fDate").value}T${$("#fTime").value}`, black: S.black, ...(S.item ? { item_id: S.item } : {}) };
 }
 const stepsHtml = (steps) => steps.map((s) => `<div class="step"><i class="${esc(s.k)}"></i><div>${esc(s.main)}${s.sub ? `<small>${esc(s.sub)}</small>` : ""}</div></div>`).join("");
 $("#form").onsubmit = async (e) => {
@@ -163,6 +173,7 @@ $("#form").onsubmit = async (e) => {
 $("#pvSend").onclick = (e) => busy(e.target, async () => {
   try {
     const r = await api("assign", body());
+    S.item = null;   // มอบแล้ว: "มอบงานอีก" เป็นงานใหม่ ไม่ผูก To Do เดิม
     closeSheets(); showDone(r);
   } catch (x) { $("#pvMsg").innerHTML = `<div class="errbox" role="alert">${esc(x.message)}</div>`; }
 });

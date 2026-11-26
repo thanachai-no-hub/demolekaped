@@ -12,16 +12,37 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" charset="utf-8" defer></script>
 <script src="shared/app.js"></script>
 <style>
+.profile{margin-bottom:14px}
+.profile .ln{display:flex;align-items:center;gap:6px;margin-top:3px}
+.profile .lnb{flex:none;font-size:10px;font-weight:700;letter-spacing:.04em;line-height:1;padding:3px 6px;border-radius:6px;background:var(--ok-bg);color:var(--green-ink)}
+.profile .lnn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.profile .go{flex:none;font-size:22px;line-height:1;color:var(--muted)}
 .sec{font-size:15px;font-weight:700;margin:18px 2px 10px}
 .hint{color:var(--muted);font-size:13px;margin:-4px 2px 10px}
-.cmds{display:grid;gap:10px}
-.cmd{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
-.cmd b{display:flex;align-items:center;gap:8px;font-size:15px}
-.cmd .ex{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.cmd .ex a{display:inline-flex;align-items:center;min-height:40px;padding:8px 12px;border-radius:99px;border:1px solid var(--line);
-  background:var(--surface-2,transparent);color:var(--fg);font-size:14px;line-height:1.3;text-decoration:none}
-.cmd .ex a:focus-visible{outline:3px solid #3a352e;outline-offset:2px}
-.cmd .ex a::before{content:"💬";margin-right:6px}
+.say{display:flex;gap:8px;margin-bottom:6px}
+.say .inp{flex:1;min-width:0}
+.say .btn{width:auto;flex:none}
+.sub{display:flex;align-items:baseline;gap:8px;font-size:14px;font-weight:700;margin:18px 2px 8px}
+.sub small{font-size:13px;font-weight:400;color:var(--muted)}
+.cmds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cmds button,.cmds a{display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 12px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--fg);font-size:14px;font-weight:600;line-height:1.3;text-align:left;text-decoration:none}
+.cmds .ci{flex:none;width:22px;font-size:18px;line-height:1;text-align:center}
+.cmds .ct{flex:1;min-width:0}
+.cmds .cg{flex:none;color:var(--faint);font-size:18px;line-height:1}
+.cmds button:active,.cmds a:active{background:var(--surface2)}
+.guide{display:block;text-align:center;margin:16px 0 4px;padding:12px;color:var(--muted);font-size:14px}
+.ans{display:grid;gap:10px;margin-bottom:14px}
+.ans .fx .b{gap:6px;font-size:14px;overflow-wrap:anywhere}
+.ans .fx .b p{margin:0}
+.ans .fx .b p.hd{font-weight:700;font-size:13px;color:var(--muted);margin-top:8px;padding-top:10px;border-top:1px solid var(--line)}
+.ans .fx .b p.bd{font-weight:700;margin-top:6px}
+.ans .fx .b p.m{color:var(--muted);font-size:13px;margin-top:-4px}
+.ans .fx .b p:first-child{font-size:17px;font-weight:700;margin:0;color:var(--fg)}
+#askSheet{max-height:84vh}
+#askSheet h3{position:sticky;top:0;z-index:1;margin:0 -16px;padding:4px 16px 10px;background:var(--surface)}
+.ans .tx{background:var(--surface2);border-radius:14px;padding:10px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.pv{background:var(--ok-bg);border-radius:14px 14px 4px 14px;padding:10px 14px;margin:4px 0 14px;font-weight:600;overflow-wrap:anywhere}
+.pv small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
 .dvlist{display:grid;gap:8px;margin-top:10px}
 .dvlist button{display:flex;flex-direction:column;align-items:flex-start;width:100%;min-height:48px;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;text-align:left}
 .dvlist button small{color:var(--muted);font-size:12px}
@@ -44,54 +65,88 @@
 <main class="wrap" id="main">
   <div class="state" id="boot"><div class="spin"></div>กำลังเปิด…</div>
   <section id="app" hidden>
-    <div class="card profile" id="profile" style="margin-bottom:14px"></div>
+    <a class="card profile" id="profile"></a>
     <div id="alerts"></div>
     <h2 class="sec">เปิดหน้า</h2>
-    <div class="tiles" id="tiles"></div>
+    <nav class="tiles" id="tiles" aria-label="เปิดหน้า"></nav>
     <div id="devSec" hidden><div class="dvlist" id="dvlist" hidden></div></div>
     <div id="chatSec" hidden>
-      <h2 class="sec">สั่งงานด้วยการพิมพ์ในแชท</h2>
-      <p class="hint">แตะตัวอย่าง แล้วกดส่งในแชท IPED · แก้ข้อความก่อนส่งได้</p>
-      <div class="cmds" id="cmds"></div>
+      <h2 class="sec">สั่ง IPED</h2>
+      <form class="say" id="say"><input class="inp" id="sayIn" maxlength="500" enterkeyhint="send" autocomplete="off" placeholder="ถามหรือสั่งอะไรก็ได้" aria-label="ข้อความถึง IPED"><button class="btn primary">ไปที่แชท</button></form>
+      <h3 class="sub">ดูข้อมูล <small>แตะแล้วเห็นคำตอบตรงนี้เลย</small></h3>
+      <div class="cmds" id="asks"></div>
+      <h3 class="sub">สั่งให้ทำ <small>กรอกสั้นๆ ไม่ต้องจำคำสั่ง</small></h3>
+      <div class="cmds" id="dos"></div>
+      <a class="guide" id="guide">ดูคู่มือภาพในแชท</a>
     </div>
   </section>
 </main>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="askSheet" role="dialog" aria-modal="true" aria-labelledby="askT" hidden>
+  <div class="grab"></div>
+  <h3><span id="askT"></span><button class="close" data-close aria-label="ปิด">×</button></h3>
+  <div class="ans" id="askBody" aria-live="polite"></div>
+  <a class="btn" id="askChat">ไปที่แชท LINE เพื่อกดปุ่มในการ์ด</a>
+</div>
+<div class="sheet" id="doSheet" role="dialog" aria-modal="true" aria-labelledby="doT" hidden>
+  <div class="grab"></div>
+  <h3><span id="doT"></span><button class="close" data-close aria-label="ปิด">×</button></h3>
+  <form id="doForm" autocomplete="off">
+    <div id="doFields"></div>
+    <div class="pv"><small>ข้อความที่จะส่งให้ IPED</small><span id="doPv"></span></div>
+    <div id="doMsg"></div>
+    <button class="btn primary">ไปที่แชทแล้วกดส่ง</button>
+  </form>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
-const { $, esc, link, boot, fail, avatar } = Duck;
+const { $, esc, link, boot, fail, avatar, api, openSheet, bkkNow } = Duck;
 const PAGES = [
-  { href: "overview/", ic: "📊", bg: "#4e6a86", t: "ภาพรวมบริษัท", s: "การเงิน จัดซื้อ โครงการ งาน · อนุมัติ PO", sBadge: "มีเรื่องรอคุณตัดสินใจ",
-    roles: ["ceo", "head"], show: (c) => c.overview === "all" || c.overview === "finance", wide: true, badge: (c) => (c.po_awaiting || 0) + c.ext_waiting + c.black_awaiting + c.registrations },
-  { href: "mytasks/", ic: "✅", bg: "#56706a", t: "งานของฉัน", s: "งานที่ได้รับมอบ · อัปเดต % / ขอเลื่อน", roles: ["ceo", "head", "staff"] },
-  { href: "calendar/", ic: "📅", bg: "#b0703c", t: "ปฏิทิน", s: "นัดประชุม เตือนความจำ กำหนดส่ง", roles: ["ceo", "head", "staff"] },
-  { href: "assign/", ic: "📝", bg: "#56704f", t: "มอบงาน", s: "เลือกคน กำหนดส่ง แล้ว IPED ตามให้", roles: ["ceo", "head"] },
-  { href: "black/", ic: "■", bg: "#2b2722", t: "การ์ดดำ", s: "งานพิเศษจาก CEO · อนุมัติ / ตาม / ขอเลื่อน", roles: ["ceo", "head", "staff"], badge: (c) => c.black_awaiting + c.ext_waiting },
-  { href: "followup/", ic: "⏰", bg: "#a8443a", t: "ตามงาน", s: "เลยกำหนด ติดปัญหา ใกล้ครบ · ตามทีเดียว", roles: ["ceo", "head"], badge: (c, r) => r === "staff" ? 0 : c.overdue },
-  { href: "overview/?tab=finance", ic: "💰", bg: "#8c8277", t: "การเงิน", s: "รายได้ กำไร เงินสด ลูกหนี้", roles: ["ceo", "head"], show: (c) => c.overview === "all" || c.overview === "finance" },
-  { href: "overview/?tab=procurement", ic: "🧾", bg: "#6e5a7a", t: "จัดซื้อ", s: "PO รออนุมัติ · ของส่งช้า", roles: ["ceo", "head"], show: (c) => c.overview === "all" || c.overview === "finance", badge: (c) => c.po_awaiting || 0 },
-  { href: "overview/?tab=projects", ic: "🏗️", bg: "#4e7a80", t: "โครงการ", s: "ความคืบหน้า · งบที่ใช้ · งวดเงิน", roles: ["ceo", "head"], show: (c) => !!c.overview },
-  { href: "register/", ic: "👤", bg: "#4e6a86", t: "โปรไฟล์ของฉัน", s: "ชื่อ แผนก ตำแหน่ง", roles: ["ceo", "head", "staff"], badge: (c) => c.registrations, sBadge: "มีคำขอลงทะเบียนรออนุมัติ" },
+  { href: "overview/", ic: "📊", bg: "#4e6a86", t: "ภาพรวมบริษัท",
+    roles: ["ceo", "head"], show: (c) => c.overview === "all" || c.overview === "finance", badge: (c) => (c.po_awaiting || 0) + c.ext_waiting + c.black_awaiting + c.registrations },
+  { href: "mytasks/", ic: "✅", bg: "#56706a", t: "งานของฉัน", roles: ["ceo", "head", "staff"] },
+  { href: "calendar/", ic: "📅", bg: "#b0703c", t: "ปฏิทิน", roles: ["ceo", "head", "staff"] },
+  { href: "assign/", ic: "📝", bg: "#56704f", t: "มอบงาน", roles: ["ceo", "head"] },
+  { href: "black/", ic: "■", bg: "#2b2722", t: "การ์ดดำ", roles: ["ceo", "head", "staff"], badge: (c) => c.black_awaiting + c.ext_waiting },
+  { href: "followup/", ic: "⏰", bg: "#a8443a", t: "ตามงาน", roles: ["ceo", "head"], badge: (c, r) => r === "staff" ? 0 : c.overdue },
+  { href: "overview/?tab=finance", ic: "💰", bg: "#8c8277", t: "การเงิน", roles: ["ceo", "head"], show: (c) => c.overview === "all" || c.overview === "finance" },
+  { href: "overview/?tab=procurement", ic: "🧾", bg: "#6e5a7a", t: "จัดซื้อ", roles: ["ceo", "head"], show: (c) => c.overview === "all" || c.overview === "finance", badge: (c) => c.po_awaiting || 0 },
+  { href: "overview/?tab=projects", ic: "🏗️", bg: "#4e7a80", t: "โครงการ", roles: ["ceo", "head"], show: (c) => !!c.overview },
 ];
 
-// สั่งงานด้วยการพิมพ์ในแชท · แตะตัวอย่าง → เปิดแชท IPED พร้อมข้อความ (กดส่งเอง)
+// ===== สั่ง IPED =====
+// ดูข้อมูล = คำสั่งที่อ่านอย่างเดียว (q ส่งไป app/chat · ตอบในหน้านี้) · สั่งให้ทำ = กรอกช่อง → ประโยค → เปิดแชทให้กดส่งเอง
 const OA_ID = "@297bbskj";
 const chatLink = (text) => "https://line.me/R/oaMessage/" + encodeURIComponent(OA_ID) + "/?" + encodeURIComponent(text);
-const CHAT = [
-  { ic: "📋", t: "สรุปงาน / รายงาน", roles: ["ceo", "head", "staff"], ex: ["สรุปงาน", "รายงานตอนนี้"] },
-  { ic: "🔎", t: "ถามว่างานถึงไหน", roles: ["ceo", "head"], ex: ["งานของคุณต้นถึงไหน", "ฝ่ายโครงการถึงไหนแล้ว"] },
-  { ic: "📝", t: "มอบงาน", roles: ["ceo", "head"], ex: ["ให้คุณต้นตรวจกันซึมสระ ภายในศุกร์นี้"] },
-  { ic: "■", t: "การ์ดดำ (งานพิเศษ)", roles: ["ceo"], ex: ["การ์ดดำ ให้คุณแพรทำ Mock-up ห้องน้ำ ภายในสัปดาห์หน้า", "การ์ดดำถึงไหนแล้ว"] },
-  { ic: "✅", t: "รออนุมัติ", roles: ["ceo", "head"], ex: ["รออนุมัติ"] },
-  { ic: "⏰", t: "ตามงาน", roles: ["ceo", "head"], ex: ["ตาม ต้น", "ตามคนที่เลยกำหนด"] },
-  { ic: "📈", t: "อัปเดตงาน (แนบรูป)", roles: ["ceo", "head", "staff"], ex: ["ตรวจรับเหล็กเสริมได้ 80% แล้ว", "เสร็จแล้ว"] },
-  { ic: "🚧", t: "ติดปัญหา / ขอเลื่อน", roles: ["head", "staff"], ex: ["ติดปัญหา รอผู้รับเหมาหลังคา", "ขอเลื่อนเป็นจันทร์หน้า"] },
-  { ic: "💰", t: "การเงิน / จัดซื้อ / โครงการ", roles: ["ceo", "head"], show: (c) => c.overview === "all" || c.overview === "finance", ex: ["การเงินเดือนนี้เป็นยังไง", "จัดซื้อ", "โครงการ"] },
-  { ic: "📅", t: "นัดประชุม", roles: ["ceo", "head", "staff"], ex: ["นัดประชุมทีม พรุ่งนี้บ่าย 2 เรื่องงานหลังคา", "นัดของฉัน"] },
-  { ic: "🔔", t: "เตือนความจำ", roles: ["ceo", "head", "staff"], ex: ["เตือนผมพรุ่งนี้ 9 โมง โทรหาเจ้าของบ้าน", "ทุกวันจันทร์ 8 โมง เตือนประชุมหน้างาน", "รายการเตือน"] },
-  { ic: "✉️", t: "ส่งข้อความ / ร่างข้อความ", roles: ["ceo", "head"], ex: ["พรุ่งนี้ 9 โมง ทักคุณสมชายเรื่องงวดเงิน", "ร่างข้อความถึงคุณวิชัย ขอเลื่อนนัดเป็นพุธหน้า"] },
-  { ic: "🧠", t: "ถามย้อนหลัง", roles: ["ceo", "head"], ex: ["ผมสั่งอะไรคุณสมชายไว้บ้าง"] },
-  { ic: "💬", t: "ถามเลขา", roles: ["ceo", "head", "staff"], ex: ["พรุ่งนี้ผมต้องรีบทำอะไรก่อน"] },
-  { ic: "🦆", t: "คู่มือภาพ", roles: ["ceo", "head", "staff"], ex: ["วิธีใช้"] },
+const ALL = ["ceo", "head", "staff"], BOSS = ["ceo", "head"];
+const ASKS = [
+  { ic: "☀️", t: "วันนี้ต้องทำอะไร", q: "วันนี้ต้องทำอะไรบ้าง", roles: ALL },
+  { ic: "📋", t: "สรุปงาน", q: "สรุปงาน", roles: ALL },
+  { ic: "✅", t: "รออนุมัติ", q: "รออนุมัติ", roles: BOSS },
+  { ic: "■", t: "การ์ดดำถึงไหน", q: "การ์ดดำถึงไหนแล้ว", roles: ALL },
+  { ic: "🏠", t: "สถานะบ้าน", q: "สถานะบ้าน", roles: ALL },
+  { ic: "📅", t: "นัดของฉัน", q: "นัดของฉัน", roles: ALL },
+  { ic: "🔔", t: "เตือนที่ตั้งไว้", q: "รายการเตือน", roles: ALL },
+  { ic: "☑️", t: "To Do ของฉัน", q: "To Do", roles: ALL },
+  { ic: "📝", t: "Memo ของฉัน", q: "Memo", roles: ALL },
+  { ic: "📌", t: "ความจำ", q: "ความจำ", roles: ALL },
+];
+const F_WHAT = (ph) => ({ k: "what", l: "เรื่องอะไร", ph, req: true });
+const F_WHO = { k: "who", l: "ใคร", ph: "ชื่อเล่น", req: true, who: true };
+const F_WHEN = (chips) => ({ k: "when", l: "เมื่อไหร่", ph: "หรือพิมพ์เอง เช่น ศุกร์นี้ บ่าย 2", req: true, chips });
+const today5 = () => bkkNow().getUTCHours() < 16 ? ["วันนี้ 5 โมงเย็น"] : [];
+const DOS = [
+  { ic: "🔔", t: "ตั้งเตือน", roles: ALL, f: () => [F_WHAT("เช่น โทรหาเจ้าของบ้าน"), F_WHEN([...today5(), "พรุ่งนี้ 9 โมง", "พรุ่งนี้บ่าย 2", "ทุกวัน 9 โมง", "ทุกวันจันทร์ 9 โมง"])], s: (v) => `เตือน${v.when} ${v.what}` },
+  { ic: "📝", t: "จด Memo", roles: ALL, f: () => [F_WHAT("เช่น เบอร์ช่างไฟ 081-xxx")], s: (v) => `จด ${v.what}` },
+  { ic: "☑️", t: "เพิ่ม To Do", roles: ALL, f: () => [F_WHAT("เช่น ส่งใบเสนอราคา"), F_WHEN([...today5(), "พรุ่งนี้ 9 โมง", "พรุ่งนี้บ่าย 2"])], s: (v) => `ต้องทำ ${v.what} ${v.when}` },
+  { ic: "📌", t: "จำระยะยาว", roles: ALL, f: () => [F_WHAT("เช่น บ้าน CINQ ใช้กระเบื้องรุ่น A")], s: (v) => `จำไว้ว่า ${v.what}` },
+  { ic: "📅", t: "นัดประชุม", roles: ALL, href: "calendar/?new=1" },
+  { ic: "👤", t: "มอบงาน", roles: BOSS, href: "assign/" },
+  { ic: "■", t: "การ์ดดำใหม่", roles: ["ceo"], href: "assign/?black=1" },
+  { ic: "🔎", t: "ถามงานของใคร", roles: BOSS, f: () => [F_WHO], s: (v) => `งานของคุณ${v.who}ถึงไหน` },
+  { ic: "💬", t: "ตั้งเวลาทักคน", roles: BOSS, f: () => [F_WHO, F_WHAT("เช่น งวดเงิน"), F_WHEN([...today5(), "พรุ่งนี้ 9 โมง", "พรุ่งนี้บ่าย 2"])], s: (v) => `${v.when} ทักคุณ${v.who}เรื่อง${v.what}` },
+  { ic: "✉️", t: "ร่างข้อความ", roles: BOSS, f: () => [F_WHO, F_WHAT("เช่น ขอเลื่อนนัดเป็นพุธหน้า")], s: (v) => `ร่างข้อความถึงคุณ${v.who} ${v.what}` },
+  { ic: "📈", t: "อัปเดตงาน", roles: ["head", "staff"], href: "mytasks/" },
 ];
 
 (async () => {
@@ -115,17 +170,21 @@ function render(me) {
     return;
   }
   const m = me.me, c = me.counts;
-  $("#profile").innerHTML = `${avatar(m, "lg")}<div class="nm"><b>${esc(m.full)}</b><small>${esc(m.role_th)}${m.role !== "ceo" ? " · " + esc(m.dept) : ""}${m.job && !m.dev ? " · " + esc(m.job) : ""}</small></div>`;
+  // การ์ดบนสุด = โปรไฟล์ (แตะเพื่อแก้ไข / อนุมัติคนลงทะเบียน) · ชื่อ LINE = บัญชีที่ผูกอยู่ (โหมดสลับไม่แสดง เพราะเป็น LINE ของ Dev)
+  const lineName = me.viewing_as ? null : Duck.S.profile?.displayName;
+  $("#profile").href = link("register/");
+  $("#profile").title = "โปรไฟล์ของฉัน";
+  $("#profile").innerHTML = `${avatar(m, "lg")}<div class="nm"><b>${esc(m.full)}</b><small>${esc(m.role_th)}${m.role !== "ceo" ? " · " + esc(m.dept) : ""}${m.job && !m.dev ? " · " + esc(m.job) : ""}</small>${
+    lineName ? `<small class="ln"><span class="lnb">LINE</span><span class="lnn">${esc(lineName)}</span></small>` : ""}</div>${
+    c.registrations ? `<span class="badge" aria-label="${c.registrations} คำขอลงทะเบียนรออนุมัติ">${c.registrations}</span>` : ""}<span class="go" aria-hidden="true">›</span>`;
   const alerts = [];
   if (c.registrations) alerts.push(`มีคำขอลงทะเบียนรอคุณอนุมัติ ${c.registrations} คน`);
   if (c.black_awaiting) alerts.push(`การ์ดดำรอคุณอนุมัติ ${c.black_awaiting} งาน`);
   if (c.ext_waiting) alerts.push(`คำขอเลื่อนรอคุณพิจารณา ${c.ext_waiting} งาน`);
   $("#alerts").innerHTML = alerts.length ? `<div class="warnbox" role="status">${alerts.map(esc).join("<br>")}</div>` : "";
   $("#tiles").innerHTML = PAGES.filter((p) => p.roles.includes(m.role) && (!p.show || p.show(c))).map((p) => {
-    const n = p.badge ? p.badge(c, m.role) : 0;
-    return tile({ ...p, s: m.role === "staff" && p.sStaff ? p.sStaff : n && p.sBadge ? p.sBadge : p.s }, n, p.wide || p.href === "register/");
+    return tile(p, p.badge ? p.badge(c, m.role) : 0);
   }).join("");
-  const cmds = CHAT.filter((x) => x.roles.includes(m.role) && (!x.show || x.show(c)));
   // Dev (ไม่ได้ดูแบบใครอยู่): ไทล์โหมดสลับ → เลือกหัวหน้า/พนักงานที่จะดูแบบ
   if (me.dev && me.view_switch && !me.viewing_as) {
     $("#tiles").insertAdjacentHTML("beforeend", `<a class="tile wide" href="#" id="dvTile"><span class="ic" style="background:#615751;color:#fff" aria-hidden="true">🛠</span><span style="min-width:0"><b style="display:block">โหมดสลับ (Dev)</b><small>ดูแบบหัวหน้า / พนักงาน · อ่านอย่างเดียว</small></span></a>`);
@@ -143,12 +202,104 @@ function render(me) {
       } catch (er) { el.innerHTML = `<div class="errbox">${esc(er.message)}</div>`; }
     };
   }
-  $("#cmds").innerHTML = cmds.map((x) => `<div class="cmd"><b><span aria-hidden="true">${esc(x.ic)}</span>${esc(x.t)}</b><div class="ex">${
-    x.ex.map((e) => `<a href="${esc(chatLink(e))}">${esc(e)}</a>`).join("")}</div></div>`).join("");
-  $("#chatSec").hidden = !cmds.length;
+  const mine = (list) => list.filter((x) => x.roles.includes(m.role));
+  const face = (x) => `<span class="ci" aria-hidden="true">${x.ic}</span><span class="ct">${esc(x.t)}</span><span class="cg" aria-hidden="true">›</span>`;
+  $("#asks").innerHTML = mine(ASKS).map((x) => `<button type="button" data-ask="${esc(x.q)}">${face(x)}</button>`).join("");
+  $("#dos").innerHTML = mine(DOS).map((x) => x.href ? `<a href="${esc(link(x.href))}">${face(x)}</a>` : `<button type="button" data-do="${DOS.indexOf(x)}">${face(x)}</button>`).join("");
+  $("#guide").href = chatLink("วิธีใช้");
+  $("#chatSec").hidden = false;
 }
+
+// ===== ดูข้อมูล: ถามผ่าน app/chat แล้วแสดงคำตอบใน sheet =====
+// การ์ด Flex → บรรทัด {t, b: ตัวหนา, m: ตัวรอง} (แถวแนวนอนรวมเป็นบรรทัดเดียว แบบเดียวกับแชตใน liff/app/app.js)
+function flexLines(n) {
+  if (!n || typeof n !== "object") return [];
+  if (n.type === "text") {
+    const t = (n.contents?.length ? n.contents.map((x) => x.text || "").join("") : n.text || "").trim();
+    const m = n.size === "xs" || n.size === "xxs";
+    return t ? [{ t, b: n.weight === "bold" && !m, m, h: n.weight === "bold" && n.size === "xs" }] : [];   // h = หัวข้อย่อย (sect ใน flex.ts)
+  }
+  if (n.type !== "box") return [];
+  const parts = (n.contents || []).map(flexLines).filter((l) => l.length);
+  if (n.layout !== "horizontal" && n.layout !== "baseline") return parts.flat();
+  return parts.length ? [{ t: parts.map((l) => l[0].t).join(" "), b: parts.some((l) => l[0].b), m: parts.every((l) => l[0].m) }, ...parts.flatMap((l) => l.slice(1))] : [];
+}
+function answerHtml(msgs) {
+  return msgs.map((x) => {
+    if (x.type === "text") return `<div class="tx">${esc(x.text)}</div>`;
+    // คู่มือต้อนรับที่แถมมาครั้งแรก ไม่ใช่คำตอบ (ดูได้ที่ลิงก์คู่มือด้านล่าง)
+    if (x.type !== "flex" || /^วิธีใช้ IPED/.test(x.altText || "")) return "";
+    const bubbles = x.contents?.type === "carousel" ? x.contents.contents || [] : [x.contents || {}];
+    return bubbles.map((b) => {
+      const head = flexLines(b.header).map((l) => l.t.replace(/^IPED[\s·]*/, "")).filter(Boolean).pop() || "IPED";
+      const lines = flexLines(b.body);
+      return `<div class="fx"><div class="h">${esc(head)}</div><div class="b">${
+        (lines.length ? lines : [{ t: x.altText || "" }]).map((l) => `<p class="${l.h ? "hd" : l.m ? "m" : l.b ? "bd" : ""}">${esc(l.t)}</p>`).join("")}</div></div>`;
+    }).join("");
+  }).join("");
+}
+let askNo = 0;
+async function ask(q, title) {
+  const no = ++askNo, body = $("#askBody");
+  $("#askT").textContent = title;
+  $("#askChat").href = chatLink(q);
+  body.innerHTML = '<div class="state" style="padding:24px"><div class="spin"></div>กำลังถาม IPED…</div>';
+  openSheet("#askSheet");
+  try {
+    const r = await api("app/chat", { text: q });
+    if (no !== askNo) return;   // เปิดเรื่องอื่นไปแล้ว
+    body.innerHTML = answerHtml(r.messages || []) || '<div class="tx">ไม่มีข้อมูล</div>';
+  } catch (e) { if (no === askNo) body.innerHTML = `<div class="errbox" role="alert">${esc(e.message)}</div>`; }
+}
+$("#asks").onclick = (e) => { const b = e.target.closest("[data-ask]"); if (b) ask(b.dataset.ask, b.querySelector(".ct").textContent); };
+
+// ===== สั่งให้ทำ: กรอกช่อง → ประโยคเดียว → เปิดแชท LINE =====
+let cur = null, people = null;
+const val = (k) => ($("#f_" + k)?.value || "").trim();
+function sentence(blank) {
+  const v = Object.fromEntries(cur.fields.map((f) => [f.k, val(f.k).replace(/\s+/g, " ") || blank(f)]));
+  if (v.who) v.who = v.who.replace(/^คุณ\s*/, "");
+  return cur.s(v);
+}
+function preview() { $("#doPv").textContent = sentence((f) => "…"); }
+$("#dos").onclick = (e) => {
+  const b = e.target.closest("[data-do]"); if (!b) return;
+  const d = DOS[+b.dataset.do];
+  cur = { ...d, fields: d.f() };
+  $("#doT").textContent = d.t; $("#doMsg").innerHTML = "";
+  $("#doFields").innerHTML = cur.fields.map((f) => `<div class="field"><label for="f_${f.k}">${f.l}</label><input class="inp" id="f_${f.k}" maxlength="200" placeholder="${esc(f.ph)}">${
+    f.who ? '<div class="chiprow" id="whoChips"></div>' : f.chips ? `<div class="chiprow">${f.chips.map((c) => `<button type="button" data-set="${f.k}" data-v="${esc(c)}" aria-pressed="false">${esc(c)}</button>`).join("")}</div>` : ""}</div>`).join("");
+  preview(); openSheet("#doSheet");
+  if (cur.fields.some((f) => f.who)) loadPeople();
+};
+async function loadPeople() {
+  try { people ??= (await api("assign/options")).people || []; } catch { people = null; }   // โหลดรายชื่อไม่ได้ = พิมพ์ชื่อเองได้
+  whoChips();
+}
+function whoChips() {
+  const el = $("#whoChips"); if (!el || !people) return;
+  const q = val("who").toLowerCase();
+  el.innerHTML = people.filter((p) => !q || [p.nick, p.full, p.dept].join(" ").toLowerCase().includes(q)).slice(0, 8)
+    .map((p) => `<button type="button" data-set="who" data-v="${esc(p.nick || p.name)}" aria-pressed="${val("who") === (p.nick || p.name)}">${esc(p.nick || p.name)}</button>`).join("");
+}
+$("#doForm").oninput = (e) => { if (e.target.id === "f_who") whoChips(); clean(); };
+$("#doForm").onclick = (e) => {
+  const b = e.target.closest("[data-set]"); if (!b) return;
+  $("#f_" + b.dataset.set).value = b.dataset.v;
+  clean();
+};
+function clean() { $("#doMsg").innerHTML = ""; marks(); preview(); }
+function marks() { for (const b of Duck.$$("#doFields [data-set]")) b.setAttribute("aria-pressed", String(val(b.dataset.set) === b.dataset.v)); }
+$("#doForm").onsubmit = (e) => {
+  e.preventDefault();
+  const miss = cur.fields.find((f) => f.req && !val(f.k));
+  if (miss) { $("#doMsg").innerHTML = `<div class="errbox" role="alert">ใส่ "${esc(miss.l)}" ก่อนครับ</div>`; $("#f_" + miss.k).focus(); return; }
+  goChat(sentence(() => ""));
+};
+$("#say").onsubmit = (e) => { e.preventDefault(); const t = $("#sayIn").value.trim(); if (t) goChat(t); else $("#sayIn").focus(); };
+function goChat(text) { location.href = chatLink(text); }
 function tile(p, badge, wide) {
-  return `<a class="tile${wide ? " wide" : ""}" href="${esc(link(p.href))}"><span class="ic" style="background:${p.bg};color:#fff" aria-hidden="true">${p.ic}</span><span style="min-width:0"><b style="display:block">${esc(p.t)}</b><small>${esc(p.s)}</small></span>${badge ? `<span class="badge" aria-label="${badge} รายการรอ">${badge}</span>` : ""}</a>`;
+  return `<a class="tile${wide ? " wide" : ""}" href="${esc(link(p.href))}"><span class="ic" style="background:${p.bg};color:#fff" aria-hidden="true">${p.ic}</span><span style="min-width:0"><b style="display:block">${esc(p.t)}</b>${p.s ? `<small>${esc(p.s)}</small>` : ""}</span>${badge ? `<span class="badge" aria-label="${badge} รายการรอ">${badge}</span>` : ""}</a>`;
 }
 </script>
 </body>

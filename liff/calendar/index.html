@@ -65,7 +65,7 @@ header .iconbtn{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.
 .iconbtn svg{width:20px;height:20px}
 .monthbar{display:flex;align-items:center;gap:8px;padding:4px 0 8px}
 .monthbar h1{flex:1;margin:0;font-size:20px;font-weight:700}
-.todaybtn{height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:14px}
+.todaybtn{height:44px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#f1f0ec;font-weight:600;font-size:14px}
 
 /* ปฏิทินเดือน */
 .cal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:6px;touch-action:pan-y;user-select:none}
@@ -307,6 +307,7 @@ async function boot() {
     }
     await load();
     $("#boot").hidden = true; $("#app").hidden = false; $("#fab").hidden = false;
+    if (qs.get("new") === "1") $("#fab").click();   // มาจากปุ่ม "นัดประชุม" ในหน้าหลัก
   } catch (e) {
     // ยังไม่ลงทะเบียน → หน้าลงทะเบียน (LIFF app เดียวกัน)
     if (e.status === 403 && e.body?.code === "not_registered") { location.replace("../register/" + (DEV_USER ? "?dev=" + encodeURIComponent(DEV_USER) : "")); return; }

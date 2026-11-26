@@ -37,12 +37,13 @@
         <a href="#groups" data-r="groups"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="8" r="2.5"/><path d="M16 13.5c2.8 0 5 2 5 5"/></svg>กลุ่ม</a>
         <a href="#todo" data-r="todo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6h9M11 12h9M11 18h9"/></svg>To Do</a>
         <a href="#repeat" data-r="repeat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h13l-3-3M20 15H7l3 3"/></svg>เตือน &amp; Memo</a>
-        <div class="nav-h">คลัง</div>
+        <div class="nav-h">Memo</div>
         <a href="#library/all" data-r="library/all"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/></svg>ทั้งหมด</a>
-        <a href="#library/note" data-r="library/note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7"/></svg>Memo</a>
+        <a href="#library/note" data-r="library/note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7"/></svg>ข้อความ</a>
         <a href="#library/link" data-r="library/link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 006 0l3-3a4 4 0 00-6-6l-1 1M14 10a4 4 0 00-6 0l-3 3a4 4 0 006 6l1-1"/></svg>ลิงก์</a>
         <a href="#library/photo" data-r="library/photo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>รูป</a>
         <a href="#library/file" data-r="library/file"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>ไฟล์</a>
+        <a href="#library/long" data-r="library/long"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l-1 7 4 4H6l4-4zM12 14v7"/></svg>ระยะยาว</a>
       </nav>
       <div class="side-foot">
         <a href="#admin" data-r="admin" id="navAdmin" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6M9 11h.01M15 11h.01"/></svg>หลังบ้าน</a>
@@ -64,7 +65,7 @@
   <a href="#today" data-r="today"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9H4z"/></svg><span>วันนี้</span></a>
   <a href="#todo" data-r="todo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6h9M11 12h9M11 18h9"/></svg><span>To Do</span></a>
   <button type="button" class="tab-new" data-act="create" aria-label="สร้างใหม่"><span aria-hidden="true">＋</span></button>
-  <a href="#library/all" data-r="library"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9"/></svg><span>คลัง</span></a>
+  <a href="#library/all" data-r="library"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9"/></svg><span>Memo</span></a>
   <button type="button" data-act="drawer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>เมนู</span></button>
 </nav>
 
@@ -132,7 +133,7 @@
     <dl class="vw-dl" id="vwDl"></dl>
     <div class="vw-body" id="vwBody" hidden></div>
     <div id="vwMeet"></div>
-    <div class="vw-acts" id="vwActs" hidden><button class="btn primary" type="button" data-vw-act="resched" hidden>📅 ลงเวลาใหม่</button><button class="btn" type="button" data-vw-act="remind">📅 แจ้งเตือน</button><button class="btn" type="button" data-vw-act="meet">🗓 นัดประชุม</button></div>
+    <div class="vw-acts" id="vwActs" hidden><button class="btn primary" type="button" data-vw-act="resched" hidden>📅 ลงเวลาใหม่</button><button class="btn" type="button" data-vw-act="remind">📅 แจ้งเตือน</button><button class="btn" type="button" data-vw-act="assign" hidden>👤 มอบหมาย → Task</button><button class="btn" type="button" data-vw-act="long" hidden>📌 จำระยะยาว</button><button class="btn" type="button" data-vw-act="meet">🗓 นัดประชุม</button></div>
     <div class="dlg-act"><a class="btn" id="vwOpen" target="_blank" rel="noopener noreferrer" hidden>เปิดรูป</a><span class="sp"></span><button class="btn" type="button" id="vwEdit" hidden>แก้ไข</button><button class="btn primary" type="button" data-dlg-close>ปิด</button></div>
   </div>
 </dialog>
